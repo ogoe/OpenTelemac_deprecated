@@ -1,0 +1,173 @@
+C                       *****************
+                        SUBROUTINE PREBD4
+C                       *****************
+C
+     *(X1,X2,A11,A12,A21,A22,B1,B2,D11,D12,D21,D22,
+     * MESH,PREXSM,DIADON)
+C
+C***********************************************************************
+C BIEF VERSION 5.1           23/12/94  J.M. HERVOUET (LNH)  30 87 80 18
+C***********************************************************************
+C
+C    FONCTION:  PRECONDITIONNEMENT BLOC-DIAGONAL D'UN SYSTEME A X = B
+C
+C-----------------------------------------------------------------------
+C                             ARGUMENTS
+C .________________.____.______________________________________________.
+C |      NOM       |MODE|                   ROLE                       |
+C |________________|____|______________________________________________|
+C |   X1,2         |<-->|  VALEURS A L' ETAPE N+1.
+C |   A11,12,21,22 | -->|  MATRICE
+C |   B1,2         | -->|  SECONDS MEMBRES DU SYSTEME.
+C |   D11,12,21,22 |<-- |  STOCKAGE DE MATRICES DIAGONALES
+C |   MESH         | -->|  BLOC DES ENTIERS DU MAILLAGE.
+C |   PREXSM       | -->|  .TRUE. : ON PRECONDITIONNE X,X2,X3 ET SM
+C |   DIADON       | -->|  .TRUE. : LES DIAGONALES SONT DONNEES.
+C |________________|____|______________________________________________
+C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
+C-----------------------------------------------------------------------
+C
+C PROGRAMMES APPELES : OS , OM
+C
+C**********************************************************************
+C
+      USE BIEF, EX_PREBD4 => PREBD4
+C
+      IMPLICIT NONE
+      INTEGER LNG,LU
+      COMMON/INFO/LNG,LU
+C
+C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+     
+C
+      LOGICAL, INTENT(IN) :: PREXSM,DIADON
+C
+C-----------------------------------------------------------------------
+C
+C  STRUCTURES DE VECTEURS
+C
+      TYPE(BIEF_OBJ), INTENT(INOUT) :: X1,B2,D11,D12,D21,D22
+      TYPE(BIEF_OBJ), INTENT(IN)    :: X2,B1
+C
+C-----------------------------------------------------------------------
+C
+C  STRUCTURES DE MATRICE
+C
+      TYPE(BIEF_OBJ), INTENT(INOUT) :: A11,A12,A21,A22
+C
+C-----------------------------------------------------------------------
+C
+C  STRUCTURE DE MAILLAGE
+C
+      TYPE(BIEF_MESH), INTENT(INOUT) :: MESH
+C
+C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+C
+      INTEGER I,NPOIN1,NPOIN2
+      DOUBLE PRECISION C
+C
+C-----------------------------------------------------------------------
+C
+      NPOIN1 = X1%DIM1
+      NPOIN2 = X2%DIM1
+C
+      IF(NPOIN2.NE.NPOIN1) THEN
+        IF(LNG.EQ.1) WRITE(LU,100)
+        IF(LNG.EQ.2) WRITE(LU,200)
+100     FORMAT(1X,'PREBD4 (BIEF) : MATRICES RECTANGULAIRES',/,1X,
+     *  'PRECONDITIONNEMENT BLOC-DIAGONAL IMPOSSIBLE DANS CE CAS')
+200     FORMAT(1X,'PREBD4 (BIEF) : RECTANGULAR MATRICES',/,1X,
+     *  'BLOCK-DIAGONAL PRECONDITIONING IMPOSSIBLE IN THIS CASE')
+        CALL PLANTE(0)
+        STOP
+      ENDIF
+C
+C-----------------------------------------------------------------------
+C
+C  PREPARATION DES DIAGONALES :
+C
+      IF(.NOT.DIADON) THEN
+C
+        CALL OS( 'X=Y     ' , D11 , A11%D , D11 , C )
+        CALL OS( 'X=Y     ' , D12 , A12%D , D12 , C )
+        CALL OS( 'X=Y     ' , D21 , A21%D , D21 , C )
+        CALL OS( 'X=Y     ' , D22 , A22%D , D22 , C )
+C
+C  TEST POUR SE RAMENER AU PRECONDITIONNEMENT DIAGONAL
+C
+C       CALL OS( 'X=C     ' , D12 , A12%D , Z , 0.D0 )
+C       CALL OS( 'X=C     ' , D21 , A21%D , Z , 0.D0 )
+C
+C  FIN DU TEST POUR SE RAMENER AU PRECONDITIONNEMENT DIAGONAL
+C
+      ENDIF
+C
+C-----------------------------------------------------------------------
+C
+C  DECOMPOSITION L D U DU BLOC DES DIAGONALES :
+C
+C     D11 NE SERT PLUS QUE PAR SON INVERSE
+      CALL OS( 'X=1/Y   ' , D11 , D11 , D11 , C)
+C
+      DO 10 I = 1,NPOIN1
+C
+        D21%R(I) = D21%R(I) * D11%R(I)
+        D22%R(I) = D22%R(I) - D21%R(I) * D12%R(I)
+        D12%R(I) = D12%R(I) * D11%R(I)
+C
+10    CONTINUE
+C
+C-----------------------------------------------------------------------
+C
+C CHANGEMENT DE VARIABLES :
+C
+      IF(PREXSM) THEN
+C
+        CALL OS( 'X=X+YZ  ' , X1 , X2 , D12 , C )
+C
+      ENDIF
+C
+C  ON CALCULE LA RACINE ET
+C  ON INVERSE D11,D22,D33. DESORMAIS ILS NE SERVENT PLUS QUE SOUS
+C  CETTE FORME
+C
+C     INVERSE DE D11 DEJA FAIT PLUS HAUT.
+      CALL OS( 'X=1/Y   ' , D22 , D22 , D22 , C )
+      CALL OS( 'X=SQR(Y)' , D11 , D11 , D11 , C )
+      CALL OS( 'X=SQR(Y)' , D22 , D22 , D22 , C )
+C
+C=======================================================================
+C MULTIPLICATION DE A A GAUCHE PAR L'INVERSE DE L
+C=======================================================================
+C
+C A21 :
+      CALL OM( 'M=M-DN  ' , A21 , A11 , D21 , C , MESH)
+C A22 :
+      CALL OM( 'M=M-DN  ' , A22 , A12 , D21 , C , MESH)
+C
+C=======================================================================
+C MULTIPLICATION DE A A DROITE PAR L'INVERSE DE U
+C=======================================================================
+C
+C A12 :
+      CALL OM( 'M=M-ND  ' , A12 , A11 , D12 , C , MESH)
+C A22 :
+      CALL OM( 'M=M-ND  ' , A22 , A21 , D12 , C , MESH)
+C
+C-----------------------------------------------------------------------
+C
+C NOUVEAU SECOND MEMBRE
+C
+      IF(PREXSM) THEN
+C
+      DO 21 I = 1,NPOIN1
+        B2%R(I) = B2%R(I) - D21%R(I) * B1%R(I)
+21    CONTINUE
+C
+      ENDIF
+C
+C-----------------------------------------------------------------------
+C
+      RETURN
+      END 
+ 
+ 
