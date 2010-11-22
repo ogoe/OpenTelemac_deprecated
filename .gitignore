@@ -51,7 +51,6 @@ lib
 *.cvs
 # cmake files
 CMakeCache.txt
-CMakeLists.txt
 cmake_install.cmake
 install_manifest.txt
 
