@@ -26,6 +26,10 @@ C
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
 C
+      INTEGER NDS(0:81,7)
+C
+      COMMON/NODES/NDS
+C
 C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 C
 C
@@ -496,7 +500,7 @@ C***********************************************************************
 C
 c     MESH%NPTFR=TMP
 c      MESH%NPTFRX=TMP
-       nds(1,5)= MESH%NPTFR
+      NDS(1,5)= MESH%NPTFR
 C CONTROLES :
 C
       ISTOP=0
