@@ -8,8 +8,8 @@ if (Fortran_COMPILER_NAME STREQUAL "gfortran")
 # gfortran
 #  set (CMAKE_Fortran_FLAGS_RELEASE "-fconvert=big-endian -frecord-marker=4 -funroll-all-loops -fno-f2c -O3")
 #  set (CMAKE_Fortran_FLAGS_DEBUG   "-fconvert=big-endian -frecord-marker=4 -fno-f2c -O0 -g")
-  set (CMAKE_Fortran_FLAGS_RELEASE "-funroll-all-loops -fno-f2c -O3")
-  set (CMAKE_Fortran_FLAGS_DEBUG   "-fno-f2c -O0 -g")
+  set (CMAKE_Fortran_FLAGS_RELEASE "-funroll-all-loops -fno-f2c -O3 -m64")
+  set (CMAKE_Fortran_FLAGS_DEBUG   "-fno-f2c -m64 -O0 -g")
 elseif (Fortran_COMPILER_NAME STREQUAL "g95")
   set (CMAKE_Fortran_FLAGS_RELEASE "-O3")
   set (CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g")
@@ -43,3 +43,31 @@ add_subdirectory(sisyphe/sisyphe_${TELEMAC_VERSION}/sources)
 add_subdirectory(tomawac/toma_${TELEMAC_VERSION}/sources)
 add_subdirectory(telemac2d/tel2d_${TELEMAC_VERSION}/sources)
 add_subdirectory(bin/sel2vtk_dir)
+
+#Dependencies
+add_dependencies(special${TELEMAC_VERSION} bief${TELEMAC_VERSION} )
+
+add_dependencies(sisyphe${TELEMAC_VERSION}
+                 bief${TELEMAC_VERSION} damo${TELEMAC_VERSION} paravoid${TELEMAC_VERSION}
+                 mumpsvoid${TELEMAC_VERSION} special${TELEMAC_VERSION} )
+
+add_dependencies(sisyphe${TELEMAC_VERSION}.exe sisyphe${TELEMAC_VERSION} )
+
+add_dependencies(telemac2d${TELEMAC_VERSION} 
+                 bief${TELEMAC_VERSION} damo${TELEMAC_VERSION} paravoid${TELEMAC_VERSION}
+                 mumpsvoid${TELEMAC_VERSION} special${TELEMAC_VERSION} sisyphe${TELEMAC_VERSION})
+
+add_dependencies(telemac2d${TELEMAC_VERSION}.exe telemac2d${TELEMAC_VERSION} )
+
+add_dependencies(tomawac${TELEMAC_VERSION}
+                 bief${TELEMAC_VERSION} damo${TELEMAC_VERSION} paravoid${TELEMAC_VERSION}
+                 mumpsvoid${TELEMAC_VERSION} special${TELEMAC_VERSION} )
+
+add_dependencies(tomawac${TELEMAC_VERSION}.exe tomawac${TELEMAC_VERSION} )
+
+add_dependencies(artemis${TELEMAC_VERSION}
+                 bief${TELEMAC_VERSION} damo${TELEMAC_VERSION} paravoid${TELEMAC_VERSION}
+                 mumpsvoid${TELEMAC_VERSION} special${TELEMAC_VERSION} )
+
+add_dependencies(artemis${TELEMAC_VERSION}.exe artemis${TELEMAC_VERSION} )
+
