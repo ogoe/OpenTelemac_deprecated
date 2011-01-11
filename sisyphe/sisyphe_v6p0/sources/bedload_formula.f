@@ -53,7 +53,8 @@ C ---------------------------------------------------------------------C
 !           BEDLOAD_HUNZ_MEYER                                         !
 !           BEDLOAD_VANRIJN                                            !
 !           BEDLOAD_BAILARD                                            !
-!           BEDLOAD_DIBWAT                                             !
+!           BEDLOAD_DIBWAT   
+!           BEDLOAD_CHENG                                         !
 !           QSFORM                                                     !
 !                                                                      !
 !======================================================================!
@@ -303,6 +304,18 @@ C        Repartition arbitraire
            QSC%R(I)=XKV*QSC%R(I)*AVA(I)*HIDING%R(I)
          ENDDO
          ALPHA = -3.D0
+      ! ======================================= !
+      ! IV(20) - FORMULE DE DIBAJNIA ET WATANABE ! 
+      !         TRANSPORT TOTAL                 ! 
+      ! ======================================= !
+      
+      ELSEIF(ICF == 20) THEN
+
+         CALL BEDLOAD_CHENG(TETAP,NPOIN,DENS,GRAV,DM,DSTAR,QSC)
+         DO I=1,NPOIN
+           QSC%R(I)=XKV*QSC%R(I)*AVA(I)*HIDING%R(I)
+         ENDDO
+         ALPHA = -6.D0
 
       ! ============================================ !
       ! IV(0) - FORMULE PROGRAMMEE PAR L'UTILISATEUR !

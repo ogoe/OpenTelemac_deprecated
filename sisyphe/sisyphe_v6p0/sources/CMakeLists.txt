@@ -16,7 +16,7 @@ bedload_nerbed_vf.f        gf_user.f                  suspension_bilan.f
 bedload_calcdw.f           suspension_computation.f  
 bedload_dibwat.f           init_avai.f                suspension_dispersion.f 
 bedload_diffin.f           bedload_solidischarge.f    init_compo.f
-layer.f  suspension_erosion.f   
+bedload_cheng.f            layer.f                    suspension_erosion.f   
 suspension_erosion_coh.f   suspension_flux_mixte.f 
 bedload_direction.f        bedload_solvs_fe.f         init_constant.f
 suspension_depot.f
