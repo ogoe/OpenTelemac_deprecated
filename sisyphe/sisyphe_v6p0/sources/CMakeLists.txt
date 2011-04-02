@@ -41,6 +41,9 @@ bedload_interact.f         conlit.f                   point_sisyphe.f
 corstr_sisyphe.f           predes.f                         maxslope.f 
 init_transport.f           init_mixte.f               init_zero.f
 init_sediment.f
+neighbourpoints.f	point_height.f		point_volume.f	
+calc_neighb_grad.f	calc_critical_bottom_angle.f	neighbourelements.f
+sandslide.f
 sisyphe.f                 read_sections_sisyphe.f rescue_sisyphe_notperma.f   tassement.f)
 
 

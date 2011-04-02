@@ -502,5 +502,34 @@ C
 C
 C=======================================================================
 C
+C  SANDSLIDE RELATED STRUCTURES
+C
+C  ADDED BY OLIVER GOETHEL
+C  USED BY SISYPHE
+C=======================================================================
+C
+      TYPE NEIGHB
+       INTEGER :: ANZ    !Number of neighbourpoints
+       INTEGER :: NR(20) !neighbourpoints ID
+       DOUBLE PRECISION :: DIFFX(20),DIFFY(20),DIFFZF(20) !differences
+      END TYPE NEIGHB
+C
+C
+C
+      TYPE NEIGHB_ELEMENTS
+       INTEGER :: ANZ  !number of elements a point belongs to
+       INTEGER :: NR(20) !number of elements
+      END TYPE NEIGHB_ELEMENTS
+C
+C
+C
+      TYPE NEIGHB_GRAD
+       DOUBLE PRECISION :: HZ(20) !height differences
+       DOUBLE PRECISION :: L(20)  !length differences
+      END TYPE NEIGHB_GRAD
+C
+C
+C=======================================================================
+C
       END MODULE BIEF_DEF
  

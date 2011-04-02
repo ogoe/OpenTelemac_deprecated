@@ -469,6 +469,7 @@ C INDEX 57 est deja pris par le mot clef EXECUTABLE PAR DEFAUT
         ENDDO
       ENDIF
       SLIDE    = MOTLOG( ADRESS(3, 20) )
+      SLIDETYPE = MOTINT( ADRESS(1, 201) )
       DIFT     = MOTLOG( ADRESS(3, 21) )
       EFFPEN   = MOTLOG( ADRESS(3, 22) )
       IF(.NOT.EFFPEN) THEN

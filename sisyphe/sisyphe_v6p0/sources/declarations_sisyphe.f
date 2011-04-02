@@ -557,6 +557,19 @@ C-----------------------------------------------------------------------
 C
       TYPE (CHAIN_TYPE), ALLOCATABLE :: CHAIN(:)
 C
+C
+C-----------------------------------------------------------------------
+C
+C  13) SANDSLIDE RELATED VARS
+C
+C-----------------------------------------------------------------------
+      TYPE(NEIGHB), ALLOCATABLE :: ELEM(:)
+      TYPE(NEIGHB_ELEMENTS), ALLOCATABLE :: NEIGHB_ELEM(:)
+      TYPE(NEIGHB_GRAD), ALLOCATABLE :: NEIGHB_DIFF(:)
+      INTEGER SLIDETYPE
+C
+C-----------------------------------------------------------------------
+C
         SAVE   ! tres important
 C
       END MODULE DECLARATIONS_SISYPHE

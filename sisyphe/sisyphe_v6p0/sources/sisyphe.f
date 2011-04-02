@@ -726,6 +726,15 @@ C
 C
 C=======================================================================
 C
+C
+C      ISSL=0
+      CALL NEIGHBOURPOINTS (IKLE%I,NELEM,NPOIN)
+      CALL NEIGHBOURELEMENTS(NPOIN,NELEM,IKLE%I)
+C
+C
+C
+C=======================================================================
+C
 C     FIN DES INITIALISATIONS
          IF(DEBUG.GT.0) WRITE(LU,*) 'END_INITIALIZATION'
       ENDIF ! IF (PART==0 OR PART = -1)
@@ -1166,6 +1175,8 @@ C fin suspension
 !
         IF(ENTET) CALL ENTETE_SISYPHE(14,AT0,LT)
 !
+	IF(SLIDETYPE.EQ.0) THEN
+!
         IF(DEBUG.GT.0) WRITE(LU,*) 'APPEL DE MAXSLOPE'
         CALL MAXSLOPE(PHISED,ZF%R,ZR%R,MESH%XEL%R,MESH%YEL%R,MESH%NELEM,
      *                MESH%NELMAX,NPOIN,MESH%IKLE%I,T1,UNSV2D,MESH)
@@ -1178,7 +1189,13 @@ C fin suspension
           WRITE(LU,*) 'SLIDE NOT IMPLEMENTED WITH GRADED SEDIMENT'
           CALL PLANTE(1)
           STOP
-        ENDIF       
+        ENDIF 
+!
+        ELSE IF(SLIDETYPE.EQ.1) THEN
+         CALL OS('X=Y     ',X=T3,Y=ZF)
+         CALL SANDSLIDE(ZF,T3)
+         CALL OS('X=Y     ',X=ZF,Y=T3)
+        ENDIF
 !
       ENDIF
 !
@@ -1220,7 +1237,7 @@ C
         CALL OS('X=0     ',X=E)
       ENDIF
       IF(SUSP)  CALL OS('X=X+Y   ',X=E,Y=ZF_S)
-      IF(SLIDE) CALL OS('X=X+Y   ',X=E,Y=T1) 
+      IF(SLIDE .AND. SLIDETYPE.EQ.0) CALL OS('X=X+Y   ',X=E,Y=T1) 
       IF(TASS)  CALL OS('X=X+Y   ',X=E,Y=T3)
 !
       CALL OS('X=X+Y   ', X=ESOMT, Y=E)
