@@ -42,7 +42,7 @@ test.gb
 #mocs
 moc_*
 #
-lib
+#lib
 *.user
 *.png
 *.jpg
