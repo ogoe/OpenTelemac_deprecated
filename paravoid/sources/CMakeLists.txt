@@ -10,8 +10,8 @@ p_mpi_alltoallv_toma1.f p_mpi_alltoallv_toma2.f p_mpi_alltoallv_toma3.f p_mpi_al
 set_target_properties(paravoid${TELEMAC_VERSION} PROPERTIES PREFIX "")
 
 install(TARGETS paravoid${TELEMAC_VERSION}
-            RUNTIME DESTINATION paravoid/paravoid_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            LIBRARY DESTINATION paravoid/paravoid_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            ARCHIVE DESTINATION paravoid/paravoid_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME})
+            RUNTIME DESTINATION paravoid/${Fortran_COMPILER_NAME}
+            LIBRARY DESTINATION paravoid/${Fortran_COMPILER_NAME}
+            ARCHIVE DESTINATION paravoid/${Fortran_COMPILER_NAME})
 
 

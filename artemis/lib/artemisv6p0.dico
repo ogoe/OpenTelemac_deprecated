@@ -2620,16 +2620,16 @@ TYPE = CARACTERE
 INDEX = 55
 MNEMO = 'LINKLIBS'
 TAILLE = 5
-DEFAUT = 'artemis|arte_VVV|PPP|artemisMMMVVV.LLL';
-'bief|bief_VVV|PPP|biefMMMVVV.LLL';
-'damocles|damo_VVV|PPP|damoMMMVVV.LLL';
-'paravoid|paravoid_VVV|PPP|paravoidMMMVVV.LLL';
-'special|special_VVV|PPP|specialMMMVVV.LLL'
+DEFAUT = 'artemis|PPP|artemisMMMVVV.LLL';
+'bief|PPP|biefMMMVVV.LLL';
+'damocles|PPP|damoMMMVVV.LLL';
+'paravoid|PPP|paravoidMMMVVV.LLL';
+'special|PPP|specialMMMVVV.LLL'
 DEFAUT1 = 'artemis|arte_VVV|PPP|artemisMMMVVV.LLL';
-'bief|bief_VVV|PPP|biefMMMVVV.LLL';
-'damocles|damo_VVV|PPP|damoMMMVVV.LLL';
-'paravoid|paravoid_VVV|PPP|paravoidMMMVVV.LLL';
-'special|special_VVV|PPP|specialMMMVVV.LLL'
+'bief|PPP|biefMMMVVV.LLL';
+'damocles|PPP|damoMMMVVV.LLL';
+'paravoid|PPP|paravoidMMMVVV.LLL';
+'special|PPP|specialMMMVVV.LLL'
 RUBRIQUE = 'ENTREES-SORTIES, GENERALITES';'CALCUL'
 RUBRIQUE1 = 'INPUT-OUTPUT, INFORMATION';'COMPUTATIONAL INFORMATION'
 NIVEAU = 1
@@ -2652,8 +2652,8 @@ TYPE = CARACTERE
 INDEX = 56
 MNEMO = 'EXEDEF'
 TAILLE = 1
-DEFAUT  = 'artemis|arte_VVV|PPP|artemisMMMVVV.exe'
-DEFAUT1 = 'artemis|arte_VVV|PPP|artemisMMMVVV.exe'
+DEFAUT  = 'artemis|PPP|artemisMMMVVV.exe'
+DEFAUT1 = 'artemis|PPP|artemisMMMVVV.exe'
 RUBRIQUE = 'ENTREES-SORTIES, GENERALITES';'CALCUL'
 RUBRIQUE1 = 'INPUT-OUTPUT, INFORMATION';'COMPUTATIONAL INFORMATION'
 NIVEAU = 1
@@ -2666,8 +2666,8 @@ TYPE = CARACTERE
 INDEX = 57
 MNEMO = 'EXEDEFPARA'
 TAILLE = 1
-DEFAUT  = 'artemis|arte_VVV|PPP|artemisMMMVVV_MP.exe'
-DEFAUT1 = 'artemis|arte_VVV|PPP|artemisMMMVVV_MP.exe'
+DEFAUT  = 'artemis|PPP|artemisMMMVVV_MP.exe'
+DEFAUT1 = 'artemis|PPP|artemisMMMVVV_MP.exe'
 RUBRIQUE = 'ENTREES-SORTIES, GENERALITES';'CALCUL'
 RUBRIQUE1 = 'INPUT-OUTPUT, INFORMATION';'COMPUTATIONAL INFORMATION'
 NIVEAU = 1

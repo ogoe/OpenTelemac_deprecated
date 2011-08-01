@@ -101,13 +101,13 @@ voisin.f     voisin31.f     waitfor.f     write_data.f write_data_serafin.f   wr
 set_target_properties(bief${TELEMAC_VERSION} PROPERTIES PREFIX "")
 
 install(TARGETS bief${TELEMAC_VERSION}
-            RUNTIME DESTINATION bief/bief_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            LIBRARY DESTINATION bief/bief_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            ARCHIVE DESTINATION bief/bief_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME})
+            RUNTIME DESTINATION bief/${Fortran_COMPILER_NAME}
+            LIBRARY DESTINATION bief/${Fortran_COMPILER_NAME}
+            ARCHIVE DESTINATION bief/${Fortran_COMPILER_NAME})
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/bief.mod ${CMAKE_CURRENT_BINARY_DIR}/bief_def.mod 
                  ${CMAKE_CURRENT_BINARY_DIR}/declarations_telemac.mod ${CMAKE_CURRENT_BINARY_DIR}/m_med.mod ${CMAKE_CURRENT_BINARY_DIR}/streamline.mod
-            DESTINATION bief/bief_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME})
+            DESTINATION bief/${Fortran_COMPILER_NAME})
 
 
 

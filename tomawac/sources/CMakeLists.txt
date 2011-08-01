@@ -1,6 +1,6 @@
 #
 set(CMAKE_INCLUDE_CURRENT_DIR On)
-include_directories("${PROJECT_BINARY_DIR}/bief/bief_${TELEMAC_VERSION}/sources")
+include_directories("${PROJECT_BINARY_DIR}/bief/sources")
 #
 #define the library
 add_library(tomawac${TELEMAC_VERSION} STATIC declarations_tomawac.f tomawac_mpi.f tomawac_mpi_tools.f
@@ -34,21 +34,21 @@ wac.f wnscou.f wpower.f )
 set_target_properties(tomawac${TELEMAC_VERSION} PROPERTIES PREFIX "")
 
 install(TARGETS tomawac${TELEMAC_VERSION}
-            RUNTIME DESTINATION tomawac/toma_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            LIBRARY DESTINATION tomawac/toma_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            ARCHIVE DESTINATION tomawac/toma_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME})
+            RUNTIME DESTINATION tomawac/${Fortran_COMPILER_NAME}
+            LIBRARY DESTINATION tomawac/${Fortran_COMPILER_NAME}
+            ARCHIVE DESTINATION tomawac/${Fortran_COMPILER_NAME})
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/declarations_tomawac.mod
               ${CMAKE_CURRENT_BINARY_DIR}/tomawac_mpi.mod ${CMAKE_CURRENT_BINARY_DIR}/tomawac_mpi_tools.mod
-        DESTINATION tomawac/toma_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME})
+        DESTINATION tomawac/${Fortran_COMPILER_NAME})
 
 
-link_directories("${PROJECT_BINARY_DIR}/special/special_${TELEMAC_VERSION}/sources"
-                 "${PROJECT_BINARY_DIR}/paravoid/paravoid_${TELEMAC_VERSION}/sources"
-                 "${PROJECT_BINARY_DIR}/mumpsvoid/mumpsvoid_${TELEMAC_VERSION}/sources"
-                 "${PROJECT_BINARY_DIR}/bief/bief_${TELEMAC_VERSION}/sources" 
-                 "${PROJECT_BINARY_DIR}/damocles/damo_${TELEMAC_VERSION}/sources"
-                 "${PROJECT_BINARY_DIR}/tomawac/toma_${TELEMAC_VERSION}/sources")
+link_directories("${PROJECT_BINARY_DIR}/special/sources"
+                 "${PROJECT_BINARY_DIR}/paravoid/sources"
+                 "${PROJECT_BINARY_DIR}/mumpsvoid/sources"
+                 "${PROJECT_BINARY_DIR}/bief/sources" 
+                 "${PROJECT_BINARY_DIR}/damocles/sources"
+                 "${PROJECT_BINARY_DIR}/tomawac/sources")
 
 add_executable(tomawac${TELEMAC_VERSION}.exe homere_tomawac.f)
 target_link_libraries(tomawac${TELEMAC_VERSION}.exe tomawac${TELEMAC_VERSION}
@@ -59,7 +59,7 @@ target_link_libraries(tomawac${TELEMAC_VERSION}.exe tomawac${TELEMAC_VERSION}
                                                     special${TELEMAC_VERSION} )
 
 install(TARGETS tomawac${TELEMAC_VERSION}.exe
-            RUNTIME DESTINATION tomawac/toma_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            LIBRARY DESTINATION tomawac/toma_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            ARCHIVE DESTINATION tomawac/toma_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME})
+            RUNTIME DESTINATION tomawac/${Fortran_COMPILER_NAME}
+            LIBRARY DESTINATION tomawac/${Fortran_COMPILER_NAME}
+            ARCHIVE DESTINATION tomawac/${Fortran_COMPILER_NAME})
 

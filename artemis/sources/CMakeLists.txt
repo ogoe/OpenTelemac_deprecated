@@ -1,7 +1,7 @@
 #
 set(CMAKE_INCLUDE_CURRENT_DIR On)
-include_directories("${PROJECT_BINARY_DIR}/bief/bief_${TELEMAC_VERSION}/sources" 
-                    "${PROJECT_BINARY_DIR}/special/special_${TELEMAC_VERSION}/sources")
+include_directories("${PROJECT_BINARY_DIR}/bief/sources" 
+                    "${PROJECT_BINARY_DIR}/special/sources")
 #
 #define the library
 add_library(artemis${TELEMAC_VERSION} STATIC declarations_artemis.f interface_artemis.f 
@@ -18,20 +18,20 @@ utimp.f)
 set_target_properties(artemis${TELEMAC_VERSION} PROPERTIES PREFIX "")
 
 install(TARGETS artemis${TELEMAC_VERSION}
-            RUNTIME DESTINATION artemis/arte_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            LIBRARY DESTINATION artemis/arte_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            ARCHIVE DESTINATION artemis/arte_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME})
+            RUNTIME DESTINATION artemis/${Fortran_COMPILER_NAME}
+            LIBRARY DESTINATION artemis/${Fortran_COMPILER_NAME}
+            ARCHIVE DESTINATION artemis/${Fortran_COMPILER_NAME})
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/declarations_artemis.mod ${CMAKE_CURRENT_BINARY_DIR}/interface_artemis.mod
-        DESTINATION artemis/arte_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME})
+        DESTINATION artemis/${Fortran_COMPILER_NAME})
 
 
-link_directories("${PROJECT_BINARY_DIR}/special/special_${TELEMAC_VERSION}/sources"
-                 "${PROJECT_BINARY_DIR}/paravoid/paravoid_${TELEMAC_VERSION}/sources"
-                 "${PROJECT_BINARY_DIR}/mumpsvoid/mumpsvoid_${TELEMAC_VERSION}/sources"
-                 "${PROJECT_BINARY_DIR}/bief/bief_${TELEMAC_VERSION}/sources" 
-                 "${PROJECT_BINARY_DIR}/damocles/damo_${TELEMAC_VERSION}/sources"
-                 "${PROJECT_BINARY_DIR}/artemis/arte_${TELEMAC_VERSION}/sources")
+link_directories("${PROJECT_BINARY_DIR}/special/sources"
+                 "${PROJECT_BINARY_DIR}/paravoid/sources"
+                 "${PROJECT_BINARY_DIR}/mumpsvoid/sources"
+                 "${PROJECT_BINARY_DIR}/bief/sources" 
+                 "${PROJECT_BINARY_DIR}/damocles/sources"
+                 "${PROJECT_BINARY_DIR}/artemis/sources")
 
 add_executable(artemis${TELEMAC_VERSION}.exe homere_artemis.f)
 target_link_libraries(artemis${TELEMAC_VERSION}.exe artemis${TELEMAC_VERSION}
@@ -42,7 +42,7 @@ target_link_libraries(artemis${TELEMAC_VERSION}.exe artemis${TELEMAC_VERSION}
                                                     special${TELEMAC_VERSION} )
 
 install(TARGETS artemis${TELEMAC_VERSION}.exe
-            RUNTIME DESTINATION artemis/arte_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            LIBRARY DESTINATION artemis/arte_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            ARCHIVE DESTINATION artemis/arte_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME})
+            RUNTIME DESTINATION artemis/${Fortran_COMPILER_NAME}
+            LIBRARY DESTINATION artemis/${Fortran_COMPILER_NAME}
+            ARCHIVE DESTINATION artemis/${Fortran_COMPILER_NAME})
 

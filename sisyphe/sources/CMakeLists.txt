@@ -1,6 +1,6 @@
 #
 set(CMAKE_INCLUDE_CURRENT_DIR On)
-include_directories("${PROJECT_BINARY_DIR}/bief/bief_${TELEMAC_VERSION}/sources")
+include_directories("${PROJECT_BINARY_DIR}/bief/sources")
 #
 #define the library
 add_library(sisyphe${TELEMAC_VERSION} STATIC declarations_sisyphe.f         
@@ -50,21 +50,21 @@ sisyphe.f                 read_sections_sisyphe.f rescue_sisyphe_notperma.f   ta
 set_target_properties(sisyphe${TELEMAC_VERSION} PROPERTIES PREFIX "")
 
 install(TARGETS sisyphe${TELEMAC_VERSION}
-            RUNTIME DESTINATION sisyphe/sisyphe_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            LIBRARY DESTINATION sisyphe/sisyphe_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            ARCHIVE DESTINATION sisyphe/sisyphe_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME})
+            RUNTIME DESTINATION sisyphe/${Fortran_COMPILER_NAME}
+            LIBRARY DESTINATION sisyphe/${Fortran_COMPILER_NAME}
+            ARCHIVE DESTINATION sisyphe/${Fortran_COMPILER_NAME})
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/declarations_sisyphe.mod ${CMAKE_CURRENT_BINARY_DIR}/interface_sisyphe_bedload.mod
               ${CMAKE_CURRENT_BINARY_DIR}/interface_sisyphe.mod ${CMAKE_CURRENT_BINARY_DIR}/interface_sisyphe_suspension.mod
-        DESTINATION sisyphe/sisyphe_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME})
+        DESTINATION sisyphe/${Fortran_COMPILER_NAME})
 
 
-link_directories("${PROJECT_BINARY_DIR}/special/special_${TELEMAC_VERSION}/sources"
-                 "${PROJECT_BINARY_DIR}/paravoid/paravoid_${TELEMAC_VERSION}/sources"
-                 "${PROJECT_BINARY_DIR}/mumpsvoid/mumpsvoid_${TELEMAC_VERSION}/sources"
-                 "${PROJECT_BINARY_DIR}/bief/bief_${TELEMAC_VERSION}/sources" 
-                 "${PROJECT_BINARY_DIR}/damocles/damo_${TELEMAC_VERSION}/sources"
-                 "${PROJECT_BINARY_DIR}/sisyphe/sispyhe_${TELEMAC_VERSION}/sources")
+link_directories("${PROJECT_BINARY_DIR}/special/sources"
+                 "${PROJECT_BINARY_DIR}/paravoid/sources"
+                 "${PROJECT_BINARY_DIR}/mumpsvoid/sources"
+                 "${PROJECT_BINARY_DIR}/bief/sources" 
+                 "${PROJECT_BINARY_DIR}/damocles/sources"
+                 "${PROJECT_BINARY_DIR}/sisyphe/sources")
 
 add_executable(sisyphe${TELEMAC_VERSION}.exe homere_sisyphe.f)
 target_link_libraries(sisyphe${TELEMAC_VERSION}.exe sisyphe${TELEMAC_VERSION}
@@ -75,7 +75,7 @@ target_link_libraries(sisyphe${TELEMAC_VERSION}.exe sisyphe${TELEMAC_VERSION}
                                                     special${TELEMAC_VERSION} )
 
 install(TARGETS sisyphe${TELEMAC_VERSION}.exe
-            RUNTIME DESTINATION sisyphe/sisyphe_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            LIBRARY DESTINATION sisyphe/sisyphe_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            ARCHIVE DESTINATION sisyphe/sisyphe_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME})
+            RUNTIME DESTINATION sisyphe/${Fortran_COMPILER_NAME}
+            LIBRARY DESTINATION sisyphe/${Fortran_COMPILER_NAME}
+            ARCHIVE DESTINATION sisyphe/${Fortran_COMPILER_NAME})
 

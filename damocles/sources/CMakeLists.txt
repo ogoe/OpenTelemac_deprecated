@@ -6,8 +6,8 @@ minus.f   next.f  precar.f prev.f  preval.f realu.f )
 set_target_properties(damo${TELEMAC_VERSION} PROPERTIES PREFIX "")
 
 install(TARGETS damo${TELEMAC_VERSION}
-            RUNTIME DESTINATION damocles/damo_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            LIBRARY DESTINATION damocles/damo_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            ARCHIVE DESTINATION damocles/damo_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME})
+            RUNTIME DESTINATION damocles/${Fortran_COMPILER_NAME}
+            LIBRARY DESTINATION damocles/${Fortran_COMPILER_NAME}
+            ARCHIVE DESTINATION damocles/${Fortran_COMPILER_NAME})
 
 

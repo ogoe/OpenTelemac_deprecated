@@ -1,8 +1,8 @@
 #
 set(CMAKE_INCLUDE_CURRENT_DIR On)
-include_directories("${PROJECT_BINARY_DIR}/bief/bief_${TELEMAC_VERSION}/sources"
-                    "${PROJECT_BINARY_DIR}/special/special_${TELEMAC_VERSION}/sources"
-                    "${PROJECT_BINARY_DIR}/sisyphe/sisyphe_${TELEMAC_VERSION}/sources" )
+include_directories("${PROJECT_BINARY_DIR}/bief/sources"
+                    "${PROJECT_BINARY_DIR}/special/sources"
+                    "${PROJECT_BINARY_DIR}/sisyphe/sources" )
 #
 #define the library
 add_library(telemac2d${TELEMAC_VERSION} STATIC friction_def.f
@@ -45,22 +45,22 @@ volfin.f vusce.f vvsce.f wrihyd.f zeropsi.f zerophi.f )
 set_target_properties(telemac2d${TELEMAC_VERSION} PROPERTIES PREFIX "")
 
 install(TARGETS telemac2d${TELEMAC_VERSION}
-            RUNTIME DESTINATION telemac2d/tel2d_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            LIBRARY DESTINATION telemac2d/tel2d_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            ARCHIVE DESTINATION telemac2d/tel2d_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME})
+            RUNTIME DESTINATION telemac2d/${Fortran_COMPILER_NAME}
+            LIBRARY DESTINATION telemac2d/${Fortran_COMPILER_NAME}
+            ARCHIVE DESTINATION telemac2d/${Fortran_COMPILER_NAME})
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/declarations_telemac2d.mod ${CMAKE_CURRENT_BINARY_DIR}/interface_telemac2d.mod
               ${CMAKE_CURRENT_BINARY_DIR}/friction_def.mod ${CMAKE_CURRENT_BINARY_DIR}/m_coupling_estel3d.mod
-        DESTINATION telemac2d/tel2d_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME})
+        DESTINATION telemac2d/${Fortran_COMPILER_NAME})
 
 
-link_directories("${PROJECT_BINARY_DIR}/special/special_${TELEMAC_VERSION}/sources"
-                 "${PROJECT_BINARY_DIR}/paravoid/paravoid_${TELEMAC_VERSION}/sources"
-                 "${PROJECT_BINARY_DIR}/mumpsvoid/mumpsvoid_${TELEMAC_VERSION}/sources"
-                 "${PROJECT_BINARY_DIR}/bief/bief_${TELEMAC_VERSION}/sources" 
-                 "${PROJECT_BINARY_DIR}/damocles/damo_${TELEMAC_VERSION}/sources"
-                 "${PROJECT_BINARY_DIR}/sisyphe/sisyphe_${TELEMAC_VERSION}/sources"
-                 "${PROJECT_BINARY_DIR}/telemac2d/tel2d_${TELEMAC_VERSION}/sources")
+link_directories("${PROJECT_BINARY_DIR}/special/sources"
+                 "${PROJECT_BINARY_DIR}/paravoid/sources"
+                 "${PROJECT_BINARY_DIR}/mumpsvoid/sources"
+                 "${PROJECT_BINARY_DIR}/bief/sources" 
+                 "${PROJECT_BINARY_DIR}/damocles/sources"
+                 "${PROJECT_BINARY_DIR}/sisyphe/sources"
+                 "${PROJECT_BINARY_DIR}/telemac2d/sources")
 
 add_executable(telemac2d${TELEMAC_VERSION}.exe homere_telemac2d.f)
 target_link_libraries(telemac2d${TELEMAC_VERSION}.exe telemac2d${TELEMAC_VERSION}
@@ -72,7 +72,7 @@ target_link_libraries(telemac2d${TELEMAC_VERSION}.exe telemac2d${TELEMAC_VERSION
                                                     special${TELEMAC_VERSION} )
 
 install(TARGETS telemac2d${TELEMAC_VERSION}.exe
-            RUNTIME DESTINATION telemac2d/tel2d_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            LIBRARY DESTINATION telemac2d/tel2d_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME}
-            ARCHIVE DESTINATION telemac2d/tel2d_${TELEMAC_VERSION}/${Fortran_COMPILER_NAME})
+            RUNTIME DESTINATION telemac2d/${Fortran_COMPILER_NAME}
+            LIBRARY DESTINATION telemac2d/${Fortran_COMPILER_NAME}
+            ARCHIVE DESTINATION telemac2d/${Fortran_COMPILER_NAME})
 
