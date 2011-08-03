@@ -686,47 +686,47 @@ sub get_code_params
   my $refVER= @_[5];
 
 #Traitement
-if ($NOMCOD eq "telemac3d") {    $$refCH    = "TELEMAC3D$ps"."TEL3D_";
+if ($NOMCOD eq "telemac3d") {    $$refCH    = "TELEMAC3D";
                                  $$refRAC   = "TELEMAC3D";
                                  $$refLNG   = $$refH{"LNGTEL3D"};
                                  $$refVER   = $$refH{"VERSTEL3D"};          }
-if ($NOMCOD eq "telemac2d") {    $$refCH    = "TELEMAC2D$ps"."TEL2D_";
+if ($NOMCOD eq "telemac2d") {    $$refCH    = "TELEMAC2D";
                                  $$refRAC   = "TELEMAC2D";
                                  $$refLNG   = $$refH{"LNGTEL"};
                                  $$refVER   = $$refH{"VERSTEL"};            }
-if ($NOMCOD eq "stbtel")    {    $$refCH    = "STBTEL$ps"."STBTEL_";
+if ($NOMCOD eq "stbtel")    {    $$refCH    = "STBTEL";
                                  $$refRAC   = "STBTEL";
                                  $$refLNG   = $$refH{"LNGSTB"};
                                  $$refVER   = $$refH{"VERSSTB"};            }
-if ($NOMCOD eq "postel3d")  {    $$refCH    = "POSTEL3D$ps"."POSTEL3D_";
+if ($NOMCOD eq "postel3d")  {    $$refCH    = "POSTEL3D";
                                  $$refRAC   = "POSTEL3D";
                                  $$refLNG   = $$refH{"LNGPOSTE"};
                                  $$refVER   = $$refH{"VERSPOSTE"};          }
-if ($NOMCOD eq "artemis")   {    $$refCH    = "ARTEMIS$ps"."ARTE_";
+if ($NOMCOD eq "artemis")   {    $$refCH    = "ARTEMIS";
                                  $$refRAC   = "ARTEMIS";
                                  $$refLNG   = $$refH{"LNGARTE"};
                                  $$refVER   = $$refH{"VERSARTE"};           }
-if ($NOMCOD eq "sisyphe")   {    $$refCH    = "SISYPHE$ps"."SISYPHE_";
+if ($NOMCOD eq "sisyphe")   {    $$refCH    = "SISYPHE";
                                  $$refRAC   = "SISYPHE";
                                  $$refLNG   = $$refH{"LNGSISY"};
                                  $$refVER   = $$refH{"VERSSISY"};           }
-if ($NOMCOD eq "cowadis")   {    $$refCH    = "COWADIS$ps"."COWA_";
+if ($NOMCOD eq "cowadis")   {    $$refCH    = "COWADIS";
                                  $$refRAC   = "COWADIS";
                                  $$refLNG   = $$refH{"LNGCOWA"};
                                  $$refVER   = $$refH{"VERSCOWA"};           }
-if ($NOMCOD eq "estel2d")   {    $$refCH    = "ESTEL2D$ps"."ESTEL2D_";
+if ($NOMCOD eq "estel2d")   {    $$refCH    = "ESTEL2D";
                                  $$refRAC   = "ESTEL2D";
                                  $$refLNG   = $$refH{"LNGESTEL2"};
                                  $$refVER   = $$refH{"VERSESTEL2"};          }
-if ($NOMCOD eq "estel3d")   {    $$refCH    = "ESTEL3D$ps"."ESTEL3D_";
+if ($NOMCOD eq "estel3d")   {    $$refCH    = "ESTEL3D";
                                  $$refRAC   = "ESTEL3D";
                                  $$refLNG   = $$refH{"LNGESTEL3"};
                                  $$refVER   = $$refH{"VERSESTEL3"};          }
-if ($NOMCOD eq "tomawac")   {    $$refCH    = "TOMAWAC$ps"."TOMA_";
+if ($NOMCOD eq "tomawac")   {    $$refCH    = "TOMAWAC";
                                  $$refRAC   = "TOMAWAC";
                                  $$refLNG   = $$refH{"LNGTOMA"};
                                  $$refVER   = $$refH{"VERSTOMA"};           }
-if ($NOMCOD eq "spartacus2d")   {    $$refCH    = "SPARTACUS2D$ps"."SPARTACUS2D_";
+if ($NOMCOD eq "spartacus2d")   {    $$refCH    = "SPARTACUS2D";
                                  $$refRAC   = "SPARTACUS2D";
                                  $$refLNG   = $$refH{"LNGSPA"};
                                  $$refVER   = $$refH{"VERSSPA"};           }
@@ -766,7 +766,7 @@ sub get_mots
 #
 #-- Lecture du dictionnaire du code dans sa version par defaut
 #   et du fichier CAS
-$$refDICO="$mPROJ$ps$mCHEM$mVDEF$ps"."lib$ps$mNOMCOD$mVDEF".".dico";
+$$refDICO="$mPROJ$ps$mCHEM$ps"."lib$ps$mNOMCOD$mVDEF".".dico";
 %Mots = tm_casdico::lecture_fichier_dictionnaire($$refDICO);
 if (keys(%Mots) == 0 )
   {  ecrire("ERREUR : le dictionnaire n'existe pas :",
@@ -1085,7 +1085,7 @@ else
     $fileToDelete="";
     $listJobs="at -l";
     $atFormat="echo $REPLANCE$ps"."$REP$ps"."$GENERIQUE.bat | at %s";
-    $cmd_tim="time";
+    $cmd_tim="";
     $exe_ext="";
 #recuperation du username pour tuer job actif : $LOGIN, $LOGUSER
     $user_name=$ENV{"LOGIN"};
