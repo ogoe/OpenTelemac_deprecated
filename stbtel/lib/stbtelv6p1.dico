@@ -869,16 +869,16 @@ TYPE = CARACTERE
 INDEX = 55
 MNEMO = 'LINKLIBS'
 TAILLE = 5
-DEFAUT = 'stbtel|stbtel_VVV|PPP|stbtelMMMVVV.LLL';
-'bief|bief_VVV|PPP|biefMMMVVV.LLL';
-'damocles|damo_VVV|PPP|damoMMMVVV.LLL';
-'special|special_VVV|PPP|specialMMMVVV.LLL';
-'paravoid|paravoid_VVV|PPP|paravoidMMMVVV.LLL'
-DEFAUT1 = 'stbtel|stbtel_VVV|PPP|stbtelMMMVVV.LLL';
-'bief|bief_VVV|PPP|biefMMMVVV.LLL';
-'damocles|damo_VVV|PPP|damoMMMVVV.LLL';
-'special|special_VVV|PPP|specialMMMVVV.LLL';
-'paravoid|paravoid_VVV|PPP|paravoidMMMVVV.LLL'
+DEFAUT = 'stbtel|PPP|stbtelMMMVVV.LLL';
+'bief|PPP|biefMMMVVV.LLL';
+'damocles|PPP|damoMMMVVV.LLL';
+'special|PPP|specialMMMVVV.LLL';
+'paravoid|PPP|paravoidMMMVVV.LLL'
+DEFAUT1 = 'stbtel|PPP|stbtelMMMVVV.LLL';
+'biefPPP|biefMMMVVV.LLL';
+'damocles|PPP|damoMMMVVV.LLL';
+'special|PPP|specialMMMVVV.LLL';
+'paravoid|PPP|paravoidMMMVVV.LLL'
 RUBRIQUE = 'ENTREES-SORTIES, GENERALITES';'CALCUL'
 RUBRIQUE1 = 'INPUT-OUTPUT, INFORMATION';'COMPUTATIONAL INFORMATION'
 NIVEAU = 1
@@ -902,8 +902,8 @@ TYPE = CARACTERE
 INDEX = 56
 MNEMO = 'EXEDEF'
 TAILLE = 1
-DEFAUT  = 'stbtel|stbtel_VVV|PPP|stbtelMMMVVV.exe'
-DEFAUT1 = 'stbtel|stbtel_VVV|PPP|stbtelMMMVVV.exe'
+DEFAUT  = 'stbtel|PPP|stbtelMMMVVV.exe'
+DEFAUT1 = 'stbtel|PPP|stbtelMMMVVV.exe'
 RUBRIQUE = 'ENTREES-SORTIES, GENERALITES';'CALCUL'
 RUBRIQUE1 = 'INPUT-OUTPUT, INFORMATION';'COMPUTATIONAL INFORMATION'
 NIVEAU = 1
@@ -916,8 +916,8 @@ TYPE = CARACTERE
 INDEX = 58
 MNEMO = 'EXEDEFPARA'
 TAILLE = 1
-DEFAUT  = 'stbtel|stbtel_VVV|PPP|stbtelMMMVVV_MP.exe'
-DEFAUT1 = 'stbtel|stbtel_VVV|PPP|stbtelMMMVVV_MP.exe'
+DEFAUT  = 'stbtel|PPP|stbtelMMMVVV_MP.exe'
+DEFAUT1 = 'stbtel|PPP|stbtelMMMVVV_MP.exe'
 RUBRIQUE = 'ENTREES-SORTIES, GENERALITES';'CALCUL'
 RUBRIQUE1 = 'INPUT-OUTPUT, INFORMATION';'COMPUTATIONAL INFORMATION'
 NIVEAU = 1

@@ -2883,16 +2883,16 @@ TYPE = CARACTERE
 INDEX = 98 
 MNEMO = 'LINKLIBS' 
 TAILLE = 5 
-DEFAUT = 'tomawac|toma_VVV|PPP|tomawacMMMVVV.LLL'; 
-'bief|bief_VVV|PPP|biefMMMVVV.LLL'; 
-'damocles|damo_VVV|PPP|damoMMMVVV.LLL'; 
-'paravoid|paravoid_VVV|PPP|paravoidMMMVVV.LLL'; 
-'special|special_VVV|PPP|specialMMMVVV.LLL' 
-DEFAUT1 = 'tomawac|toma_VVV|PPP|tomawacMMMVVV.LLL'; 
-'bief|bief_VVV|PPP|biefMMMVVV.LLL'; 
-'damocles|damo_VVV|PPP|damoMMMVVV.LLL'; 
-'paravoid|paravoid_VVV|PPP|paravoidMMMVVV.LLL'; 
-'special|special_VVV|PPP|specialMMMVVV.LLL' 
+DEFAUT = 'tomawac|PPP|tomawacMMMVVV.LLL'; 
+'bief|PPP|biefMMMVVV.LLL'; 
+'damocles|PPP|damoMMMVVV.LLL'; 
+'paravoid|PPP|paravoidMMMVVV.LLL'; 
+'special|PPP|specialMMMVVV.LLL' 
+DEFAUT1 = 'tomawac|PPP|tomawacMMMVVV.LLL'; 
+'bief|PPP|biefMMMVVV.LLL'; 
+'damocles|PPP|damoMMMVVV.LLL'; 
+'paravoid|PPP|paravoidMMMVVV.LLL'; 
+'special|PPP|specialMMMVVV.LLL' 
 RUBRIQUE = 'ENTREES-SORTIES, GENERALITES';'CALCUL' 
 RUBRIQUE1 = 'INPUT-OUTPUT, INFORMATION';'COMPUTATIONAL INFORMATION' 
 NIVEAU = 1 
@@ -2905,8 +2905,8 @@ TYPE = CARACTERE
 INDEX = 97 
 MNEMO = 'EXEDEF' 
 TAILLE = 1 
-DEFAUT  = 'tomawac|toma_VVV|PPP|tomawacMMMVVV.exe' 
-DEFAUT1 = 'tomawac|towa_VVV|PPP|tomawacMMMVVV.exe' 
+DEFAUT  = 'tomawac|PPP|tomawacMMMVVV.exe' 
+DEFAUT1 = 'tomawac|PPP|tomawacMMMVVV.exe' 
 RUBRIQUE = 'ENTREES-SORTIES, GENERALITES';'CALCUL' 
 RUBRIQUE1 = 'INPUT-OUTPUT, INFORMATION';'COMPUTATIONAL INFORMATION' 
 NIVEAU = 1 
@@ -2919,8 +2919,8 @@ TYPE = CARACTERE
 INDEX = 101 
 MNEMO = 'EXEDEFPARA' 
 TAILLE = 1 
-DEFAUT  = 'tomawac|toma_VVV|PPP|tomawacMMMVVV_MP.exe' 
-DEFAUT1 = 'tomawac|towa_VVV|PPP|tomawacMMMVVV_MP.exe' 
+DEFAUT  = 'tomawac|PPP|tomawacMMMVVV_MP.exe' 
+DEFAUT1 = 'tomawac|PPP|tomawacMMMVVV_MP.exe' 
 RUBRIQUE = 'ENTREES-SORTIES, GENERALITES';'CALCUL' 
 RUBRIQUE1 = 'INPUT-OUTPUT, INFORMATION';'COMPUTATIONAL INFORMATION' 
 NIVEAU = 1 

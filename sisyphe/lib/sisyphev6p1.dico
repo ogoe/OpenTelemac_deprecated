@@ -3021,19 +3021,19 @@ TYPE = CARACTERE
 INDEX = 54
 MNEMO = 'LINKLIBS'
 TAILLE = 5
-DEFAUT = 'sisyphe|sisyphe_VVV|PPP|sisypheMMMVVV.LLL';
-'bief|bief_VVV|PPP|biefMMMVVV.LLL';
-'special|special_VVV|PPP|specialMMMVVV.LLL';
-'damocles|damo_VVV|PPP|damoMMMVVV.LLL';
-'paravoid|paravoid_VVV|PPP|paravoidMMMVVV.LLL'
-/'dredgesim|dredgesim_VVV|PPP|dredgesimMMMVVV.LLL'
+DEFAUT = 'sisyphe|PPP|sisypheMMMVVV.LLL';
+'bief|PPP|biefMMMVVV.LLL';
+'special|PPP|specialMMMVVV.LLL';
+'damocles|PPP|damoMMMVVV.LLL';
+'paravoid|PPP|paravoidMMMVVV.LLL'
+/'dredgesim|PPP|dredgesimMMMVVV.LLL'
 
-DEFAUT1 = 'sisyphe|sisyphe_VVV|PPP|sisypheMMMVVV.LLL';
-'bief|bief_VVV|PPP|biefMMMVVV.LLL';
-'special|special_VVV|PPP|specialMMMVVV.LLL';
-'damocles|damo_VVV|PPP|damoMMMVVV.LLL';
-'paravoid|paravoid_VVV|PPP|paravoidMMMVVV.LLL'
-/'dredgesim|dredgesim_VVV|PPP|dredgesimMMMVVV.LLL'
+DEFAUT1 = 'sisyphe|PPP|sisypheMMMVVV.LLL';
+'bief|PPP|biefMMMVVV.LLL';
+'special|PPP|specialMMMVVV.LLL';
+'damocles|PPP|damoMMMVVV.LLL';
+'paravoid|PPP|paravoidMMMVVV.LLL'
+/'dredgesim|PPP|dredgesimMMMVVV.LLL'
 
 RUBRIQUE = 'ENTREES-SORTIES, GENERALITES';'CALCUL'
 RUBRIQUE1 = 'INPUT-OUTPUT, INFORMATION';'COMPUTATIONAL INFORMATION'
@@ -3047,8 +3047,8 @@ TYPE = CARACTERE
 INDEX = 57
 MNEMO = 'EXEDEF'
 TAILLE = 1
-DEFAUT  = 'sisyphe|sisyphe_VVV|PPP|sisypheMMMVVV.exe'
-DEFAUT1 = 'sisyphe|sisyphe_VVV|PPP|sisypheMMMVVV.exe'
+DEFAUT  = 'sisyphe|PPP|sisypheMMMVVV.exe'
+DEFAUT1 = 'sisyphe|PPP|sisypheMMMVVV.exe'
 RUBRIQUE = 'ENTREES-SORTIES, GENERALITES';'CALCUL'
 RUBRIQUE1 = 'INPUT-OUTPUT, INFORMATION';'COMPUTATIONAL INFORMATION'
 NIVEAU = 1
@@ -3061,8 +3061,8 @@ TYPE = CARACTERE
 INDEX = 58
 MNEMO = 'EXEDEFPARA'
 TAILLE = 1
-DEFAUT  = 'sisyphe|sisyphe_VVV|PPP|sisypheMMMVVV_MP.exe'
-DEFAUT1 = 'sisyphe|sisyphe_VVV|PPP|sisypheMMMVVV_MP.exe'
+DEFAUT  = 'sisyphe|PPP|sisypheMMMVVV_MP.exe'
+DEFAUT1 = 'sisyphe|PPP|sisypheMMMVVV_MP.exe'
 RUBRIQUE = 'ENTREES-SORTIES, GENERALITES';'CALCUL'
 RUBRIQUE1 = 'INPUT-OUTPUT, INFORMATION';'COMPUTATIONAL INFORMATION'
 NIVEAU = 1

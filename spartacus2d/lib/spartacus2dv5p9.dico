@@ -779,16 +779,16 @@ TYPE = CARACTERE
 INDEX = 98
 MNEMO = 'LINKLIBS'
 TAILLE = 5
-DEFAUT = 'spartacus2d|spartacus2d_VVV|PPP|spartacus2dMMMVVV.LLL';
-'bief|bief_VVV|PPP|biefMMMVVV.LLL';
-'damocles|damo_VVV|PPP|damoMMMVVV.LLL';
-'paravoid|paravoid_VVV|PPP|paravoidMMMVVV.LLL';
-'special|special_VVV|PPP|specialMMMVVV.LLL'
-DEFAUT1 = 'spartacus2d|spartacus2d_VVV|PPP|spartacus2dMMMVVV.LLL';
-'bief|bief_VVV|PPP|biefMMMVVV.LLL';
-'damocles|damo_VVV|PPP|damoMMMVVV.LLL';
-'paravoid|paravoid_VVV|PPP|paravoidMMMVVV.LLL';
-'special|special_VVV|PPP|specialMMMVVV.LLL'
+DEFAUT = 'spartacus2d|PPP|spartacus2dMMMVVV.LLL';
+'bief|PPP|biefMMMVVV.LLL';
+'damocles|PPP|damoMMMVVV.LLL';
+'paravoid|PPP|paravoidMMMVVV.LLL';
+'special|PPP|specialMMMVVV.LLL'
+DEFAUT1 = 'spartacus2|PPP|spartacus2dMMMVVV.LLL';
+'bief|PPP|biefMMMVVV.LLL';
+'damocles|PPP|damoMMMVVV.LLL';
+'paravoid|PPP|paravoidMMMVVV.LLL';
+'special|PPP|specialMMMVVV.LLL'
 RUBRIQUE = 'ENTREES-SORTIES, GENERALITES';'CALCUL'
 RUBRIQUE1 = 'INPUT-OUTPUT, INFORMATION';'COMPUTATIONAL INFORMATION'
 NIVEAU = 1
@@ -811,8 +811,8 @@ TYPE = CARACTERE
 INDEX = 97
 MNEMO = 'EXEDEF'
 TAILLE = 1
-DEFAUT  = 'spartacus2d|spartacus2d_VVV|PPP|spartacus2dMMMVVV.exe'
-DEFAUT1 = 'spartacus2d|spartacus2d_VVV|PPP|spartacus2dMMMVVV.exe'
+DEFAUT  = 'spartacus2d|PPP|spartacus2dMMMVVV.exe'
+DEFAUT1 = 'spartacus2d|PPP|spartacus2dMMMVVV.exe'
 RUBRIQUE = 'ENTREES-SORTIES, GENERALITES';'CALCUL'
 RUBRIQUE1 = 'INPUT-OUTPUT, INFORMATION';'COMPUTATIONAL INFORMATION'
 NIVEAU = 1
@@ -825,8 +825,8 @@ TYPE = CARACTERE
 INDEX = 101
 MNEMO = 'EXEDEFPARA'
 TAILLE = 1
-DEFAUT  = 'spartacus2d|spartacus2d_VVV|PPP|spartacus2dMMMVVV_MP.exe'
-DEFAUT1 = 'spartacus2d|spartacus2d_VVV|PPP|spartacus2dMMMVVV_MP.exe'
+DEFAUT  = 'spartacus2d|PPP|spartacus2dMMMVVV_MP.exe'
+DEFAUT1 = 'spartacus2d|PPP|spartacus2dMMMVVV_MP.exe'
 RUBRIQUE = 'ENTREES-SORTIES, GENERALITES';'CALCUL'
 RUBRIQUE1 = 'INPUT-OUTPUT, INFORMATION';'COMPUTATIONAL INFORMATION'
 NIVEAU = 1
