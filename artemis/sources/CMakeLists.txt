@@ -1,18 +1,15 @@
 #
-set(CMAKE_INCLUDE_CURRENT_DIR On)
 include_directories("${PROJECT_BINARY_DIR}/bief/sources" 
                     "${PROJECT_BINARY_DIR}/special/sources")
 #
+FILE(GLOB CTR_SOURCES artemis/sources *.f)
+## parallel file with mpi.h
+file(GLOB to_remove build_global_front.f)
+#
+list(REMOVE_ITEM CTR_SOURCES ${to_remove}) 
+#
 #define the library
-add_library(artemis${TELEMAC_VERSION} STATIC declarations_artemis.f interface_artemis.f 
-artemis.f        berkho.f         borh.f           calcfw.f         
-calcmn.f         calcqb.f         calctm.f         calcue.f         
-calre2.f         calres.f         cntpre.f         condih.f         
-corfon.f         dirale.f         dismoy.f         entart.f         
-fwspec.f         homere_artemis.f lecdon_artemis.f leclim_artemis.f 
-masque_artemis.f nomvar_artemis.f perale.f  phbor.f   point_artemis.f  
-radia1.f         radia2.f         spd.f            spe.f            
-utimp.f)
+add_library(artemis${TELEMAC_VERSION} STATIC ${CTR_SOURCES})
 
 
 set_target_properties(artemis${TELEMAC_VERSION} PROPERTIES PREFIX "")

@@ -1,5 +1,7 @@
+#
+FILE(GLOB CTR_SOURCES mumpsvoid/sources *.f)
 #define the library
-add_library(mumpsvoid${TELEMAC_VERSION} STATIC solve_mumps.f pre4_mumps.f)
+add_library(mumpsvoid${TELEMAC_VERSION} STATIC ${CTR_SOURCES})
 
 set_target_properties(mumpsvoid${TELEMAC_VERSION} PROPERTIES PREFIX "")
 
