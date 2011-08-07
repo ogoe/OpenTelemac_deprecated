@@ -32,6 +32,8 @@ SET(TELEMAC_VERSION_MINOR 0)
 SET(TELEMAC_VERSION v${TELEMAC_VERSION_MAJOR}p${TELEMAC_VERSION_MINOR})
 
 set(CMAKE_INSTALL_PREFIX $ENV{PROJECT})
+#
+set(CMAKE_INCLUDE_CURRENT_DIR On)
 
 add_subdirectory(bief/sources)
 add_subdirectory(damocles/sources)

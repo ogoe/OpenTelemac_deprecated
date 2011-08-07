@@ -1,7 +1,7 @@
+#
+FILE(GLOB CTR_SOURCES damocles/sources *.f)
 #define the library
-add_library(damo${TELEMAC_VERSION} STATIC aidelu.f carlu.f classe.f cmd.f damoc.f damocle.f damocles.f
-dico.f    influ.f intlu.f  loglu.f longlu.f majus.f
-minus.f   next.f  precar.f prev.f  preval.f realu.f )
+add_library(damo${TELEMAC_VERSION} STATIC ${CTR_SOURCES})
 
 set_target_properties(damo${TELEMAC_VERSION} PROPERTIES PREFIX "")
 
