@@ -1,3 +1,5 @@
+#CMake buildfile for telemac/tomawac
+#Author: Oliver Goethel (Email: coding at ogoethel.de)
 #
 include_directories("${PROJECT_BINARY_DIR}/bief/sources")
 #

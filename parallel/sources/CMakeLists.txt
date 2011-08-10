@@ -1,3 +1,5 @@
+#CMake buildfile for telemac/parallel
+#Author: Oliver Goethel (Email: coding at ogoethel.de)
 #
 #
 FILE(GLOB CTR_SOURCES parallel/sources *.f)
@@ -29,5 +31,28 @@ install(TARGETS parallel${TELEMAC_VERSION}
             RUNTIME DESTINATION parallel$/${Fortran_COMPILER_NAME}
             LIBRARY DESTINATION parallel$/${Fortran_COMPILER_NAME}
             ARCHIVE DESTINATION parallel$/${Fortran_COMPILER_NAME})
+#
+#Parallel executables
+#partel is only buiöd if libmetis is found in one of the given diretories
+#
+add_executable(gretel.exe gretel_autop.f)
+#
+install(TARGETS gretel.exe
+            RUNTIME DESTINATION bin)
+#
+FIND_LIBRARY(METIS_LIBRARY metis
+    /usr/local/lib
+    /usr/lib
+    ${CMAKE_SOURCE_DIR}/parallel
+  )
 
-
+IF(METIS_LIBRARY)
+#
+  add_executable(partel.exe partel.f)
+#
+  target_link_libraries(partel.exe ${METIS_LIBRARY})
+#
+  install(TARGETS partel.exe
+            RUNTIME DESTINATION bin)
+#
+ENDIF(METIS_LIBRARY)

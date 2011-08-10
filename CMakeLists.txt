@@ -1,3 +1,6 @@
+#CMake main-buildfile for opentelemac
+#Author: Oliver Goethel (Email: coding at ogoethel.de)
+#
 cmake_minimum_required(VERSION 2.8)
 #use Fortran
 enable_language (Fortran)

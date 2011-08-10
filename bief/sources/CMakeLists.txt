@@ -1,3 +1,5 @@
+#CMake buildfile for telemac/bief
+#Author: Oliver Goethel (Email: coding at ogoethel.de)
 #
 #define the library
 FILE(GLOB CTR_SOURCES bief/sources *.f)
