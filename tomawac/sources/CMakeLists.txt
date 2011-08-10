@@ -38,3 +38,22 @@ install(TARGETS tomawac${TELEMAC_VERSION}.exe
             LIBRARY DESTINATION tomawac/${Fortran_COMPILER_NAME}
             ARCHIVE DESTINATION tomawac/${Fortran_COMPILER_NAME})
 
+#
+#Parallel:
+if (MPI_Fortran_FOUND)
+
+add_executable(tomawac${TELEMAC_VERSION}_MP.exe homere_tomawac.f)
+target_link_libraries(tomawac${TELEMAC_VERSION}_MP.exe tomawac${TELEMAC_VERSION}
+                                                    bief${TELEMAC_VERSION}
+                                                    damo${TELEMAC_VERSION}
+                                                    mumpsvoid${TELEMAC_VERSION}
+                                                    parallel${TELEMAC_VERSION}
+                                                    special${TELEMAC_VERSION}
+                                                    ${MPI_Fortran_LIBRARIES}         )
+
+install(TARGETS tomawac${TELEMAC_VERSION}_MP.exe
+            RUNTIME DESTINATION tomawac/${Fortran_COMPILER_NAME}
+            LIBRARY DESTINATION tomawac/${Fortran_COMPILER_NAME}
+            ARCHIVE DESTINATION tomawac/${Fortran_COMPILER_NAME})
+
+endif (MPI_Fortran_FOUND)
