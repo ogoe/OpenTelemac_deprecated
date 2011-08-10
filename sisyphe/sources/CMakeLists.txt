@@ -1,6 +1,8 @@
 #
 #
 include_directories("${PROJECT_BINARY_DIR}/bief/sources")
+#CMake buildfile for telemac/sisyphe
+#Author: Oliver Goethel (Email: coding at ogoethel.de)
 #
 FILE(GLOB CTR_SOURCES sisyphe/sources *.f)
 #

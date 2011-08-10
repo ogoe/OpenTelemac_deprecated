@@ -1,3 +1,5 @@
+#CMake buildfile for telemac/paravoid
+#Author: Oliver Goethel (Email: coding at ogoethel.de)
 #
 FILE(GLOB CTR_SOURCES paravoid/sources *.f)
 #define the library

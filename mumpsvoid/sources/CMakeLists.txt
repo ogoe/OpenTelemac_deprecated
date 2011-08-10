@@ -1,3 +1,5 @@
+#CMake buildfile for telemac/mumpsvoid
+#Author: Oliver Goethel (Email: coding at ogoethel.de)
 #
 FILE(GLOB CTR_SOURCES mumpsvoid/sources *.f)
 #define the library
