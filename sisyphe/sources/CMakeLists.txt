@@ -44,4 +44,22 @@ install(TARGETS sisyphe${TELEMAC_VERSION}.exe
             RUNTIME DESTINATION sisyphe/${Fortran_COMPILER_NAME}
             LIBRARY DESTINATION sisyphe/${Fortran_COMPILER_NAME}
             ARCHIVE DESTINATION sisyphe/${Fortran_COMPILER_NAME})
+#
+#Parallel:
+if (MPI_Fortran_FOUND)
 
+add_executable(sisyphe${TELEMAC_VERSION}_MP.exe homere_sisyphe.f)
+target_link_libraries(sisyphe${TELEMAC_VERSION}_MP.exe sisyphe${TELEMAC_VERSION}
+                                                    bief${TELEMAC_VERSION}
+                                                    damo${TELEMAC_VERSION}
+                                                    mumpsvoid${TELEMAC_VERSION}
+                                                    parallel${TELEMAC_VERSION}
+                                                    special${TELEMAC_VERSION}
+                                                    ${MPI_Fortran_LIBRARIES}    )
+
+install(TARGETS sisyphe${TELEMAC_VERSION}_MP.exe
+            RUNTIME DESTINATION sisyphe/${Fortran_COMPILER_NAME}
+            LIBRARY DESTINATION sisyphe/${Fortran_COMPILER_NAME}
+            ARCHIVE DESTINATION sisyphe/${Fortran_COMPILER_NAME})
+
+endif (MPI_Fortran_FOUND)

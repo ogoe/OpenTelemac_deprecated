@@ -41,4 +41,23 @@ install(TARGETS telemac2d${TELEMAC_VERSION}.exe
             RUNTIME DESTINATION telemac2d/${Fortran_COMPILER_NAME}
             LIBRARY DESTINATION telemac2d/${Fortran_COMPILER_NAME}
             ARCHIVE DESTINATION telemac2d/${Fortran_COMPILER_NAME})
+#
+#Parallel:
+if (MPI_Fortran_FOUND)
 
+add_executable(telemac2d${TELEMAC_VERSION}_MP.exe homere_telemac2d.f)
+target_link_libraries(telemac2d${TELEMAC_VERSION}_MP.exe telemac2d${TELEMAC_VERSION}
+                                                    sisyphe${TELEMAC_VERSION}
+                                                    bief${TELEMAC_VERSION}
+                                                    damo${TELEMAC_VERSION}
+                                                    mumpsvoid${TELEMAC_VERSION}
+                                                    parallel${TELEMAC_VERSION}
+                                                    special${TELEMAC_VERSION}
+                                                    ${MPI_Fortran_LIBRARIES}    )
+
+install(TARGETS telemac2d${TELEMAC_VERSION}_MP.exe
+            RUNTIME DESTINATION telemac2d/${Fortran_COMPILER_NAME}
+            LIBRARY DESTINATION telemac2d/${Fortran_COMPILER_NAME}
+            ARCHIVE DESTINATION telemac2d/${Fortran_COMPILER_NAME})
+
+endif (MPI_Fortran_FOUND)
