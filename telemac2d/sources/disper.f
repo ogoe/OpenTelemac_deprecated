@@ -1,65 +1,73 @@
-C                       *****************
-                        SUBROUTINE DISPER
-C                       *****************
-C
-     *( VISC , U , V , H , CF , ELDER , PROPNU )
-C
-C***********************************************************************
-C  TELEMAC 2D VERSION 5.6      26/05/06     C MOULIN (LNH) 30 87 83 81
-C                                             + MODIFS JMH
-C***********************************************************************
-C
-C     FONCTION  : CALCUL DES COEFFICIENTS DE DISPERSION TENSORIELS
-C                 EN FONCTION DES COEFFICIENTS LONGITUDINAL ET
-C                 TRANSVERSAL.
-C
-C----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C !      NOM       !MODE!                   ROLE                       !
-C !________________!____!______________________________________________!
-C !   VISC         !<-- ! COEFF DU TENSEUR  DE DISPERSION (DIM. NPOIN)
-C !   U,V          ! -->! COMPOSANTES DE LA VITESSE
-C !   H            ! -->! HAUTEUR D'EAU
-C !   CF           ! -->! COEFFICIENT DE FROTTEMENT
-C !   ELDER        ! -->! COEFFICIENTS ADIMENSIONNELS DE DISPERSION
-C !   PROPNU       ! -->! VISCOSITE LAMINAIRE
-C !________________!____!______________________________________________!
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C SOUS-PROGRAMME APPELANT : TELMAC
-C SOUS-PROGRAMMES APPELES :
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE DISPER
+!                    *****************
+!
+     &( VISC , U , V , H , CF , ELDER , PROPNU )
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    COMPUTES THE TENSORIAL DISPERSION COEFFICIENTS
+!+                ACCORDING TO THE LONGITUDINAL AND TRANSVERSE
+!+                COEFFICIENTS.
+!
+!history  C MOULIN (LNH)
+!+        26/05/2006
+!+        V5P6
+!+   + MODIFS JMH
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CF             |<--| ADIMENSIONAL FRICTION COEFFICIENT
+!| ELDER          |-->| ADIMENSIONAL DISPERSION COEFFICIENTS
+!| H              |-->| WATER DEPTH
+!| PROPNU         |-->| LAMINAR VISCOSITY
+!| U              |-->| X-COMPONENT OF VELOCITY
+!| V              |-->| Y-COMPONENT OF VELOCITY
+!| VISC           |<--| COEFFICIENTS OF DISPERSION TENSOR VISC(NPOIN,3)
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       DOUBLE PRECISION, INTENT(IN)  :: ELDER(2),PROPNU
       DOUBLE PRECISION, INTENT(IN)  :: H(*),CF(*),U(*),V(*)
-      TYPE(BIEF_OBJ), INTENT(INOUT) :: VISC      
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+      TYPE(BIEF_OBJ), INTENT(INOUT) :: VISC
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER I,NPOIN,NPX
-C
-      DOUBLE PRECISION KL,KT,COST,SINT,NORMV,USTAR          
-C
+!
+      DOUBLE PRECISION KL,KT,COST,SINT,NORMV,USTAR
+!
       INTRINSIC SQRT,MAX
-C
-C-----------------------------------------------------------------------
-C CALCUL DES COEFFICIENTS DE DISPERSION
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+! COMPUTES DISPERSION COEFFICIENTS
+!-----------------------------------------------------------------------
+!
       NPOIN = VISC%DIM1
       NPX   = VISC%MAXDIM1
-C
+!
       DO 20 I=1,NPOIN
-C
+!
          NORMV = MAX(SQRT(U(I)**2+V(I)**2),1.D-6)
          COST = U(I)/NORMV
          SINT = V(I)/NORMV
@@ -69,10 +77,10 @@ C
          VISC%R(I      ) = PROPNU + ( KL - KT ) * COST**2    + KT
          VISC%R(I+NPX  ) = PROPNU + ( KT - KL ) * COST**2    + KL
          VISC%R(I+2*NPX) = PROPNU + ( KL - KT ) * COST*SINT
-C
+!
 20    CONTINUE
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

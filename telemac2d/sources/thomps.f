@@ -1,453 +1,660 @@
-C                       *****************
-                        SUBROUTINE THOMPS
-C                       *****************
-C
-     *(HBOR,UBOR,VBOR,TBOR,U,V,H,T,ZF,X,Y,NBOR,FRTYPE,UNA,C,
-     * UCONV,VCONV,T6,FU,FV,LIHBOR,LIUBOR,LIVBOR,LITBOR,LISPFR,T8,W1,
-     * ITRAV2,
-     * W1R,W2R,W3R,W4R,HBTIL,UBTIL,VBTIL,TBTIL,ZBTIL,SURDET,IKLE,
-     * CF,SMH,IFABOR,NULONE,NELEM,MESH,
-     * KP1BOR,XNEBOR,YNEBOR,NPOIN,NPTFR,LT,NIT,TEMPS,DT,GRAV,
-     * DEBLIQ,FINLIQ,NTRAC,NFRLIQ,KSORT,LV,MSK,MASKEL,MASKPT,
-     * NELBOR,NELMAX,IELM,NORD,FAIR,WINDX,WINDY,
-     * VENT,HWIND,CORIOL,FCOR,SPHERI,
-     * OPTPRO,MAREE,MARDAT,MARTIM,PHI0,OPTSOU,ISCE,DSCE,USCE,VSCE,T5,
-     * COUROU,NPTH,VARCL,NVARCL,VARCLA,NUMLIQ,SHP,UNSV2D,HFROT)
-C
-C***********************************************************************
-C  TELEMAC 2D VERSION 6.0    05/09/08    E DAVID (LHF) 04 76 33 42 36
-C
-C JMH 01/09/2008 : POINTS GROUPED REGARDLESS OF THEIR BOUNDARY NUMBER
-C                  THIS IS TO HAVE AN ALGORITHM THAT WORK ALSO IN
-C                  PARALLEL (BUT THE GROUPS WILL BE DIFFERENT) 
-C                  CALLING GTSH11 ONCE AT THE BEGINNING AND NOT IN
-C                  CARAFR (NOW GTSH11 IS INDEPENDENT OF THE VELOCITY)
-C
-C                  OTHER DIFFICULTIES FORBID PARALLELISM SO FAR
-C
-C***********************************************************************
-C
-C      FONCTION:    TRAITEMENT DES FRONTIERES LIQUIDES PAR LA
-C                   METHODE DE THOMPSON - RESOLUTION PAR
-C                   REMONTEE DES CARACTERISTIQUES
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |   HBOR         |<-- |  HAUTEUR IMPOSEE.                            |
-C |   UBOR         |<-- |  VITESSE U IMPOSEE.                          |
-C |   VBOR         |<-- |  VITESSE V IMPOSEE.                          |
-C |   TBOR         |<-- |  TRACEUR IMPOSE AU BORD                      |
-C |    U,V         | -->|  COMPOSANTES DE LA VITESSE AU TEMPS N        |
-C |    H           | -->|  HAUTEUR AU TEMPS N                          |
-C |    T           | -->|  TRACEUR AU TEMPS N                          |
-C |    ZF          | -->|  FOND                                        |
-C |    X,Y         | -->|  COORDONNEES DES POINTS DU MAILLAGE          |
-C |    NBOR        | -->|  ADRESSES DES POINTS DE BORD                 |
-C |    FRTYPE      | -->|  TYPE DE FRONTIERES LIQUIDES                 |
-C |    UNA         | -->|  TABLEAU DE TRAVAIL                          |
-C |    C           | -->|  TABLEAU DE TRAVAIL : CELERITE DES ONDES     |
-C |    UCONV,VCONV | -->|  TABLEAU DE TRAVAIL : CHAMPS DE VITESSE      |
-C |                |    |  CONVECTEUR DES INVARIANTS DE RIEMANN        |
-C |    FU,FV       | -->|  TABLEAU DE TRAVAIL : TERMES SOURCES         |
-C |   LIHBOR       | -->|  CONDITIONS AUX LIMITES SUR H                |
-C | LIUBOR,LIVBOR  | -->|  CONDITIONS AUX LIMITES SUR U ET V           |
-C |   LITBOR       | -->|  CONDITIONS AUX LIMITES SUR LE TRACEUR       |
-C |   LISPFR       | -->|  LISTE DES POINTS FRONTIERES CONTIGUS TRAITES|
-C |                |    |  ENSEMBLES PAR LES CARACTERISTIQUES          |
-C |   W1R,..,W4R   | -->|  INVARIANTS DE RIEMANN TRANSPORTES           |
-C |   HBTIL..TBTIL | -->|  VALEURS DE H,..,T AU PIEDS DES              |
-C |                |    |  CARACTERISTIQUES                            |
-C |   KP1BOR       | -->|  NUMERO DU POINT FRONTIERE SUIVANT           |
-C | XNEBOR,YNEBOR  | -->|  NORMALES EXTERIEURES AUX POINTS.
-C |   NPOIN        | -->|  NOMBRE DE POINTS DU MAILLAGE.               |
-C |   NPTFR        | -->|  NOMBRE DE POINTS FRONTIERE.                 |
-C |   LT           | -->|  NUMERO DE L'ITERATION EN COURS              |
-C |   TEMPS        | -->|  TEMPS                                       |
-C |   DT           | -->|  PAS DE TEMPS                                |
-C |   GRAV         | -->|  GRAVITE                                     |
-C |   TRAC         | -->|  LOGIQUE INDIQUANT LA PRESENCE D'UN TRACEUR  |
-C |   DEBLIQ       | -->|  TABLEAU D'INDICES DE DEBUT DE FRONTIERE LIQ.|
-C |   FINLIQ       | -->|  TABLEAU D'INDICES DE FIN DE FRONTIERE LIQUI.|
-C |   NFRLIQ       | -->|  NOMBRE DE FRONTIERES LIQUIDES
-C |   KENT,KENTU,  | -->|  CONVENTION POUR LES TYPES DE CONDITIONS AUX |
-C |   KSORT,       |    |  LIMITES PHYSIQUES                           |
-C |   KINC         |    |  KENT:VALEURS IMPOSEES (SAUF U ET V)         |
-C |                |    |  KENTU:U ET V IMPOSES                        |
-C |                |    |  KSORT:VALEURS LIBRES                        |
-C |                |    |  KINC:ONDE INCIDENTE                         |
-C |   MSK          | -->|  SI OUI, PRESENCE D'ELEMENTS MASQUES.        |
-C |   MASKEL       | -->|  TABLEAU DE MASQUAGE DES ELEMENTS            |
-C |                |    |  =1. : NORMAL   =0. : ELEMENT MASQUE         |
-C |   NELBOR       | -->|  NUMEROS DES ELEMENTS ADJACENTS AUX BORDS    |
-C |   NELMAX       | -->|  NOMBRE MAXIMUM D'ELEMENTS                   |
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : TELMAC
-C
-C SOUS-PROGRAMME APPELE : FRICTI,PROSOU,CARAFR
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE THOMPS
+!                    *****************
+!
+     &(HBOR,UBOR,VBOR,TBOR,U,V,H,T,ZF,X,Y,NBOR,FRTYPE,UNA,C,
+     & UCONV,VCONV,T6,T7,XCONV,YCONV,FU,FV,LIHBOR,LIUBOR,LIVBOR,
+     & LITBOR,LISPFR,T8,ITRAV2,W1R,W2R,W3R,
+     & HBTIL,UBTIL,VBTIL,TBTIL,ZBTIL,SURDET,IKLE,CF,SMH,IFABOR,NELEM,
+     & MESH,XNEBOR,YNEBOR,NPOIN,NPTFR,LT,TEMPS,DT,GRAV,
+     & NTRAC,NFRLIQ,KSORT,KINC,KENT,KENTU,LV,MSK,MASKEL,
+     & NELMAX,IELM,NORD,FAIR,WINDX,WINDY,VENT,HWIND,CORIOL,FCOR,SPHERI,
+     & MAREE,MARDAT,MARTIM,PHI0,OPTSOU,ISCE,DSCE,SHPP,
+     & COUROU,NPTH,VARCL,NVARCL,VARCLA,NUMLIQ,SHP,UNSV2D,HFROT,
+     & FXWAVE,FYWAVE,DX_T,DY_T,DZ_T,ELT_T,IT3,IT4,HFIELD,UFIELD,VFIELD,
+     & ZS,GZSX,GZSY)
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    TREATS LIQUID BOUNDARIES USING THOMPSON METHOD
+!+                BASED ON CHARACTERISTICS.
+!
+!history  J-M HERVOUET (LNHE)
+!+        01/09/2008
+!+
+!+   POINTS GROUPED REGARDLESS OF THEIR BOUNDARY NUMBER.
+!
+!history  E DAVID (LHF)
+!+        05/09/2008
+!+        V6P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| C              |-->| WORK ARRAY: CELERITY OF WAVES
+!| CF             |<--| ADIMENSIONAL FRICTION COEFFICIENT
+!| CORIOL         |-->| IF YES, CORIOLIS FORCE
+!| COUROU         |-->| IF YES, WAVE DRIVEN CURRENTS
+!| DSCE           |-->| DISCHARGE OF SOURCES
+!| DT             |-->| TIME STEP
+!| DX_T           |<->| WORK ARRAY
+!| DY_T           |<->| WORK ARRAY
+!| DZ_T           |<->| WORK ARRAY
+!| ELT_T          |<->| WORK ARRAY
+!| FAIR           |-->| COEFFICIENT OF WIND INFLUENCE
+!| FCOR           |-->| CORIOLIS COEFFICIENT
+!| FRTYPE         |-->| TYPE OF LIQUID BOUNDARIES
+!| FU             |-->| SOURCE TERMS ON U
+!| FV             |-->| SOURCE TERMS ON V
+!| FXWAVE         |<->| FORCING OF WAVES ALONG X
+!| FYWAVE         |<->| FORCING OF WAVES ALONG Y
+!| GRAV           |-->| GRAVITY
+!| GZSX           |<--| FREE SURFACE GRADIENT ALONG X
+!| GZSY           |<--| FREE SURFACE GRADIENT ALONG Y
+!| H              |-->| WATER DEPTH AT TIME N
+!| HBOR           |<--| PRESCRIBED DEPTH AT BOUNDARIES
+!| HBTIL          |<->| WORK ARRAY, DEPTH AT BOUNDARIES AFTER ADVECTION
+!| HFIELD         |<->| WORK ARRAY, DEPTH WITH RELAXATION
+!| HFROT          |-->| KEYWORD : 'DEPTH IN FRICTION TERM'
+!| HWIND          |-->| THRESHOLD DEPTH FOR WIND
+!| IELM           |-->| TYPE OF ELEMENT
+!| IFABOR         |-->| ELEMENTS BEHIND THE EDGES OF A TRIANGLE
+!|                |   | IF NEGATIVE OR ZERO, THE EDGE IS A LIQUID
+!|                |   | BOUNDARY
+!| IKLE           |-->| CONNECTIVITY TABLE
+!| ISCE           |-->| GLOBAL NUMBER OF POINT SOURCES
+!| ITRAV2         |-->| INTEGER WORK ARRAY
+!| IT3            |<->| INTEGER WORK ARRAY
+!| IT3            |<->| INTEGER WORK ARRAY
+!| KSORT          |-->| CONVENTION FOR FREE OUTPUT
+!| KINC           |-->| CONVENTION FOR INCIDENT WAVE BOUNDARY CONDITION
+!| KENT           |-->| CONVENTION FOR LIQUID INPUT WITH PRESCRIBED VALUE
+!| KENTU          |-->| CONVENTION FOR LIQUID INPUT WITH PRESCRIBED VELOCITY
+!| LIHBOR         |-->| TYPE OF BOUNDARY CONDITIONS ON DEPTH
+!| LISPFR         |-->| LIST OF BOUNDARY POINTS TO BE DEALT WITH
+!| LITBOR         |-->| TYPE OF BOUNDARY CONDITIONS ON TRACERS
+!| LIUBOR         |-->| TYPE OF BOUNDARY CONDITIONS ON U
+!| LIVBOR         |-->| TYPE OF BOUNDARY CONDITIONS ON V
+!| LT             |-->| CURRENT TIME-STEP
+!| LV             |-->| VECTOR LENGTH (FOR VECTOR MACHINES)
+!| MARDAT         |-->| DATE (YEAR, MONTH,DAY)
+!| MAREE          |-->| IF YES, TIDE GENERATING FORCE
+!| MARTIM         |-->| TIME (HOUR, MINUTE,SECOND)
+!| MASKEL         |-->| MASKING OF ELEMENTS
+!|                |   | =1. : NORMAL   =0. : MASKED ELEMENT
+!| MESH           |-->| MESH STRUCTURE
+!| MSK            |-->| IF YES, THERE IS MASKED ELEMENTS.
+!| NBOR           |-->| GLOBAL NUMBER OF BOUNDARY POINTS
+!| NELEM          |-->| NUMBER OF ELEMENTS
+!| NELMAX         |-->| MAXIMUM NUMBER OF ELEMENTS
+!| NFRLIQ         |-->| NUMBER OF LIQUID BOUNDARIES
+!| NORD           |-->| ANGLE OF NORTH WITH VERTICAL AXIS
+!| NPOIN          |-->| NUMBER OF POINTS
+!| NPTFR          |-->| NUMBER OF BOUNDARY POINTS
+!| NPTH           |-->| RECORD NUMBER IN THE WAVE CURRENTS FILE
+!| NTRAC          |-->| NUMBER OF TRACERS
+!| NUMLIQ         |-->| LIQUID BOUNDARY NUMBER OF BOUNDARY POINTS
+!| NVARCL         |-->| NUMBER OF CLANDESTINE VARIABLES
+!| OPTSOU         |-->| TYPE OF SOURCES
+!|                |   | 1: NORMAL
+!|                |   | 2: DIRAC
+!| PHI0           |-->| LATITUDE OF ORIGIN POINT
+!| SHP            |<--| BARYCENTRIC COORDINATES AT THE FOOT
+!|                |   | OF CHARACTERISTICS
+!| SHPP           |<--| BARYCENTRIC COORDINATES AT THE FOOT
+!|                |   | OF CHARACTERISTICS, FOR BOUNDARY POINTS
+!| SMH            |-->| SOURCE TERM IN CONTINUITY EQUATION
+!| SPHERI         |-->| IF TRUE : SPHERICAL COORDINATES
+!| SURDET         |-->| 1/(DETERMINANT OF ISOPARAMETRIC TRANSFORMATION)
+!| T              |-->| BLOCK OF TRACERS AT TIME N
+!| T6             |<->| WORK BIEF_OBJ STRUCTURE
+!| T7             |<->| WORK BIEF_OBJ STRUCTURE
+!| T8             |<->| WORK BIEF_OBJ STRUCTURE
+!| TBOR           |<--| PRESCRIBED BOUNDARY CONDITION ON TRACER
+!| TBTIL          |<--| BLOCK OF WORK ARRAYS, TRACERS AFTER ADVECTION
+!| TEMPS          |-->| TIME IN SECONDS
+!| U              |<->| X-COMPONENT OF VELOCITY
+!| UBOR           |<--| PRESCRIBED VELOCITY U.
+!| UBTIL          |<--| WORK ARRAY, U AT BOUNDARIES AFTER ADVECTION
+!| UCONV          |-->| WORK ARRAY: ADVECTION FIELDS
+!| UFIELD         |<->| WORK ARRAY, U WITH RELAXATION
+!| UNA            |<->| WORK ARRAY
+!| UNSV2D         |-->| INVERSE OF INTEGRALS OF TEST FUNCTIONS
+!| V              |<->| Y-COMPONENT OF VELOCITY
+!| VARCL          |-->| BLOCK OF CLANDESTINE VARIABLES
+!| VARCLA         |-->| NAMES OF CLANDESTINE VARIABLES
+!| UBOR           |<--| PRESCRIBED VELOCITY V.
+!| VBTIL          |<--| WORK ARRAY, V AT BOUNDARIES AFTER ADVECTION
+!| VCONV          |-->| WORK ARRAY: ADVECTION FIELDS
+!| VENT           |-->| IF YES, WIND TAKEN INTO ACCOUNT
+!| VFIELD         |<->| WORK ARRAY, V WITH RELAXATION
+!| W1R            |<->| WORK ARRAY
+!| W2R            |<->| WORK ARRAY
+!| W3R            |<->| WORK ARRAY
+!| WINDX          |-->| VELOCITY OF WIND ALONG X
+!| WINDY          |-->| VELOCITY OF WIND ALONG Y
+!| X              |-->| ABSCISSAE OF POINTS IN THE MESH
+!| XNEBOR         |-->| X-COMPONENT OF NORMAL AT NODES
+!| Y              |-->| ORDINATES OF POINTS IN THE MESH
+!| YNEBOR         |-->| Y-COMPONENT OF NORMAL AT NODES
+!| ZBTIL          |<--| WORK ARRAY, BOTTOM AT BOUNDARIES AFTER ADVECTION
+!| ZF             |-->| ELEVATION OF BOTTOM
+!| ZS             |<--| FREE SURFACE
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
       USE INTERFACE_TELEMAC2D, EX_THOMPS => THOMPS
-C
+      USE STREAMLINE, ONLY : SCARACT
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-      INTEGER, INTENT(IN) :: NPTFR,LT,NIT,NPOIN,NELEM,NELMAX,NFRLIQ,LV
-      INTEGER, INTENT(IN) :: NVARCL,NPTH,KSORT,IELM,NTRAC,HFROT
-      INTEGER, INTENT(IN) :: OPTPRO,MARDAT(3),MARTIM(3),OPTSOU,ISCE(*)
-      INTEGER, INTENT(IN) :: DEBLIQ(NFRLIQ),FINLIQ(NFRLIQ)
-      INTEGER, INTENT(IN) :: NBOR(NPTFR),KP1BOR(NPTFR,2),NELBOR(NPTFR)
-      INTEGER, INTENT(IN) :: IKLE(*),IFABOR(*),NULONE(*)
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+      INTEGER, INTENT(IN) :: NPTFR,LT,NPOIN,NELEM,NELMAX,NFRLIQ,LV
+      INTEGER, INTENT(IN) :: NVARCL,NPTH,IELM,NTRAC,HFROT
+      INTEGER, INTENT(IN) :: KSORT,KINC,KENT,KENTU
+      INTEGER, INTENT(IN) :: MARDAT(3),MARTIM(3),OPTSOU,ISCE(*)
+      INTEGER, INTENT(IN) :: NBOR(NPTFR)
+      INTEGER, INTENT(IN) :: IKLE(*),IFABOR(*)
       INTEGER, INTENT(IN) :: LIHBOR(NPTFR),LIUBOR(NPTFR),LIVBOR(NPTFR)
-      INTEGER, INTENT(IN) :: FRTYPE(NFRLIQ),NUMLIQ(NFRLIQ)
-      INTEGER, INTENT(INOUT) :: LISPFR(NPTFR)  
-C     ITRAV2 : TAILLE NPOIN
+      INTEGER, INTENT(IN) :: FRTYPE(NFRLIQ),NUMLIQ(NPTFR)
+      INTEGER, INTENT(INOUT) :: LISPFR(NPTFR),ELT_T(NPTFR)
+!     ITRAV2 : OF DIMENSION NPOIN
       INTEGER, INTENT(INOUT) :: ITRAV2(*)
       LOGICAL, INTENT(IN) :: VENT,MAREE,CORIOL,SPHERI,MSK,COUROU
-      DOUBLE PRECISION, INTENT(IN) :: HWIND
       DOUBLE PRECISION, INTENT(INOUT) :: HBOR(NPTFR)
       DOUBLE PRECISION, INTENT(INOUT) :: UBOR(NPTFR),VBOR(NPTFR)
       DOUBLE PRECISION, INTENT(IN)    :: X(NPOIN),Y(NPOIN)
       DOUBLE PRECISION, INTENT(IN)    :: XNEBOR(NPTFR),YNEBOR(NPTFR)
       DOUBLE PRECISION, INTENT(IN)    :: SURDET(*),DSCE(*)
-      DOUBLE PRECISION, INTENT(IN)    :: USCE(*),VSCE(*)
-      DOUBLE PRECISION, INTENT(IN)  :: TEMPS,GRAV,DT,FAIR,FCOR,NORD,PHI0
+      DOUBLE PRECISION, INTENT(IN)    :: TEMPS,GRAV,DT,FAIR,FCOR,NORD
+      DOUBLE PRECISION, INTENT(IN)    :: HWIND,PHI0
       DOUBLE PRECISION, INTENT(INOUT) :: W1R(NPTFR),W2R(NPTFR)
-      DOUBLE PRECISION, INTENT(INOUT) :: W3R(NPTFR),W4R(NPTFR)
-      DOUBLE PRECISION, INTENT(INOUT) :: HBTIL(NPTFR),UBTIL(NPTFR)
-      DOUBLE PRECISION, INTENT(INOUT) :: VBTIL(NPTFR),ZBTIL(NPTFR)
-      DOUBLE PRECISION, INTENT(INOUT) :: T5(NPOIN),SHP(*)   
-      TYPE(BIEF_OBJ), INTENT(IN)      :: WINDX,WINDY,MASKEL,MASKPT
-      TYPE(BIEF_OBJ), INTENT(INOUT)   :: W1,VARCL
+      DOUBLE PRECISION, INTENT(INOUT) :: W3R(NPTFR)
+      DOUBLE PRECISION, INTENT(INOUT) :: SHPP(3,NPTFR),SHP(*)
+      DOUBLE PRECISION, INTENT(INOUT) :: DX_T(NPTFR),DY_T(NPTFR)
+      DOUBLE PRECISION, INTENT(INOUT) :: DZ_T(NPTFR)
+      TYPE(BIEF_OBJ), INTENT(IN)      :: WINDX,WINDY,MASKEL
+      TYPE(BIEF_OBJ), INTENT(INOUT)   :: HBTIL,UBTIL,VBTIL,ZBTIL,T7
+      TYPE(BIEF_OBJ), INTENT(INOUT)   :: VARCL,FXWAVE,FYWAVE,XCONV,YCONV
       TYPE(BIEF_OBJ), INTENT(INOUT)   :: FU,FV,T8,UNA,UCONV,VCONV,C,U,V
-      TYPE(BIEF_OBJ), INTENT(INOUT)   :: H,T,SMH,TBOR,TBTIL,T6   
-      TYPE(BIEF_OBJ), INTENT(IN)      :: ZF,CF,LITBOR,UNSV2D 
+      TYPE(BIEF_OBJ), INTENT(INOUT)   :: H,T,SMH,TBOR,TBTIL,T6,IT3,IT4
+      TYPE(BIEF_OBJ), INTENT(INOUT)   :: HFIELD,UFIELD,VFIELD,ZS
+      TYPE(BIEF_OBJ), INTENT(INOUT)   :: GZSX,GZSY
+      TYPE(BIEF_OBJ), INTENT(IN)      :: ZF,CF,LITBOR,UNSV2D
       TYPE(BIEF_MESH), INTENT(INOUT)  :: MESH
       CHARACTER(LEN=32), INTENT(IN)   :: VARCLA(NVARCL)
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-      INTEGER K,NDEB,NFIN,IFRLIQ,NPT,KP,J,ITRAC,N                 
-C                      
-      DOUBLE PRECISION EPSIL,HMIN,HHBOR
-C
-      LOGICAL TSI
-C
-      DATA EPSIL /1.D-5/
-      DATA TSI   /.FALSE./
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+      INTEGER K,NDEB,NPT,KP,J,ITRAC,N,NOMB               
+      DOUBLE PRECISION HMIN,HHBOR,DETADX,DETADY,TBAR(100),TT(100)
+      DOUBLE PRECISION UCSI,UCSIBAR,UETA,UETABAR,CBAR,HH,TETA
+      DOUBLE PRECISION ZSTAR(1),ZCONV(1,1),SHZ(1),Z(1,1),UNORM,NORMZS
+      INTEGER ETA(1)
+      LOGICAL QUAD
+      INTEGER NDP,NPLAN,IELMU,I
+!
       DATA HMIN  /2.D-2/
-C
-      INTRINSIC ABS
-C
-C-----------------------------------------------------------------------
-C
-      IF(NCSIZE.GT.1) THEN
-        IF(LNG.EQ.1) THEN
-          WRITE(LU,*) 'THOMPSON NE MARCHE PAS EN PARALLELE'
+!      
+      LOGICAL INIT
+      DATA    INIT/.TRUE./
+      TYPE(BIEF_OBJ) :: FNCAR1,FTILD1
+      SAVE
+!
+!-----------------------------------------------------------------------
+! 
+      IF(INIT) THEN
+        CALL ALLBLO(FNCAR1,'FNCAR1')
+        CALL ALLBLO(FTILD1,'FTILD1')
+        CALL ADDBLO(FNCAR1,UFIELD)
+        CALL ADDBLO(FNCAR1,VFIELD)
+        CALL ADDBLO(FNCAR1,HFIELD)
+        CALL ADDBLO(FNCAR1,ZF)
+        CALL ADDBLO(FTILD1,UBTIL)
+        CALL ADDBLO(FTILD1,VBTIL)
+        CALL ADDBLO(FTILD1,HBTIL) 
+        CALL ADDBLO(FTILD1,ZBTIL)                     
+        IF(NTRAC.GT.0) THEN
+          DO ITRAC=1,NTRAC
+            CALL ADDBLO(FNCAR1,T%ADR(ITRAC)%P)
+            CALL ADDBLO(FTILD1,TBTIL%ADR(ITRAC)%P)
+          ENDDO
         ENDIF
-        IF(LNG.EQ.2) THEN
-          WRITE(LU,*) 'THOMPSON NOT YET IMPLEMENTED IN PARALLEL'
-        ENDIF
-        CALL PLANTE(1)
-        STOP
+        INIT=.FALSE.     
       ENDIF
-C
-C     SEULEMENT SI IL Y A DES FRONTIERES LIQUIDES
-C
-      IF(NFRLIQ.NE.0) THEN
-C                                                  
-C
-C CALCUL DU TERME DE FROTTEMENT DANS UCONV
-C "C,C" AJOUTE PAR JMH LE 08/08/2000 (STRUCTURES VERTICALES)
-C MAIS NON PRIS EN COMPTE ICI (DERNIER ARGUMENT FALSE)
-C
-        CALL FRICTI(FU,FV,C,C,U,V,H,CF,MESH,T8,T6,.FALSE.,UNSV2D,
-     *              MSK,MASKEL,HFROT)
-C
-C CALCUL DU TERME DT*UCONV*U
-C
-        CALL OS('X=CYZ   ', UCONV , FU , U , DT )
-        CALL OS('X=CYZ   ', VCONV , FV , V , DT )
-C
-C CALCUL DES TERMES SOURCES DANS FU
-C
-        CALL PROSOU(FU,FV,SMH,U,V,H,GRAV,NORD,
-     *              FAIR,WINDX,WINDY,VENT,HWIND,CORIOL,FCOR,
-     *              SPHERI,TSI,MESH%COSLAT,MESH%SINLAT,
-     *              TEMPS,LT,0,0,DSCE,ISCE,UNA,MESH,MSK,MASKEL,
-     *              MAREE,MARDAT,MARTIM,PHI0,OPTSOU,COUROU,NPTH,
-     *              VARCL,NVARCL,VARCLA,UNSV2D)
-C
-C ASSEMBLAGE DANS FU
-C
-        CALL OS('X=Y+CZ  ', FU , UCONV , FU , DT )
-        CALL OS('X=Y+CZ  ', FV , VCONV , FV , DT )
-C
-C CALCUL DE LA CELERITE
-C
-        CALL OS('X=CY    ' , C , H , H , GRAV )
-        CALL CLIP(C,0.D0,.TRUE.,1.D6,.FALSE.,0)
-        CALL OS('X=SQR(Y)',X=C,Y=C )
-C
-C CORRECTION POUR LES BANCS DECOUVRANTS
-C
-        DO 9 K=1,NPOIN
-          IF(H%R(K).LT.HMIN) THEN
-            FU%R(K)=0.D0
-            FV%R(K)=0.D0
+!
+      ETA(1)=1  
+      NDP=3
+      NPLAN=1
+      IELMU=IELM 
+!
+!-----------------------------------------------------------------------
+!
+!     CREATING FIELDS OF H, U AND V, THAT CONTAIN THE PRESCRIBED DATA
+!     WITH RELAXATION TETA (IF 1.D0, THE ROUGH DATA ARE TAKEN ON THE 
+!     THOMPSON BOUNDARIES FOR INTERPOLATION AT THE FOOT OF 
+!     CHARACTERISTICS)
+!
+      CALL OS('X=Y     ',X=HFIELD,Y=H)
+      CALL OS('X=Y     ',X=UFIELD,Y=U)
+      CALL OS('X=Y     ',X=VFIELD,Y=V)
+!    
+      TETA=1.D0
+!     CAN BE RELAXED, TESTED UP TO 0.05 IN PALUEL BOX MODEL
+!     TETA=0.05D0  
+      DO K=1,NPTFR
+        IF(NUMLIQ(K).NE.0) THEN
+          IF(FRTYPE(NUMLIQ(K)).EQ.2) THEN
+            N=NBOR(K)
+            IF(LIHBOR(K).EQ.KENT) THEN
+              HFIELD%R(N)=TETA*HBOR(K)+(1.D0-TETA)*HFIELD%R(N)
+            ENDIF
+            IF(LIUBOR(K).EQ.KENT.OR.LIUBOR(K).EQ.KENTU) THEN
+              UFIELD%R(N)=TETA*UBOR(K)+(1.D0-TETA)*UFIELD%R(N)
+            ENDIF
+            IF(LIVBOR(K).EQ.KENT.OR.LIVBOR(K).EQ.KENTU) THEN
+              VFIELD%R(N)=TETA*VBOR(K)+(1.D0-TETA)*VFIELD%R(N)
+            ENDIF            
           ENDIF
-9       CONTINUE
-C
-C AVANCEMENT TEMPOREL (SPLITTING DU/DT=FU)
-C
-        CALL OS('X=X+Y   ',X=U,Y=FU)
-        CALL OS('X=X+Y   ',X=V,Y=FV)
-C
-C REGROUPEMENT DES POINTS POSSEDANT LA MEME NORMALE
-C A LA PRECISION 'EPSIL' PRES
-C NPT : NOMBRE DE POINT CONTINUS
-C LISPFR : LISTE DE CES POINTS DANS LA NUMEROTATION DES POINTS FRONTIERE
-C
-      NDEB=0
-C
-19    CONTINUE
-      K=NDEB
-20    CONTINUE
-C
-      K=K+1
-      IF(K.GT.NPTFR) GO TO 1000
-      IF(NUMLIQ(K).EQ.0) GO TO 20
-      IF(FRTYPE(NUMLIQ(K)).EQ.2) THEN
-C       PREMIER POINT THOMSON DE LA LISTE TROUVE
-        NPT=1
-        LISPFR(NPT)=K
-      ELSE
-        GO TO 20
-      ENDIF
-      NDEB = K
-      KP   = K
-30    CONTINUE
-      KP=KP+1
-      IF(KP.GT.NPTFR) GO TO 999
-      IF(NUMLIQ(KP).EQ.0) GO TO 999
-      IF(FRTYPE(NUMLIQ(KP)).EQ.2.AND.
-     *   ABS(XNEBOR(KP)-XNEBOR(K)).LT.EPSIL.AND.
-     *   ABS(YNEBOR(KP)-YNEBOR(K)).LT.EPSIL     ) THEN
-        NPT=NPT+1
-        LISPFR(NPT)=KP
-        GO TO 30
-      ENDIF
-999   CONTINUE
-      NDEB=LISPFR(NPT)
-C
-C MISE A JOUR DES VALEURS AUX BORDS SI SORTIE LIBRE
-C
-      DO J=1,NPT
-        K=LISPFR(J)
-        N=NBOR(K)
-        IF(LIHBOR(K).EQ.KSORT) THEN
-          HBOR(K)=H%R(N)
-        ENDIF
-        IF(LIUBOR(K).EQ.KSORT) THEN
-          UBOR(K)=U%R(N)
-        ENDIF
-        IF(LIVBOR(K).EQ.KSORT) THEN
-          VBOR(K)=V%R(N)
         ENDIF
       ENDDO
+!
+!-----------------------------------------------------------------------
+!
+      QUAD=.FALSE.     
+!
+!     COMPUTES THE CELERITY
+!     
+      CALL OS('X=CY    ',C,H,H,GRAV)
+      CALL CLIP(C,0.D0,.TRUE.,1.D6,.FALSE.,0)
+      CALL OS('X=SQR(Y)',X=C,Y=C)
+!
+!     COMPUTES MINUS THE FREE SURFACE GRADIENT 
+!
+      CALL OS('X=Y+Z   ',X=ZS,Y=H,Z=ZF)
+      CALL VECTOR(GZSX,'=','GRADF          X',IELM,
+     &            -1.D0,ZS,ZS,ZS,ZS,ZS,ZS,MESH,MSK,MASKEL)
+      CALL VECTOR(GZSY,'=','GRADF          Y',IELM,
+     &            -1.D0,ZS,ZS,ZS,ZS,ZS,ZS,MESH,MSK,MASKEL)
+      IF(NCSIZE.GT.1) THEN
+        CALL PARCOM(GZSX,2,MESH)
+        CALL PARCOM(GZSY,2,MESH)
+      ENDIF
+!
+!     REGROUPS THE POINTS WITH THOMPSON TREATMENT
+!     NPT : NUMBER OF POINTS
+!     LISPFR : LIST OF THOSE POINTS (BOUNDARY NODE NUMBERS)
+!
+      NPT=0      
+      DO K=1,NPTFR
+        IF(NUMLIQ(K).NE.0) THEN
+          IF(FRTYPE(NUMLIQ(K)).EQ.2) THEN
+            NPT=NPT+1
+            LISPFR(NPT)=K             
+          ENDIF
+        ENDIF
+      ENDDO
+!
+!--------------------------------------------------------------------     
+!     CHARACTERISTICS WITH ADVECTION FIELD U
+!     MAY BE CALLED WITH NPT=0 IF OTHER PROCESSORS STILL AT WORK
+!--------------------------------------------------------------------
+!
+!     COMPUTES THE ADVECTION FIELD U
+!     
+      DO N=1,NPOIN
+        UCONV%R(N)=U%R(N)
+        VCONV%R(N)=V%R(N)
+      ENDDO
+!
+!     NOTE JMH: COULD BE SIMPLIFIED WITH ARRAYS NELBOR AND NULONE !!!
+      CALL GTSH11(SHP,ITRAV2,IKLE,NPOIN,NELEM,NELMAX,MSK,MASKEL%R)
+!
+      CALL PRE_SCARACT_THOMPSON(NPTFR,NPT,NDP,NELEM,NBOR,LISPFR,X,Y,
+     *                          ITRAV2,SHP,XCONV%R,YCONV%R,SHPP,ELT_T)
+!
+!     PROVISIONAL, SHOULD WORK WITHOUT THIS IN VERSION 6.2
+      IF(NCSIZE.GT.1) THEN
+        CALL OS('X=0     ',X=UBTIL)
+        CALL OS('X=0     ',X=VBTIL)
+        CALL OS('X=0     ',X=HBTIL)
+        CALL OS('X=0     ',X=ZBTIL)
+      ENDIF
+!
+      NOMB=4+NTRAC
+      CALL SCARACT(FNCAR1,FTILD1,UCONV%R,VCONV%R,VCONV%R,X,Y,
+     *             ZSTAR,XCONV%R,YCONV%R,ZCONV,DX_T,DY_T,DZ_T,Z,
+     *             SHPP,SHZ,SURDET,DT,IKLE,IFABOR,ELT_T,
+     *             ETA,IT3%I,IT4%I,IELM,IELMU,NELEM,NELMAX,
+     *             NOMB,NPOIN,NPOIN,NDP,NPLAN,LV,MSK,MASKEL%R,
+     *             MESH,MESH%FAC%R,T7%R,T7,.FALSE.,QUAD,NPT,
+     *             .FALSE.,.FALSE.)
+!
+!----------------------------------------------------------------------
+!     UBTIL, VBTIL, HBTIL, TBTIL AT BOUNDARY NODES NUMBERING
+!----------------------------------------------------------------------
+!
+!     BACKWARD LOOP TO AVOID ERASING DATA, K ALWAYS GREATER THAN J
+      DO J=NPT,1,-1
+        K=LISPFR(J)
+        UBTIL%R(K)=UBTIL%R(J)
+        VBTIL%R(K)=VBTIL%R(J)
+        HBTIL%R(K)=HBTIL%R(J)
+!       ZBTIL%R(K)=ZBTIL%R(J)
+      ENDDO
       IF(NTRAC.GT.0) THEN
-        DO J=1,NPT
-          K=LISPFR(J)
-          N=NBOR(K)
-          DO ITRAC=1,NTRAC
-            IF(LITBOR%ADR(ITRAC)%P%I(K).EQ.KSORT) THEN
-              TBOR%ADR(ITRAC)%P%R(K)=T%ADR(ITRAC)%P%R(N)
-            ENDIF
+        DO ITRAC=1,NTRAC
+          DO J=NPT,1,-1
+            K=LISPFR(J)
+            TBTIL%ADR(ITRAC)%P%R(K)=TBTIL%ADR(ITRAC)%P%R(J)
           ENDDO
         ENDDO
       ENDIF
-C
-C CALCUL DU CHAMP CONVECTEUR U SELON LA DIRECTION NORMALE
-C A LA FRONTIERE
-C
-      CALL OS('X=CY    ',UNA  ,U  ,U  ,XNEBOR(LISPFR(1)))
-      CALL OS('X=X+CY  ',UNA  ,V  ,V  ,YNEBOR(LISPFR(1)))
-      CALL OS('X=CY    ',UCONV,UNA,UNA,XNEBOR(LISPFR(1)))
-      CALL OS('X=CY    ',VCONV,UNA,UNA,YNEBOR(LISPFR(1)))
-C
-C CARACTERISTIQUES POUR LES POINTS GROUPES , CHAMPS CONVECTEUR U
-C
-      CALL GTSH11(UCONV%R,VCONV%R,X,Y,SHP,ITRAV2,
-C                      INDIC  NLOC   (NE SERVENT PLUS)
-     *            IKLE,ITRAV2,ITRAV2,NPOIN,NELEM,NELMAX,1,MSK,MASKEL%R)
-      CALL CARAFR
-     * ( U%R,V%R,H%R,T,UCONV%R,VCONV%R,X,Y,SHP, 
-     *   SURDET , DT , IKLE , IFABOR , ITRAV2 ,
-     *   NBOR , NELBOR , NULONE , IELM , NELEM , NELMAX , 
-     *   NPOIN , 3 , NPTFR , 
-     *   MSK , MASKEL%R , MASKPT%R ,  NPT , LISPFR , NTRAC ,
-     *   HBTIL , UBTIL , VBTIL , TBTIL , ZBTIL , ZF%R,T5)
-C
-C CALCUL DES INVARIANTS DE RIEMANN W1 ET W4 (DEUXIEME DIMENSION DE TBOR) 
-C TRANSPORTES PAR CE CHAMP
-C
-      DO J=1,NPT
-       K=LISPFR(J)
-       IF(UNA%R(NBOR(K)).GE.0.D0) THEN
-        W1R(K)=-HBTIL(K)*(XNEBOR(LISPFR(1))*(VBTIL(K)-V%R(NBOR(K)))-
-     *                    YNEBOR(LISPFR(1))*(UBTIL(K)-U%R(NBOR(K))))
+      IF(NCSIZE.GT.1) THEN
+        CALL PARCOM_BORD(UBTIL%R,1,MESH)
+        CALL PARCOM_BORD(VBTIL%R,1,MESH)
+        CALL PARCOM_BORD(HBTIL%R,1,MESH)
+!       CALL PARCOM_BORD(ZBTIL%R,1,MESH)
         IF(NTRAC.GT.0) THEN
           DO ITRAC=1,NTRAC
-            TBOR%ADR(ITRAC)%P%R(K+NPTFR)=HBTIL(K)*
-     *      (TBTIL%ADR(ITRAC)%P%R(K)-T%ADR(ITRAC)%P%R(NBOR(K)))
+            CALL PARCOM_BORD(TBTIL%ADR(ITRAC)%P%R,1,MESH)
           ENDDO
         ENDIF
-       ELSE
-        W1R(K)=-HBOR(K)*(XNEBOR(LISPFR(1))*(VBOR(K)-V%R(NBOR(K)))-
-     *                   YNEBOR(LISPFR(1))*(UBOR(K)-U%R(NBOR(K))) )
-        IF(NTRAC.GT.0) THEN
-          DO ITRAC=1,NTRAC
-            TBOR%ADR(ITRAC)%P%R(K+NPTFR)=
-     *      HBOR(K)*(TBOR%ADR(ITRAC)%P%R(K)-T%ADR(ITRAC)%P%R(NBOR(K)))
-          ENDDO
-        ENDIF
-       ENDIF
-      ENDDO
-C
-C CALCUL DU CHAMP CONVECTEUR U+C SELON LA DIRECTION NORMALE
-C A LA FRONTIERE
-C
-      CALL OS('X=X+CY  ',UNA  , C   , C   ,             1.D0 )
-      CALL OS('X=CY    ',UCONV, UNA , UNA , XNEBOR(LISPFR(1)) )
-      CALL OS('X=CY    ',VCONV, UNA , UNA , YNEBOR(LISPFR(1)) )
-C
-C CARACTERISTIQUES POUR LES POINTS GROUPES , CHAMPS U+C
-C
-      CALL GTSH11(UCONV%R,VCONV%R,X,Y,SHP,ITRAV2,
-C                      INDIC  NLOC   (NE SERVENT PLUS)
-     *            IKLE,ITRAV2,ITRAV2,NPOIN,NELEM,NELMAX,1,MSK,MASKEL%R)
-      CALL CARAFR
-     * ( U%R,V%R,H%R,T,UCONV%R,VCONV%R,X,Y,SHP, 
-     *   SURDET,DT,IKLE,IFABOR,ITRAV2,
-     *   NBOR,NELBOR,NULONE,IELM,NELEM,NELMAX, 
-     *   NPOIN,3,NPTFR, 
-     *   MSK,MASKEL%R,MASKPT%R,NPT,LISPFR,NTRAC,
-     *   HBTIL,UBTIL,VBTIL,TBTIL,ZBTIL,ZF%R,T5)
-C
-C CALCUL DES INVARIANTS DE RIEMANN W2 TRANSPORTE PAR CE CHAMP CONVECTEUR
-C
-      DO 50 J=1,NPT
-       K=LISPFR(J)
-       IF (UNA%R(NBOR(K)).GE.0.D0) THEN
-        W2R(K)=(-ZF%R(NBOR(K))+HBTIL(K)+ZBTIL(K))*C%R(NBOR(K))+
-     *         HBTIL(K)*(XNEBOR(LISPFR(1))*(UBTIL(K)-U%R(NBOR(K)))+
-     *                   YNEBOR(LISPFR(1))*(VBTIL(K)-V%R(NBOR(K))) )
-       ELSE
-        W2R(K)=HBOR(K)*(C%R(NBOR(K))+
-     *                 (XNEBOR(LISPFR(1))*(UBOR(K)-U%R(NBOR(K)))+
-     *                  YNEBOR(LISPFR(1))*(VBOR(K)-V%R(NBOR(K)))) )
-       ENDIF
-50    CONTINUE
-C
-C CALCUL DU CHAMP CONVECTEUR U-C SELON LA DIRECTION NORMALE
-C A LA FRONTIERE
-C
-      CALL OS('X=X+CY  ',X=UNA, Y=C , C=-2.D0 )
-      CALL OS('X=CY    ',X=UCONV,Y=UNA , C=XNEBOR(LISPFR(1)) )
-      CALL OS('X=CY    ',X=VCONV,Y=UNA , C=YNEBOR(LISPFR(1)) )
-C
-C CARACTERISTIQUES POUR LES POINTS GROUPES , CHAMPS U+C
-C
-      CALL GTSH11(UCONV%R,VCONV%R,X,Y,SHP,ITRAV2,
-C                      INDIC  NLOC   (NE SERVENT PLUS)
-     *            IKLE,ITRAV2,ITRAV2,NPOIN,NELEM,NELMAX,1,MSK,MASKEL%R)
-      CALL CARAFR
-     * ( U%R,V%R,H%R,T,UCONV%R,VCONV%R,X,Y,SHP,
-     *   SURDET,DT,IKLE,IFABOR,ITRAV2,
-     *   NBOR,NELBOR,NULONE,IELM,NELEM,NELMAX,NPOIN,3,NPTFR, 
-     *   MSK,MASKEL%R,MASKPT%R,NPT,LISPFR,NTRAC,
-     *   HBTIL,UBTIL,VBTIL,TBTIL,ZBTIL,ZF%R,T5)
-C
-C CALCUL DES INVARIANTS DE RIEMANN W3 TRANSPORTE PAR CE CHAMP CONVECTEUR
-C
-      DO 60 J=1,NPT
-       K=LISPFR(J)
-       IF(UNA%R(NBOR(K)).GE.0.D0) THEN
-        W3R(K)=(-ZF%R(NBOR(K))+HBTIL(K)+ZBTIL(K))*C%R(NBOR(K))-
-     *         HBTIL(K)*(XNEBOR(LISPFR(1))*(UBTIL(K)-U%R(NBOR(K)))+
-     *                   YNEBOR(LISPFR(1))*(VBTIL(K)-V%R(NBOR(K))) )
-       ELSE
-        W3R(K)=HBOR(K)*(C%R(NBOR(K))-
-     *                 (XNEBOR(LISPFR(1))*(UBOR(K)-U%R(NBOR(K)))+
-     *                  YNEBOR(LISPFR(1))*(VBOR(K)-V%R(NBOR(K)))) )
-       ENDIF
-60    CONTINUE
-C
-C RECONSTRUCTION DES VARIABLES DE TELEMAC-2D
-C
-C POUR LES BANCS DECOUVRANTS (ICI H<HMIN) IL FAUT LAISSER FAIRE CE QUE
-C L'ANCIENNE VERSION AVAIT PREVU
-C
-      DO 70 J=1,NPT
-C
-        K=LISPFR(J)
-        IF(C%R(NBOR(K))**2.GT.GRAV*HMIN) THEN
-          HBOR(K)=(W2R(K)+W3R(K))/(2*C%R(NBOR(K)))
-          IF(HBOR(K).GT.HMIN) THEN
-C           BEWARE TIDAL FLATS, AND HIDDEN PARAMETER 0.1
-            HHBOR=MAX(0.1D0,HBOR(K))
-            UBOR(K)=(YNEBOR(LISPFR(1))*W1R(K)+XNEBOR(LISPFR(1))*W2R(K)-
-     *HBOR(K)*C%R(NBOR(K))*XNEBOR(LISPFR(1)))/HHBOR+U%R(NBOR(K))
-            VBOR(K)=(YNEBOR(LISPFR(1))*W2R(K)-XNEBOR(LISPFR(1))*W1R(K)-
-     *HBOR(K)*C%R(NBOR(K))*YNEBOR(LISPFR(1)))/HHBOR+V%R(NBOR(K))
-            IF(NTRAC.GT.0) THEN
+      ENDIF
+!
+!     COMPUTES THE RIEMANN INVARIANTS W1 AND W4 (SECOND DIMENSION OF TBOR)
+!     CARRIED BY THIS FIELD
+!
+!     IF W1=0 IS OK, THIS PART COULD BE DONE ONLY WHEN NTRAC.GT.0
+!
+      IF(NPT.GT.0) THEN 
+        DO J=1,NPT
+          K=LISPFR(J)
+          N=NBOR(K)  
+          UNORM=SQRT(U%R(N)**2+V%R(N)**2)
+          IF(UNORM.GT.1.D-12) THEN
+            DETADX=U%R(N)/UNORM
+            DETADY=V%R(N)/UNORM
+          ELSE
+            DETADX=0.D0
+            DETADY=0.D0
+          ENDIF
+          UCSIBAR=-U%R(N)*DETADY+V%R(N)*DETADX
+          HH=HBTIL%R(K)
+          UCSI=-UBTIL%R(K)*DETADY+VBTIL%R(K)*DETADX
+          W1R(K)=HH*(UCSIBAR-UCSI) 
+          IF(NTRAC.GT.0) THEN
+            DO ITRAC=1,NTRAC
+              TBAR(ITRAC)=T%ADR(ITRAC)%P%R(N)
+            ENDDO
+            IF(UCONV%R(N)*XNEBOR(K)+VCONV%R(N)*YNEBOR(K).GT.0.D0) THEN
+!             VELOCITY EXITING THE DOMAIN, THE CHARACTERISTICS ARE USED
               DO ITRAC=1,NTRAC
-                TBOR%ADR(ITRAC)%P%R(K)=
-     *          TBOR%ADR(ITRAC)%P%R(K+NPTFR)/HHBOR+
-     *          T%ADR(ITRAC)%P%R(NBOR(K))
+                TT(ITRAC)=TBTIL%ADR(ITRAC)%P%R(K)
+              ENDDO
+            ELSE
+!             VELOCITY ENTERING THE DOMAIN, PRESCRIBED VALUES TAKEN
+              DO ITRAC=1,NTRAC
+                TT(ITRAC)=TBOR%ADR(ITRAC)%P%R(K)
               ENDDO
             ENDIF
+            DO ITRAC=1,NTRAC
+!             W4
+              TBOR%ADR(ITRAC)%P%R(K+NPTFR)=HH*(TT(ITRAC)-TBAR(ITRAC))
+            ENDDO
+          ENDIF       
+        ENDDO
+      ENDIF
+!
+!----------------------------------------------------------
+!     COMPUTES THE ADVECTION FIELD U + C 
+!----------------------------------------------------------
+!
+      DO N=1,NPOIN
+        UNORM=SQRT(U%R(N)**2+V%R(N)**2)
+        IF(UNORM.GT.1.D-12) THEN
+          DETADX=U%R(N)/UNORM
+          DETADY=V%R(N)/UNORM
+        ELSE
+!         VERY IMPORTANT
+          NORMZS=SQRT(GZSX%R(N)**2+GZSY%R(N)**2)
+          IF(NORMZS.GT.1.D-12) THEN
+            DETADX=GZSX%R(N)/NORMZS
+            DETADY=GZSY%R(N)/NORMZS
           ELSE
-C           ON DEVIENT DECOUVERT
-            HBOR(K)=MAX(0.D0,HBOR(K))
+            DETADX=0.D0
+            DETADY=0.D0
+          ENDIF
+        ENDIF
+        UETABAR=U%R(N)*DETADX+V%R(N)*DETADY+C%R(N)                   
+        UCONV%R(N)=UETABAR*DETADX
+        VCONV%R(N)=UETABAR*DETADY
+      ENDDO
+!
+!----------------------------------------------------------------------
+!     CHARACTERISTICS FOR THE GROUP OF POINTS, FIELD U + C
+!     MAY BE CALLED WITH NPT=0 IF OTHER PROCESSORS STILL AT WORK
+!----------------------------------------------------------------------
+!
+      CALL PRE_SCARACT_THOMPSON(NPTFR,NPT,NDP,NELEM,
+     *                          NBOR,LISPFR,X,Y,ITRAV2,
+     *                          SHP,XCONV%R,YCONV%R,SHPP,ELT_T)
+!
+!     PROVISIONAL, SHOULD WORK WITHOUT THIS IN VERSION 6.2
+      IF(NCSIZE.GT.1) THEN
+        CALL OS('X=0     ',X=UBTIL)
+        CALL OS('X=0     ',X=VBTIL)
+        CALL OS('X=0     ',X=HBTIL)
+        CALL OS('X=0     ',X=ZBTIL)
+      ENDIF
+!
+      NOMB=4
+      CALL SCARACT(FNCAR1,FTILD1,UCONV%R,VCONV%R,VCONV%R,X,Y,
+     *             ZSTAR,XCONV%R,YCONV%R,ZCONV,DX_T,DY_T,DZ_T,Z,
+     *             SHPP,SHZ,SURDET,DT,IKLE,IFABOR,ELT_T,ETA,
+     *             IT3%I,IT4%I,IELM,IELMU,NELEM,NELMAX,NOMB,NPOIN,
+     *             NPOIN,NDP,NPLAN,LV,MSK,MASKEL%R,MESH,MESH%FAC%R,
+     *             T7%R,T7,.FALSE.,QUAD,NPT,.FALSE.,.FALSE.)
+!
+!----------------------------------------------------------------------
+!     UBTIL, VBTIL, HBTIL AT BOUNDARY NODES NUMBERING
+!----------------------------------------------------------------------
+!
+!     BACKWARD LOOP TO AVOID ERASING DATA, K ALWAYS GREATER THAN J
+      DO J=NPT,1,-1
+        K=LISPFR(J)
+        UBTIL%R(K)=UBTIL%R(J)
+        VBTIL%R(K)=VBTIL%R(J)
+        HBTIL%R(K)=HBTIL%R(J)
+        ZBTIL%R(K)=ZBTIL%R(J)
+      ENDDO
+      IF(NCSIZE.GT.1) THEN
+        CALL PARCOM_BORD(UBTIL%R,1,MESH)
+        CALL PARCOM_BORD(VBTIL%R,1,MESH)
+        CALL PARCOM_BORD(HBTIL%R,1,MESH)
+        CALL PARCOM_BORD(ZBTIL%R,1,MESH)
+      ENDIF
+!
+!----------------------------------------------------------------------
+!     COMPUTES THE RIEMANN INVARIANTS W2 CARRIED BY THIS ADVECTION FIELD
+!----------------------------------------------------------------------
+!
+      IF(NPT.GT.0) THEN
+        DO J=1,NPT
+          K=LISPFR(J)
+          N=NBOR(K)
+          UNORM=SQRT(U%R(N)**2+V%R(N)**2)
+          IF(UNORM.GT.1.D-12) THEN
+            DETADX=U%R(N)/UNORM
+            DETADY=V%R(N)/UNORM
+          ELSE
+            DETADX=0.D0
+            DETADY=0.D0
+          ENDIF
+!         UETABAR=U%R(N)*DETADX+V%R(N)*DETADY
+          UETABAR=UNORM
+          CBAR=C%R(N)
+          HH  =HBTIL%R(K)
+          UETA=UBTIL%R(K)*DETADX+VBTIL%R(K)*DETADY
+          W2R(K)=(HH+ZBTIL%R(K)-ZF%R(N))*CBAR+HH*(UETA-UETABAR)                               
+        ENDDO
+      ENDIF           
+!
+!     COMPUTES THE ADVECTION FIELD U-C 
+!    
+      DO N=1,NPOIN
+        UNORM=SQRT(U%R(N)**2+V%R(N)**2)
+        IF(UNORM.GT.1.D-12) THEN
+          DETADX=U%R(N)/UNORM
+          DETADY=V%R(N)/UNORM
+        ELSE
+          NORMZS=SQRT(GZSX%R(N)**2+GZSY%R(N)**2)
+          IF(NORMZS.GT.1.D-12) THEN
+            DETADX=GZSX%R(N)/NORMZS
+            DETADY=GZSY%R(N)/NORMZS
+          ELSE
+            DETADX=0.D0
+            DETADY=0.D0
+          ENDIF
+        ENDIF
+        UETABAR=U%R(N)*DETADX+V%R(N)*DETADY-C%R(N)                   
+        UCONV%R(N)=UETABAR*DETADX
+        VCONV%R(N)=UETABAR*DETADY
+      ENDDO
+!
+!     CHARACTERISTICS FOR THE GROUP OF POINTS, FIELD U + C
+!     
+      CALL PRE_SCARACT_THOMPSON(NPTFR,NPT,NDP,NELEM,NBOR,LISPFR,X,Y,
+     *                          ITRAV2,SHP,XCONV%R,YCONV%R,SHPP,ELT_T)
+!
+!     PROVISIONAL, SHOULD WORK WITHOUT THIS IN VERSION 6.2
+      IF(NCSIZE.GT.1) THEN
+        CALL OS('X=0     ',X=UBTIL)
+        CALL OS('X=0     ',X=VBTIL)
+        CALL OS('X=0     ',X=HBTIL)
+        CALL OS('X=0     ',X=ZBTIL)
+      ENDIF
+!
+      NOMB=4
+      CALL SCARACT(FNCAR1,FTILD1,UCONV%R,VCONV%R,VCONV%R,X,Y,ZSTAR,
+     *             XCONV%R,YCONV%R,ZCONV,DX_T,DY_T,DZ_T,Z,SHPP,SHZ,
+     *             SURDET,DT,IKLE,IFABOR,ELT_T,ETA,IT3%I,IT4%I,IELM,
+     *             IELMU,NELEM,NELMAX,NOMB,NPOIN,NPOIN,NDP,NPLAN, 
+     *             LV,MSK,MASKEL%R,MESH,MESH%FAC%R,T7%R,T7,
+     *             .FALSE.,QUAD,NPT,.FALSE.,.FALSE.)
+!
+!----------------------------------------------------------------------
+!     UBTIL, VBTIL, HBTIL AT BOUNDARY NODES NUMBERING
+!----------------------------------------------------------------------
+!
+!     BACKWARD LOOP TO AVOID ERASING DATA, K ALWAYS GREATER THAN J
+      DO J=NPT,1,-1
+        K=LISPFR(J)
+        UBTIL%R(K)=UBTIL%R(J)
+        VBTIL%R(K)=VBTIL%R(J)
+        HBTIL%R(K)=HBTIL%R(J)
+        ZBTIL%R(K)=ZBTIL%R(J)
+      ENDDO
+      IF(NCSIZE.GT.1) THEN
+        CALL PARCOM_BORD(UBTIL%R,1,MESH)
+        CALL PARCOM_BORD(VBTIL%R,1,MESH)
+        CALL PARCOM_BORD(HBTIL%R,1,MESH)
+        CALL PARCOM_BORD(ZBTIL%R,1,MESH)
+      ENDIF
+!
+! COMPUTES THE RIEMANN INVARIANTS W3 CARRIED BY THIS ADVECTION FIELD
+!
+      IF(NPT.GT.0) THEN
+        DO J=1,NPT
+          K=LISPFR(J)
+          N=NBOR(K)
+          UNORM=SQRT(U%R(N)**2+V%R(N)**2)
+          IF(UNORM.GT.1.D-12) THEN
+            DETADX=U%R(N)/UNORM
+            DETADY=V%R(N)/UNORM
+          ELSE
+            DETADX=0.D0
+            DETADY=0.D0
+          ENDIF
+!         UETABAR=U%R(N)*DETADX+V%R(N)*DETADY
+!         MARCHE AUSSI
+          UETABAR=UNORM
+          CBAR=C%R(N)
+          HH  =HBTIL%R(K)
+          UETA=UBTIL%R(K)*DETADX+VBTIL%R(K)*DETADY
+          W3R(K)=(HH+ZBTIL%R(K)-ZF%R(N))*CBAR+HH*(-UETA+UETABAR)        
+        ENDDO
+      ENDIF
+!
+!----------------------------------------------------------------------
+!       RE-BUILDS THE TELEMAC-2D VARIABLES
+!----------------------------------------------------------------------       
+!
+      IF(NPT.GT.0) THEN     
+        DO J=1,NPT    
+          K=LISPFR(J)
+          N=NBOR(K) 
+          UNORM=SQRT(U%R(N)**2+V%R(N)**2)
+          IF(UNORM.GT.1.D-12) THEN
+            DETADX=U%R(N)/UNORM
+            DETADY=V%R(N)/UNORM
+          ELSE
+            NORMZS=SQRT(GZSX%R(N)**2+GZSY%R(N)**2)
+            IF(NORMZS.GT.1.D-12) THEN
+              DETADX=GZSX%R(N)/NORMZS
+              DETADY=GZSY%R(N)/NORMZS
+            ELSE
+              DETADX=0.D0
+              DETADY=0.D0
+            ENDIF
+          ENDIF     
+          IF(C%R(N)**2.GT.GRAV*HMIN) THEN
+            HBOR(K)=(W2R(K)+W3R(K))/(2*C%R(N))                                      
+            IF(HBOR(K).GT.HMIN) THEN
+!             BEWARE TIDAL FLATS, AND HIDDEN PARAMETER 0.1
+              HHBOR=MAX(0.1D0,HBOR(K))
+              UBOR(K)=(       DETADY* W1R(K)
+     &                 +0.5D0*DETADX*(W2R(K)-W3R(K)))/HHBOR+U%R(N)              
+              VBOR(K)=(      -DETADX* W1R(K)
+     &                 +0.5D0*DETADY*(W2R(K)-W3R(K)))/HHBOR+V%R(N)            
+              IF(NTRAC.GT.0) THEN
+                DO ITRAC=1,NTRAC
+!                 REMEMBER THAT W4 IS STORED INTO SECOND DIMENSION OF TBOR
+                  TBOR%ADR(ITRAC)%P%R(K)=
+     *            TBOR%ADR(ITRAC)%P%R(K+NPTFR)/HHBOR+T%ADR(ITRAC)%P%R(N)
+                ENDDO
+              ENDIF
+            ELSE
+!             BECOMES DRY
+              HBOR(K)=MAX(0.D0,HBOR(K))
+              UBOR(K)=0.D0
+              VBOR(K)=0.D0
+            ENDIF
+          ELSE
+!           WAS DRY, H IS GIVEN BY BORD
             UBOR(K)=0.D0
             VBOR(K)=0.D0
           ENDIF
-        ELSE
-C         ON ETAIT DECOUVERT, H EST DONNE PAR BORD
-          UBOR(K)=0.D0
-          VBOR(K)=0.D0
-        ENDIF
-C
-70    CONTINUE
-C
-      IF(NDEB.LE.NPTFR) GO TO 19
-C
-C     TEST IF(NFRLIQ.GT.0)...
+        ENDDO
       ENDIF
-C
-C
-1000  CONTINUE
-C
-C
-C RECUPERATION DE LA VALEUR EXACTE DE U ET V
-C CAR BESOIN POUR LES SOUS ITERATIONS
-C
-      CALL OS('X=X-Y   ' , X=U , Y=FU )
-      CALL OS('X=X-Y   ' , X=V , Y=FV )
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

@@ -3,7 +3,8 @@
 #
 include_directories("${PROJECT_BINARY_DIR}/bief/sources"
                     "${PROJECT_BINARY_DIR}/special/sources"
-                    "${PROJECT_BINARY_DIR}/sisyphe/sources" )
+                    "${PROJECT_BINARY_DIR}/sisyphe/sources"
+                    "${PROJECT_BINARY_DIR}/tomawac/sources" )
 #
 FILE(GLOB CTR_SOURCES telemac2d/sources *.f)
 #define the library
@@ -28,11 +29,13 @@ link_directories("${PROJECT_BINARY_DIR}/special/sources"
                  "${PROJECT_BINARY_DIR}/bief/sources" 
                  "${PROJECT_BINARY_DIR}/damocles/sources"
                  "${PROJECT_BINARY_DIR}/sisyphe/sources"
+                 "${PROJECT_BINARY_DIR}/tomawac/sources"
                  "${PROJECT_BINARY_DIR}/telemac2d/sources")
 
 add_executable(telemac2d${TELEMAC_VERSION}.exe homere_telemac2d.f)
 target_link_libraries(telemac2d${TELEMAC_VERSION}.exe telemac2d${TELEMAC_VERSION}
                                                     sisyphe${TELEMAC_VERSION}
+                                                    tomawac${TELEMAC_VERSION}
                                                     bief${TELEMAC_VERSION}
                                                     damo${TELEMAC_VERSION}
                                                     mumpsvoid${TELEMAC_VERSION}
@@ -50,6 +53,7 @@ if (MPI_Fortran_FOUND)
 add_executable(telemac2d${TELEMAC_VERSION}_MP.exe homere_telemac2d.f)
 target_link_libraries(telemac2d${TELEMAC_VERSION}_MP.exe telemac2d${TELEMAC_VERSION}
                                                     sisyphe${TELEMAC_VERSION}
+                                                    tomawac${TELEMAC_VERSION}
                                                     bief${TELEMAC_VERSION}
                                                     damo${TELEMAC_VERSION}
                                                     mumpsvoid${TELEMAC_VERSION}

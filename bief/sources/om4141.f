@@ -1,107 +1,129 @@
-C                       *****************
-                        SUBROUTINE OM4141
-C                       *****************
-C
-     *(OP ,  DM,TYPDIM,XM,TYPEXM,   DN,TYPDIN,XN,TYPEXN,   D,C,
-     * IKLE,NELEM,NELMAX,NDIAG)
-C
-C***********************************************************************
-C BIEF VERSION 5.9      09/07/2008    J-M HERVOUET (LNHE) 01 30 87 80 18
-C                                         F  LEPEINTRE (LNH) 30 87 78 54
-C***********************************************************************
-C
-C FONCTION : OPERATIONS SUR DES MATRICES EN PRISMES P1
-C            OU TOUT AUTRE ELEMENT AYANT LE MEME NOMBRE DE POINTS
-C
-C   OP EST UNE CHAINE DE 8 CARACTERES QUI INDIQUE L'OPERATION QUI SERA
-C   EFFECTUEE SUR LES MATRICES M ET N ,LA MATRICE DIAGONALE D ET LA
-C   CONSTANTE C.
-C
-C   LE RESULTAT EST LA MATRICE M.
-C
-C      OP = 'M=N     '  : COPIE DE N DANS M
-C      OP = 'M=CN    '  : PRODUIT DE N PAR LA CONSTANTE C
-C      OP = 'M=M+CN  '  : ON AJOUTE CN A M
-C      OP = 'M=M+N   '  : ON AJOUTE N A M
-C      OP = 'M=MD    '  : PRODUIT DE M PAR D A DROITE
-C      OP = 'M=DM    '  : PRODUIT DE M PAR D A GAUCHE
-C      OP = 'M=DMD   '  : PRODUIT DE M A DROITE ET A GAUCHE PAR D
-C      OP = 'M=0     '  : COPIE DE LA MATRICE NULLE DANS M
-C      OP = 'M=X(M)  '  : PASSAGE A UNE FORME NON SYMETRIQUE
-C                         (ANCIEN MATSNS)
-C      OP = 'M=MSK(M)'  : MASQUAGE DES TERMES EXTRADIAGONAUX
-C                         (ANCIEN MASKEX)
-C                         LE MASQUE EST PRIS DANS D
-C      OP = 'M=M+D   '  : ON AJOUTE D A M
-C
-C-----------------------------------------------------------------------
-C
-C     CONVENTION POUR LE STOCKAGE DES TERMES EXTRA-DIAGONAUX :
-C
-C     XA(IELEM, 1)  ---->  A(1,2)
-C     XA(IELEM, 2)  ---->  A(1,3)
-C     XA(IELEM, 3)  ---->  A(1,4)
-C     XA(IELEM, 4)  ---->  A(1,5)
-C     XA(IELEM, 5)  ---->  A(1,6)
-C     XA(IELEM, 6)  ---->  A(2,3)
-C     XA(IELEM, 7)  ---->  A(2,4)
-C     XA(IELEM, 8)  ---->  A(2,5)
-C     XA(IELEM, 9)  ---->  A(2,6)
-C     XA(IELEM,10)  ---->  A(3,4)
-C     XA(IELEM,11)  ---->  A(3,5)
-C     XA(IELEM,12)  ---->  A(3,6)
-C     XA(IELEM,13)  ---->  A(4,5)
-C     XA(IELEM,14)  ---->  A(4,6)
-C     XA(IELEM,15)  ---->  A(5,6)
-C     XA(IELEM,16)  ---->  A(2,1)
-C     XA(IELEM,17)  ---->  A(3,1)
-C     XA(IELEM,18)  ---->  A(4,1)
-C     XA(IELEM,19)  ---->  A(5,1)
-C     XA(IELEM,20)  ---->  A(6,1)
-C     XA(IELEM,21)  ---->  A(3,2)
-C     XA(IELEM,22)  ---->  A(4,2)
-C     XA(IELEM,23)  ---->  A(5,2)
-C     XA(IELEM,24)  ---->  A(6,2)
-C     XA(IELEM,25)  ---->  A(4,3)
-C     XA(IELEM,26)  ---->  A(5,3)
-C     XA(IELEM,27)  ---->  A(6,3)
-C     XA(IELEM,28)  ---->  A(5,4)
-C     XA(IELEM,29)  ---->  A(6,4)
-C     XA(IELEM,30)  ---->  A(6,5)
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|_______________________________________________
-C |    OP          | -->| OPERATION A EFFECTUER
-C |    DM,TYPDIM   |<-->| DIAGONALE ET TYPE DE DIAGONALE DE M
-C |    XM,TYPEXM   | -->| TERMES EXTRA-DIAG. ET TYPE POUR M
-C |    DN,TYPDIN   | -->| DIAGONALE ET TYPE DE DIAGONALE DE N
-C |    XN,TYPEXN   | -->| TERMES EXTRA-DIAG. ET TYPE POUR N
-C |    D           | -->| MATRICE DIAGONALE
-C |    C           | -->| CONSTANTE DONNEE
-C |    IKLE        | -->| CORRESPONDANCE NUMEROTATIONS LOCALE ET GLOBALE
-C |    NELEM       | -->| NOMBRE D'ELEMENTS DU MAILLAGE
-C |    NELMAX      | -->| NOMBRE MAXIMUM D'ELEMENTS DU MAILLAGE
-C |                |    | (CAS D'UN MAILLAGE ADAPTATIF)
-C |    NDIAG       | -->| NOMBRE DE VALEURS DE LA DIAGONALE.
-C |________________|____|_______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES   : OV
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE OM4141
+!                    *****************
+!
+     &(OP ,  DM,TYPDIM,XM,TYPEXM,   DN,TYPDIN,XN,TYPEXN,   D,C,
+     & IKLE,NELEM,NELMAX,NDIAG)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    OPERATIONS ON MATRICES WITH P1 PRISMS
+!+                OR ANY OTHER ELEMENT WITH THE SAME NUMBER OF POINTS.
+!code
+!+   D: DIAGONAL MATRIX
+!+   C: CONSTANT
+!+
+!+   OP IS A STRING OF 8 CHARACTERS, WHICH INDICATES THE OPERATION TO BE
+!+   PERFORMED ON MATRICES M AND N, D AND C.
+!+
+!+   THE RESULT IS MATRIX M.
+!+
+!+      OP = 'M=N     '  : COPIES N IN M
+!+      OP = 'M=CN    '  : MULTIPLIES N BY C
+!+      OP = 'M=M+CN  '  : ADDS CN TO M
+!+      OP = 'M=M+N   '  : ADDS N TO M
+!+      OP = 'M=MD    '  : M X D
+!+      OP = 'M=DM    '  : D X M
+!+      OP = 'M=DMD   '  : D X M X D
+!+      OP = 'M=0     '  : SETS M TO 0
+!+      OP = 'M=X(M)  '  : NOT SYMMETRICAL FORM OF M
+!+                         (OLD MATSNS)
+!+      OP = 'M=MSK(M)'  : MASKS M EXTRADIAGONAL TERMS
+!+                         (OLD MASKEX)
+!+                         THE MASK IS TAKEN FROM D
+!+      OP = 'M=M+D   '  : ADDS D TO M
+!
+!code
+!+  CONVENTION FOR THE STORAGE OF EXTRA-DIAGONAL TERMS:
+!+
+!+     XA(IELEM, 1)  ---->  A(1,2)
+!+     XA(IELEM, 2)  ---->  A(1,3)
+!+     XA(IELEM, 3)  ---->  A(1,4)
+!+     XA(IELEM, 4)  ---->  A(1,5)
+!+     XA(IELEM, 5)  ---->  A(1,6)
+!+     XA(IELEM, 6)  ---->  A(2,3)
+!+     XA(IELEM, 7)  ---->  A(2,4)
+!+     XA(IELEM, 8)  ---->  A(2,5)
+!+     XA(IELEM, 9)  ---->  A(2,6)
+!+     XA(IELEM,10)  ---->  A(3,4)
+!+     XA(IELEM,11)  ---->  A(3,5)
+!+     XA(IELEM,12)  ---->  A(3,6)
+!+     XA(IELEM,13)  ---->  A(4,5)
+!+     XA(IELEM,14)  ---->  A(4,6)
+!+     XA(IELEM,15)  ---->  A(5,6)
+!+     XA(IELEM,16)  ---->  A(2,1)
+!+     XA(IELEM,17)  ---->  A(3,1)
+!+     XA(IELEM,18)  ---->  A(4,1)
+!+     XA(IELEM,19)  ---->  A(5,1)
+!+     XA(IELEM,20)  ---->  A(6,1)
+!+     XA(IELEM,21)  ---->  A(3,2)
+!+     XA(IELEM,22)  ---->  A(4,2)
+!+     XA(IELEM,23)  ---->  A(5,2)
+!+     XA(IELEM,24)  ---->  A(6,2)
+!+     XA(IELEM,25)  ---->  A(4,3)
+!+     XA(IELEM,26)  ---->  A(5,3)
+!+     XA(IELEM,27)  ---->  A(6,3)
+!+     XA(IELEM,28)  ---->  A(5,4)
+!+     XA(IELEM,29)  ---->  A(6,4)
+!+     XA(IELEM,30)  ---->  A(6,5)
+!
+!history  J-M HERVOUET (LNHE)     ; F  LEPEINTRE (LNH)
+!+        09/07/2008
+!+        V5P9
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| C              |-->| A GIVEN CONSTANT USED IN OPERATION OP
+!| D              |-->| A DIAGONAL MATRIX
+!| DM             |<->| DIAGONAL OF M
+!| DN             |-->| DIAGONAL OF N
+!| IKLE           |-->| CONNECTIVITY TABLE.
+!| NDIAG          |-->| NUMBER OF TERMS IN THE DIAGONAL
+!| NELEM          |-->| NUMBER OF ELEMENTS
+!| NELMAX         |-->| MAXIMUM NUMBER OF ELEMENTS
+!| OP             |-->| OPERATION TO BE DONE (SEE ABOVE)
+!| TYPDIM         |<->| TYPE OF DIAGONAL OF M:
+!|                |   | TYPDIM = 'Q' : ANY VALUE
+!|                |   | TYPDIM = 'I' : IDENTITY
+!|                |   | TYPDIM = '0' : ZERO
+!| TYPDIN         |<->| TYPE OF DIAGONAL OF N:
+!|                |   | TYPDIN = 'Q' : ANY VALUE
+!|                |   | TYPDIN = 'I' : IDENTITY
+!|                |   | TYPDIN = '0' : ZERO
+!| TYPEXM         |-->| TYPE OF OFF-DIAGONAL TERMS OF M:
+!|                |   | TYPEXM = 'Q' : ANY VALUE
+!|                |   | TYPEXM = 'S' : SYMMETRIC
+!|                |   | TYPEXM = '0' : ZERO
+!| TYPEXN         |-->| TYPE OF OFF-DIAGONAL TERMS OF N:
+!|                |   | TYPEXN = 'Q' : ANY VALUE
+!|                |   | TYPEXN = 'S' : SYMMETRIC
+!|                |   | TYPEXN = '0' : ZERO
+!| XM             |-->| OFF-DIAGONAL TERMS OF M
+!| XN             |-->| OFF-DIAGONAL TERMS OF N
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_OM4141 => OM4141
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN) :: NELEM,NELMAX,NDIAG
       INTEGER, INTENT(IN) :: IKLE(NELMAX,6)
       CHARACTER(LEN=8), INTENT(IN)    :: OP
@@ -109,21 +131,21 @@ C
       DOUBLE PRECISION, INTENT(INOUT) :: DM(*),XM(NELMAX,*)
       CHARACTER(LEN=1), INTENT(INOUT) :: TYPDIM,TYPEXM,TYPDIN,TYPEXN
       DOUBLE PRECISION, INTENT(IN)    :: C
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER I,J,IELEM,I1,I2,I3,I4,I5,I6
-C
+!
       DOUBLE PRECISION Z(1),Y(1)
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(OP(3:8).EQ.'N     ') THEN
-C
+!
         IF(TYPDIN(1:1).EQ.'Q') THEN
           CALL OV( 'X=Y     ' , DM , DN , Z , C , NDIAG )
         ELSEIF(TYPDIN(1:1).EQ.'I'.OR.TYPDIN(1:1).EQ.'0') THEN
-C         RIEN A FAIRE, JUSTE TYPDIN A RECOPIER.
+!         NOTHING TO DO, ONLY NEEDS TO COPY TYPDIN
         ELSE
            IF (LNG.EQ.1) WRITE(LU,5) TYPDIN(1:1)
            IF (LNG.EQ.2) WRITE(LU,6) TYPDIN(1:1)
@@ -133,7 +155,7 @@ C         RIEN A FAIRE, JUSTE TYPDIN A RECOPIER.
            STOP
         ENDIF
         TYPDIM(1:1)=TYPDIN(1:1)
-C
+!
         IF(TYPEXN(1:1).EQ.'S') THEN
           DO 1 I=1,15
             CALL OV( 'X=Y     ' , XM(1,I) , XN(1,I) , Z , C , NELEM )
@@ -150,15 +172,15 @@ C
           CALL PLANTE(1)
           STOP
         ENDIF
-C
+!
         TYPEXM(1:1)=TYPEXN(1:1)
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       ELSEIF(OP(3:8).EQ.'TN    ') THEN
-C
+!
         CALL OV( 'X=Y     ' , DM       , DN       , Z , C , NDIAG )
-C
+!
         IF(TYPEXN(1:1).EQ.'S') THEN
           DO I=1,15
             CALL OV( 'X=Y     ' , XM(1,I) , XN(1,I) , Z , C , NELEM )
@@ -174,16 +196,16 @@ C
           CALL PLANTE(1)
           STOP
         ENDIF
-C
+!
         TYPDIM(1:1)=TYPDIN(1:1)
         TYPEXM(1:1)=TYPEXN(1:1)
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       ELSEIF(OP(3:8).EQ.'CN    ') THEN
-C
+!
         CALL OV( 'X=CY    ' , DM       , DN       , Z , C , NDIAG )
-C
+!
         IF(TYPEXN(1:1).EQ.'S') THEN
           DO 2 I=1,15
             CALL OV( 'X=CY    ' , XM(1,I) , XN(1,I) , Z , C , NELEM )
@@ -198,20 +220,20 @@ C
           CALL PLANTE(1)
           STOP
         ENDIF
-C
+!
         TYPDIM(1:1)=TYPDIN(1:1)
         TYPEXM(1:1)=TYPEXN(1:1)
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       ELSEIF(OP(3:8).EQ.'M+CN  ') THEN
-C
+!
         IF(TYPDIN(1:1).EQ.'I') THEN
           CALL OV( 'X=X+C   ' , DM , DN , Z , C , NDIAG )
         ELSEIF(TYPDIN(1:1).NE.'0') THEN
           CALL OV( 'X=X+CY  ' , DM , DN , Z , C , NDIAG )
         ENDIF
-C
+!
         IF(TYPEXN(1:1).EQ.'S') THEN
           DO 3 I=1,15
             CALL OV( 'X=X+CY  ' , XM(1,I) , XN(1,I) , Z , C , NELEM )
@@ -226,9 +248,9 @@ C
             IF (LNG.EQ.1) WRITE(LU,99) TYPEXM(1:1),OP(1:8),TYPEXN(1:1)
             IF (LNG.EQ.2) WRITE(LU,98) TYPEXM(1:1),OP(1:8),TYPEXN(1:1)
 99          FORMAT(1X,'OM4141 (BIEF) : TYPEXM = ',A1,' NE CONVIENT PAS',
-     *      /,1X,'POUR L''OPERATION : ',A8,' AVEC TYPEXN = ',A1)
+     &      /,1X,'POUR L''OPERATION : ',A8,' AVEC TYPEXN = ',A1)
 98          FORMAT(1X,'OM4141 (BIEF) : TYPEXM = ',A1,' DOES NOT GO',
-     *      /,1X,'FOR THE OPERATION : ',A8,' WITH TYPEXN = ',A1)
+     &      /,1X,'FOR THE OPERATION : ',A8,' WITH TYPEXN = ',A1)
             CALL PLANTE(1)
             STOP
           ENDIF
@@ -241,14 +263,14 @@ C
           CALL PLANTE(1)
           STOP
         ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       ELSEIF(OP(3:8).EQ.'M+N   '.OR.
-     *      (OP(3:8).EQ.'M+TN  ').AND.TYPEXN(1:1).NE.'Q') THEN
-C
+     &      (OP(3:8).EQ.'M+TN  ').AND.TYPEXN(1:1).NE.'Q') THEN
+!
         CALL OV( 'X=X+Y   ' , DM       , DN       , Z , C , NDIAG )
-C
+!
         IF(TYPEXN(1:1).EQ.'S') THEN
           DO 4 I=1,15
             CALL OV( 'X=X+Y   ' , XM(1,I) , XN(1,I) , Z , C , NELEM )
@@ -274,13 +296,13 @@ C
           CALL PLANTE(1)
           STOP
         ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       ELSEIF(OP(3:8).EQ.'MD    ') THEN
-C
-C   CONTRIBUTION DE LA DIAGONALE
-C
+!
+!   DIAGONAL TERMS
+!
          IF(TYPDIM(1:1).EQ.'Q') THEN
            CALL OV( 'X=XY    ' , DM , D , Z , C , NDIAG )
          ELSEIF(TYPDIM(1:1).EQ.'I') THEN
@@ -292,13 +314,13 @@ C
            CALL PLANTE(1)
            STOP
          ENDIF
-C
-C   CONTRIBUTION DES TERMES EXTRADIAGONAUX
-C
+!
+!   EXTRADIAGONAL TERMS
+!
          IF(TYPEXM(1:1).EQ.'Q') THEN
-C
+!
          DO 50 IELEM = 1 , NELEM
-C
+!
            XM(IELEM, 1) = XM(IELEM, 1) * D(IKLE(IELEM,2))
            XM(IELEM, 2) = XM(IELEM, 2) * D(IKLE(IELEM,3))
            XM(IELEM, 3) = XM(IELEM, 3) * D(IKLE(IELEM,4))
@@ -314,7 +336,7 @@ C
            XM(IELEM,13) = XM(IELEM,13) * D(IKLE(IELEM,5))
            XM(IELEM,14) = XM(IELEM,14) * D(IKLE(IELEM,6))
            XM(IELEM,15) = XM(IELEM,15) * D(IKLE(IELEM,6))
-C
+!
            XM(IELEM,16) = XM(IELEM,16) * D(IKLE(IELEM,1))
            XM(IELEM,17) = XM(IELEM,17) * D(IKLE(IELEM,1))
            XM(IELEM,18) = XM(IELEM,18) * D(IKLE(IELEM,1))
@@ -330,15 +352,15 @@ C
            XM(IELEM,28) = XM(IELEM,28) * D(IKLE(IELEM,4))
            XM(IELEM,29) = XM(IELEM,29) * D(IKLE(IELEM,4))
            XM(IELEM,30) = XM(IELEM,30) * D(IKLE(IELEM,5))
-C
+!
 50       CONTINUE
-C
+!
          ELSEIF(TYPEXM(1:1).EQ.'S') THEN
           IF (LNG.EQ.1) WRITE(LU,150)
           IF (LNG.EQ.2) WRITE(LU,151)
 150       FORMAT(1X,'OM4141 (BIEF) : M=MD A ECRIRE SI M SYMETRIQUE')
 151       FORMAT(1X,
-     *    'OM4141 (BIEF) : M=MD NOT AVAILABLE IF M SYMMETRIC')
+     &    'OM4141 (BIEF) : M=MD NOT AVAILABLE IF M SYMMETRIC')
           CALL PLANTE(1)
           STOP
          ELSEIF(TYPEXM(1:1).NE.'0') THEN
@@ -347,13 +369,13 @@ C
           CALL PLANTE(1)
           STOP
          ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       ELSEIF(OP(3:8).EQ.'DM    ') THEN
-C
-C   TERMES DIAGONAUX
-C
+!
+!   DIAGONAL TERMS
+!
          IF(TYPDIM(1:1).EQ.'Q') THEN
            CALL OV( 'X=XY    ' , DM , D , Z , C , NDIAG )
          ELSEIF(TYPDIM(1:1).EQ.'I') THEN
@@ -365,13 +387,13 @@ C
            CALL PLANTE(1)
            STOP
          ENDIF
-C
-C   CONTRIBUTION DES TERMES EXTRADIAGONAUX
-C
+!
+!   EXTRADIAGONAL TERMS
+!
          IF(TYPEXM(1:1).EQ.'Q') THEN
-C
+!
          DO 60 IELEM = 1 , NELEM
-C
+!
            XM(IELEM, 1) = XM(IELEM, 1) * D(IKLE(IELEM,1))
            XM(IELEM, 2) = XM(IELEM, 2) * D(IKLE(IELEM,1))
            XM(IELEM, 3) = XM(IELEM, 3) * D(IKLE(IELEM,1))
@@ -387,7 +409,7 @@ C
            XM(IELEM,13) = XM(IELEM,13) * D(IKLE(IELEM,4))
            XM(IELEM,14) = XM(IELEM,14) * D(IKLE(IELEM,4))
            XM(IELEM,15) = XM(IELEM,15) * D(IKLE(IELEM,5))
-C
+!
            XM(IELEM,16) = XM(IELEM,16) * D(IKLE(IELEM,2))
            XM(IELEM,17) = XM(IELEM,17) * D(IKLE(IELEM,3))
            XM(IELEM,18) = XM(IELEM,18) * D(IKLE(IELEM,4))
@@ -403,15 +425,15 @@ C
            XM(IELEM,28) = XM(IELEM,28) * D(IKLE(IELEM,5))
            XM(IELEM,29) = XM(IELEM,29) * D(IKLE(IELEM,6))
            XM(IELEM,30) = XM(IELEM,30) * D(IKLE(IELEM,6))
-C
+!
 60       CONTINUE
-C
+!
          ELSEIF(TYPEXM(1:1).EQ.'S') THEN
           IF (LNG.EQ.1) WRITE(LU,160)
           IF (LNG.EQ.2) WRITE(LU,161)
 160       FORMAT(1X,'OM4141 (BIEF) : M=DM A ECRIRE SI M SYMETRIQUE')
 161       FORMAT(1X,
-     *    'OM4141 (BIEF) : M=MD NOT AVAILABLE IF M SYMMETRIC')
+     &    'OM4141 (BIEF) : M=MD NOT AVAILABLE IF M SYMMETRIC')
           CALL PLANTE(1)
           STOP
          ELSEIF(TYPEXM(1:1).NE.'0') THEN
@@ -422,13 +444,13 @@ C
           CALL PLANTE(1)
           STOP
          ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       ELSEIF(OP(3:8).EQ.'DMD   ') THEN
-C
-C   DIAGONALE
-C
+!
+!   DIAGONAL TERMS
+!
         IF(TYPDIM(1:1).EQ.'Q') THEN
            CALL OV( 'X=XY    ' , DM , D , Z , C , NDIAG )
            CALL OV( 'X=XY    ' , DM , D , Z , C , NDIAG )
@@ -443,20 +465,20 @@ C
            CALL PLANTE(1)
            STOP
         ENDIF
-C
-C   CONTRIBUTION DES TERMES EXTRADIAGONAUX
-C
+!
+!   EXTRADIAGONAL TERMS
+!
         IF(TYPEXM(1:1).EQ.'S') THEN
-C
+!
          DO 65 IELEM = 1 , NELEM
-C
+!
            I1 = IKLE(IELEM,1)
            I2 = IKLE(IELEM,2)
            I3 = IKLE(IELEM,3)
            I4 = IKLE(IELEM,4)
            I5 = IKLE(IELEM,5)
            I6 = IKLE(IELEM,6)
-C
+!
            XM(IELEM, 1) =  XM(IELEM, 1) * D(I2) * D(I1)
            XM(IELEM, 2) =  XM(IELEM, 2) * D(I3) * D(I1)
            XM(IELEM, 3) =  XM(IELEM, 3) * D(I4) * D(I1)
@@ -472,20 +494,20 @@ C
            XM(IELEM,13) =  XM(IELEM,13) * D(I5) * D(I4)
            XM(IELEM,14) =  XM(IELEM,14) * D(I6) * D(I4)
            XM(IELEM,15) =  XM(IELEM,15) * D(I6) * D(I5)
-C
+!
 65       CONTINUE
-C
+!
         ELSEIF(TYPEXM(1:1).EQ.'Q') THEN
-C
+!
          DO 66 IELEM = 1 , NELEM
-C
+!
            I1 = IKLE(IELEM,1)
            I2 = IKLE(IELEM,2)
            I3 = IKLE(IELEM,3)
            I4 = IKLE(IELEM,4)
            I5 = IKLE(IELEM,5)
            I6 = IKLE(IELEM,6)
-C
+!
            XM(IELEM, 1) =  XM(IELEM, 1) * D(I2) * D(I1)
            XM(IELEM, 2) =  XM(IELEM, 2) * D(I3) * D(I1)
            XM(IELEM, 3) =  XM(IELEM, 3) * D(I4) * D(I1)
@@ -516,9 +538,9 @@ C
            XM(IELEM,28) =  XM(IELEM,28) * D(I5) * D(I4)
            XM(IELEM,29) =  XM(IELEM,29) * D(I6) * D(I4)
            XM(IELEM,30) =  XM(IELEM,30) * D(I6) * D(I5)
-C
+!
 66       CONTINUE
-C
+!
         ELSEIF(TYPEXM(1:1).NE.'0') THEN
            IF (LNG.EQ.1) WRITE(LU,20) TYPEXM(1:1)
            IF (LNG.EQ.2) WRITE(LU,21) TYPEXM(1:1)
@@ -527,14 +549,14 @@ C
            CALL PLANTE(1)
            STOP
         ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
        ELSEIF(OP(3:8).EQ.'0     ') THEN
-C
+!
         PRINT*,'OM4141 M=0'
         CALL OV( 'X=C     ' , DM , Y , Z , 0.D0 , NDIAG )
-C
+!
         IF(TYPEXM(1:1).EQ.'S') THEN
            CALL OV( 'X=C     ' , XM(1,1 ) , Y , Z , 0.D0 , NELEM )
            CALL OV( 'X=C     ' , XM(1,2 ) , Y , Z , 0.D0 , NELEM )
@@ -547,7 +569,7 @@ C
            CALL OV( 'X=C     ' , XM(1,9 ) , Y , Z , 0.D0 , NELEM )
            CALL OV( 'X=C     ' , XM(1,10) , Y , Z , 0.D0 , NELEM )
            CALL OV( 'X=C     ' , XM(1,11) , Y , Z , 0.D0 , NELEM )
-           CALL OV( 'X=C     ' , XM(1,12) , Y , Z , 0.D0 , NELEM ) 
+           CALL OV( 'X=C     ' , XM(1,12) , Y , Z , 0.D0 , NELEM )
            CALL OV( 'X=C     ' , XM(1,13) , Y , Z , 0.D0 , NELEM )
            CALL OV( 'X=C     ' , XM(1,14) , Y , Z , 0.D0 , NELEM )
            CALL OV( 'X=C     ' , XM(1,15) , Y , Z , 0.D0 , NELEM )
@@ -563,7 +585,7 @@ C
            CALL OV( 'X=C     ' , XM(1,9 ) , Y , Z , 0.D0 , NELEM )
            CALL OV( 'X=C     ' , XM(1,10) , Y , Z , 0.D0 , NELEM )
            CALL OV( 'X=C     ' , XM(1,11) , Y , Z , 0.D0 , NELEM )
-           CALL OV( 'X=C     ' , XM(1,12) , Y , Z , 0.D0 , NELEM ) 
+           CALL OV( 'X=C     ' , XM(1,12) , Y , Z , 0.D0 , NELEM )
            CALL OV( 'X=C     ' , XM(1,13) , Y , Z , 0.D0 , NELEM )
            CALL OV( 'X=C     ' , XM(1,14) , Y , Z , 0.D0 , NELEM )
            CALL OV( 'X=C     ' , XM(1,15) , Y , Z , 0.D0 , NELEM )
@@ -582,7 +604,6 @@ C
            CALL OV( 'X=C     ' , XM(1,28) , Y , Z , 0.D0 , NELEM )
            CALL OV( 'X=C     ' , XM(1,29) , Y , Z , 0.D0 , NELEM )
            CALL OV( 'X=C     ' , XM(1,30) , Y , Z , 0.D0 , NELEM )
-
         ELSEIF(TYPEXM(1:1).NE.'0') THEN
            IF (LNG.EQ.1) WRITE(LU,710) TYPEXM(1:1)
            IF (LNG.EQ.2) WRITE(LU,711) TYPEXM(1:1)
@@ -591,14 +612,14 @@ C
            CALL PLANTE(1)
            STOP
         ENDIF
-C       ON NE CHANGE PAS TYPDIM
-C        TYPDIM(1:1)='0'
-C       ON NE CHANGE PAS TYPEXM
-C        TYPEXM(1:1)='0'
-C-----------------------------------------------------------------------
-C
+!       TYPDIM IS NOT CHANGED
+!        TYPDIM(1:1)='0'
+!       TYPEXM IS NOT CHANGED
+!        TYPEXM(1:1)='0'
+!-----------------------------------------------------------------------
+!
       ELSEIF(OP(3:8).EQ.'X(M)  ') THEN
-C
+!
         IF(TYPEXM(1:1).EQ.'S') THEN
           CALL OV( 'X=Y     ' , XM(1,16) , XM(1, 1) , Z , C , NELEM )
           CALL OV( 'X=Y     ' , XM(1,17) , XM(1, 2) , Z , C , NELEM )
@@ -620,16 +641,16 @@ C
           IF (LNG.EQ.2) WRITE(LU,811) TYPEXM(1:1)
 810       FORMAT(1X,'OM4141 (BIEF) : MATRICE DEJA NON SYMETRIQUE : ',A1)
 811       FORMAT(1X,'OM4141 (BIEF) : MATRIX ALREADY NON SYMMETRICAL: ',
-     *           A1)
+     &           A1)
           CALL PLANTE(1)
           STOP
         ENDIF
         TYPEXM(1:1)='Q'
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       ELSEIF(OP(3:8).EQ.'MSK(M)') THEN
-C
+!
       IF(TYPEXM(1:1).EQ.'S') THEN
         J = 15
       ELSEIF(TYPEXM(1:1).EQ.'Q') THEN
@@ -643,35 +664,35 @@ C
         CALL PLANTE(1)
         STOP
       ENDIF
-C
+!
       IF(J.GT.0) THEN
          DO 30 I = 1,J
             CALL OV ( 'X=XY    ' , XM(1,I) , D , Z , C , NELEM )
 30       CONTINUE
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       ELSEIF(OP(3:8).EQ.'M+D   ') THEN
-C
+!
         CALL OV( 'X=X+Y   ' , DM , D , Z , C , NDIAG )
-C       ICI IL Y A UN DOUTE SUR TYPDIM
+!       HERE THERE IS A DOUBT ABOUT TYPDIM
         TYPDIM(1:1)='Q'
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       ELSE
-C
+!
         IF (LNG.EQ.1) WRITE(LU,40) OP
         IF (LNG.EQ.2) WRITE(LU,41) OP
 40      FORMAT(1X,'OM4141 (BIEF) : OPERATION INCONNUE : ',A8)
 41      FORMAT(1X,'OM4141 (BIEF) : UNKNOWN OPERATION : ',A8)
         CALL PLANTE(1)
         STOP
-C
+!
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

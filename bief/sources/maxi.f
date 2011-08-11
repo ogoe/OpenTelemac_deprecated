@@ -1,63 +1,70 @@
-C                       ***************
-                        SUBROUTINE MAXI
-C                       ***************
-C
-     *( XMAX , IMAX , X , NPOIN )
-C
-C***********************************************************************
-C BIEF VERSION 5.1       17/08/94    E. PELTIER   (LNH)
-C***********************************************************************
-C
-C  FONCTION : RECHERCHE DE LA PLUS GRANDE VALEUR DANS UN TABLEAU X
-C             DE DIMENSION NPOIN
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |      XMAX      |<-- | MAXIMUM TROUVE
-C |      IMAX      |<-- | INDICE DU MAXIMUM
-C |      X         | -->| TABLEAU DES VALEURS
-C |      NPOIN     | -->| DIMENSION DU TABLEAU
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C PROGRAMME APPELANT :
-C PROGRAMMES APPELES : AUCUN
-C**********************************************************************
-C
+!                    ***************
+                     SUBROUTINE MAXI
+!                    ***************
+!
+     &( XMAX , IMAX , X , NPOIN )
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    LOOKS FOR THE GREATEST VALUE IN ARRAY X
+!+                OF DIMENSION NPOIN.
+!
+!history  E. PELTIER   (LNH)
+!+        17/08/94
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| IMAX           |<--| INDEX OF MAXIMUM
+!| NPOIN          |-->| DIMENSION OF ARRAY X
+!| X              |-->| ARRAY WITH VALUES TO LOOK AT
+!| XMAX           |<--| THE MAXIMUM 
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-      INTEGER, INTENT(IN)             :: NPOIN 
-      INTEGER, INTENT(INOUT)          :: IMAX 
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+      INTEGER, INTENT(IN)             :: NPOIN
+      INTEGER, INTENT(INOUT)          :: IMAX
       DOUBLE PRECISION, INTENT(INOUT) :: XMAX
       DOUBLE PRECISION, INTENT(IN)    :: X(NPOIN)
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-      INTEGER I     
-C
-C-----------------------------------------------------------------------
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+      INTEGER I
+!
+!-----------------------------------------------------------------------
+!
       XMAX = X(1)
       IMAX = 1
-C
+!
       DO 10 I = 2 , NPOIN
-C
+!
         IF(X(I).GT.XMAX) THEN
           IMAX = I
           XMAX = X(I)
         ENDIF
-C
+!
 10    CONTINUE
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END
- 

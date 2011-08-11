@@ -1,50 +1,60 @@
-C                       *****************************
-                        DOUBLE PRECISION FUNCTION DOT
-C                       *****************************
-C
-     *(NPOIN,X,Y)
-C
-C***********************************************************************
-C BIEF VERSION 5.1           18/08/94    J-M HERVOUET (LNH) 30 87 80 18
-C                                        F  LEPEINTRE (LNH) 30 87 78 54
-C***********************************************************************
-C
-C FONCTION : PRODUIT SCALAIRE DES VECTEURS X ET Y DE TAILLE NPOIN
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |    NPOIN       | -->| TAILLE DE X ET Y
-C |    X , Y       | -->| TABLEAUX CONTENANT LES VECTEURS
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C***********************************************************************
-C
+!                    *****************************
+                     DOUBLE PRECISION FUNCTION DOT
+!                    *****************************
+!
+     &(NPOIN,X,Y)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    SCALAR PRODUCT OF VECTORS X AND Y OF SIZE NPOIN.
+!
+!history  J-M HERVOUET (LNH)    ; F  LEPEINTRE (LNH)
+!+        18/08/94
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| NPOIN          |-->| TAILLE DE X ET Y
+!| X              |-->| FIRST DOUBLE PRECISION VECTOR
+!| Y              |-->| SECOND DOUBLE PRECISION VECTOR
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN) :: NPOIN
       DOUBLE PRECISION, INTENT(IN) :: X(NPOIN),Y(NPOIN)
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER I
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       DOT = 0.D0
-C
+!
       DO I = 1 , NPOIN
        DOT = DOT + X(I) * Y(I)
       ENDDO
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-      END 
- 
+      END

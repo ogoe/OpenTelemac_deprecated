@@ -1,74 +1,78 @@
-C                       *****************
-                        SUBROUTINE INTANG
-C                       *****************
-C
-     *( LAVANT, LAPRES, IPLAN , NPLAN , DELTAD)
-C
-C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C
-C                                                                     C
-C  EDF/DER - LABORATOIRE NATIONAL D'HYDRAULIQUE  -  CHATOU (FRANCE)   C
-C                                                                     C
-C  CODE TOMAWAC DE MODELISATION DES ETATS DE MER EN ELEMENTS FINIS    C
-C                       ---- VERSION 1.2 ----                         C
-C                                                                     C
-C  INTANG :  CALCUL DES INDICES ANGULAIRES ENTOURANT UNE DIRECTION    C
-C  ********  DONNEE POUR LE TERME D'INTERACTIONS NON-LINEAIRES AVEC   C
-C            DE LA METHODE "DISCRETE INTERACTION APPROXIMATION (DIA)" C
-C            PROPOSEE PAR HASSELMANN ET HASSELMANN (1985).            C
-C            PROCEDURE SPECIFIQUE AU CAS OU LES DIRECTIONS SONT       C
-C            REPARTIES REGULIEREMENT SUR [0;2.PI].                    C
-C                                                                     C
-C   - CREE POUR VERSION 1.2  LE 26/06/96 PAR M. BENOIT                C
-C                                                                     C
-C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C
-C                                                                     C
-C  ARGUMENTS D'APPEL :                                                C
-C  *******************                                                C
-C  +-------------+----+--------------------------------------------+  C
-C  ! NOM         !MODE! SIGNIFICATION - OBSERVATIONS               !  C
-C  +-------------+----+--------------------------------------------+  C
-C  ! LAVANT      !<-- ! INDICE ANGULAIRE PRECEDANT LA DIR. ARRIVEE !  C
-C  ! LAPRES      !<-- ! INDICE ANGULAIRE SUIVANT   LA DIR. ARRIVEE !  C
-C  ! IPLAN       ! -->! INDICE DE LA DIRECTION DE DEPART           !  C
-C  ! NPLAN       ! -->! NOMBRE DE DIRECTIONS DE DISCRETISATION     !  C
-C  ! DELTAD      ! -->! DEVIATION PAR RAPPORT A LA DIRECTION DEPART!  C
-C  +-------------+----+--------------------------------------------+  C
-C  ! MODE   (-> : NON-MODIFIE)  (<-> : MODIFIE)  (<- : INITIALISE) !  C
-C  +---------------------------------------------------------------+  C
-C                                                                     C
-C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C
-C                                                                     C
-C  APPELS :    - PROGRAMME(S) APPELANT  :  PRENL1                     C
-C  ********    - PROGRAMME(S) APPELE(S) :    -                        C
-C                                                                     C
-C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C
-C                                                                     C
-C  REMARQUES :                                                        C
-C  ***********                                                        C
-C                                                                     C
-C  - LA DEVIATION DELTAD EST A FOURNIR EN DEGRES.                     C
-C                                                                     C
-C  - LAVANT ET LAPRES SONT TOUS DEUX COMPRIS ENTRE 1 ET NPLAN.        C
-C                                                                     C
-C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C
-C
+!                    *****************
+                     SUBROUTINE INTANG
+!                    *****************
+!
+     &( LAVANT, LAPRES, IPLAN , NPLAN , DELTAD)
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   17/06/2011
+!***********************************************************************
+!
+!brief    GETS THE ANGULAR INDICES AROUND A GIVEN DIRECTION
+!+                FOR THE NON-LINEAR INTERACTION TERM, USING THE DIA
+!+               ("DISCRETE INTERACTION APPROXIMATION") METHOD
+!+                PROPOSED BY HASSELMANN AND HASSELMANN (1985).
+!+
+!+
+!+            PROCEDURE SPECIFIC TO THE CASE WHERE THE DIRECTIONS
+!+                ARE EVENLY DISTRIBUTED OVER [0;2.PI].
+!
+!note     THE DELTAD DEVIATION SHOULD BE GIVEN IN DEGREES.
+!note   LAVANT AND LAPRES ARE COMPRISED BETWEEN 1 AND NPLAN.
+!
+!reference  HASSELMANN S., HASSELMANN K. ET AL.(1985) :
+!+                     "COMPUTATIONS AND PARAMETERIZATIONS OF THE NONLINEAR
+!+                      ENERGY TRANSFER IN GRAVITY-WAVE SPECTRUM. PART2 :
+!+                      PARAMETERIZATIONS OF THE NONLINEAR ENERGY TRANSFER
+!+                      FOR APPLICATION IN WAVE MODELS". JPO, VOL 15, PP 1378-1391.
+!
+!history  M. BENOIT
+!+        26/06/96
+!+        V1P2
+!+   CREATED
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        17/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| DELTAD         |-->| ANGULAR DEVIATION FROM THE STARTING DIRECTION
+!| IPLAN          |-->| STARTING DIRECTION INDEX
+!| LAPRES         |<--| ANGULAR INDEX FOLLOWING THE DIRECTION
+!| LAVANT         |<--| ANGULAR INDEX PRECEDING THE DIRECTION
+!| NPLAN          |-->| NUMBER OF DIRECTIONS
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
-C.....VARIABLES TRANSMISES.
-C     """""""""""""""""""""
+!
+!.....VARIABLES IN ARGUMENT
+!     """""""""""""""""""""
       INTEGER  LAVANT, LAPRES, NPLAN , IPLAN
       DOUBLE PRECISION DELTAD
-C
-C.....VARIABLES LOCALES.
-C     """"""""""""""""""
+!
+!.....LOCAL VARIABLES
+!     """"""""""""""""""
       DOUBLE PRECISION TETA  , DTETAD
-C
-C
+!
+!
       DTETAD=360.D0/DBLE(NPLAN)
       TETA=DBLE(IPLAN-1)*DTETAD+DELTAD
-C
-C.....TETA EST AJUSTE POUR SE TROUVER COMPRIS ENTRE 0 ET 360 DEG.
-C     """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+!
+!.....TETA IS ADJUSTED TO BE COMPRISED BETWEEN 0 AND 360 DEG.
+!     """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
   100 IF (TETA.GE.360.D0) THEN
         TETA=TETA-360.D0
         GOTO 100
@@ -77,12 +81,12 @@ C     """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
         TETA=TETA+360.D0
         GOTO 110
       ENDIF
-C
-C.....CALCUL DES INDICES ANGULAIRES PRECEDANT ET SUIVANT TETA.
-C     """"""""""""""""""""""""""""""""""""""""""""""""""""""""
+!
+!.....GETS THE ANGULAR INDICES PRECEDING AND FOLLOWING TETA
+!     """"""""""""""""""""""""""""""""""""""""""""""""""""""""
       LAVANT=INT(TETA/DTETAD)+1
       LAPRES=LAVANT+1
       IF (LAPRES.GT.NPLAN) LAPRES=1
-C
+!
       RETURN
       END

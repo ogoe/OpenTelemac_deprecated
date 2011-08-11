@@ -1,46 +1,72 @@
-C                       *************************
-                        SUBROUTINE LECDON_TOMAWAC
-C                       *************************
-C
-     * (FILE_DESC,PATH,NCAR,CODE)
-C
-C**********************************************************************
-C  TOMAWAC - 6.0    Michel BENOIT (EDF R&D LNHE)            06/12/2004
-C**********************************************************************
-C
-C      FONCTION:
-C      =========
-C
-C    LECTURE DU FICHIER CAS PAR APPEL DU LOGICIEL DAMOCLES.
-C
-C-----------------------------------------------------------------------
-C
-C SOUS-PROGRAMME APPELE PAR : HOMERE_TOMAWAC
-C SOUS-PROGRAMMES APPELES   : DAMOC 
-C
-C***********************************************************************
-C
+!                    *************************
+                     SUBROUTINE LECDON_TOMAWAC
+!                    *************************
+!
+     & (FILE_DESC,PATH,NCAR,CODE)
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   21/06/2011
+!***********************************************************************
+!
+!brief    READS THE STEERING FILE THROUGH A DAMOCLES CALL.
+!
+!history  MICHEL BENOIT (EDF R&D LNHE)
+!+        06/12/2004
+!+        V6P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF)
+!+        16/05/2011
+!+        V6P1
+!+   Declaration of new keywords defined by
+!+       E. GAGNAIRE-RENOU for solving new source terms models.
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        20/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CODE           |-->| NAME OF CALLING PROGRAMME
+!| FILE_DESC      |-->| STORES THE FILES 'SUBMIT' ATTRIBUTES
+!|                |   | IN DICTIONARIES. IT IS FILLED BY DAMOCLES.
+!| NCAR           |-->| LENGTH OF PATH
+!| PATH           |-->| NAME OF CURRENT DIRECTORY
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
       USE DECLARATIONS_TELEMAC
       USE DECLARATIONS_TOMAWAC
-C
+!
       IMPLICIT NONE
-C
+!
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C DEGRAD = parametre pour la conversion des degres en radians
+!
+! DEGRAD = CONVERSION FACTOR FROM DEGREES TO RADIANS
       DOUBLE PRECISION DEGRAD, PIS2
       PARAMETER(DEGRAD=0.01745329252D0, PIS2=1.570796327D0)
       CHARACTER*8      MNEMO(MAXVAR)
       INTEGER          K
-C
-C-----------------------------------------------------------------------
-C
-C DECLARATION DES TABLEAUX POUR L'APPEL DE DAMOCLES
-C
+!
+!-----------------------------------------------------------------------
+!
+! ARRAYS USED IN THE DAMOCLES CALL
+!
       INTEGER, PARAMETER :: NMAX = 300
-C
+!
       INTEGER          ADRESS(4,NMAX),DIMEN(4,NMAX)
       DOUBLE PRECISION MOTREA(NMAX)
       INTEGER          MOTINT(NMAX)
@@ -51,85 +77,85 @@ C
       LOGICAL          DOC
       CHARACTER(LEN=250) :: NOM_CAS
       CHARACTER(LEN=250) :: NOM_DIC
-!ARGUMENTS
+! ARGUMENTS
       CHARACTER(LEN=24), INTENT(IN)     :: CODE
       CHARACTER(LEN=144), INTENT(INOUT) :: FILE_DESC(4,NMAX)
       INTEGER, INTENT(IN)               :: NCAR
       CHARACTER(LEN=250), INTENT(IN)    :: PATH
       INTEGER :: I
-C
-C FIN DES VARIABLES AJOUTEES POUR LE NOUVEAU DAMOCLES
-C
-C
-C***********************************************************************
-C
+!
+! END OF DECLARATIONS FOR DAMOCLES CALL
+!
+!
+!***********************************************************************
+!
       IF (LNG.EQ.1) WRITE(LU,1)
       IF (LNG.EQ.2) WRITE(LU,2)
 1     FORMAT(1X,/,19X, '********************************************',/,
-     *            19X, '*     SOUS-PROGRAMME LECDON_TOMAWAC        *',/,
-     *            19X, '*           APPEL DE DAMOCLES              *',/,
-     *            19X, '*     VERIFICATION DES DONNEES LUES        *',/,
-     *            19X, '*           SUR LE FICHIER CAS             *',/,
-     *            19X, '********************************************',/)
+     &            19X, '*     SOUS-PROGRAMME LECDON_TOMAWAC        *',/,
+     &            19X, '*           APPEL DE DAMOCLES              *',/,
+     &            19X, '*     VERIFICATION DES DONNEES LUES        *',/,
+     &            19X, '*           SUR LE FICHIER CAS             *',/,
+     &            19X, '********************************************',/)
 2     FORMAT(1X,/,19X, '********************************************',/,
-     *            19X, '*        SUBROUTINE LECDON_TOMAWAC         *',/,
-     *            19X, '*           CALL OF DAMOCLES               *',/,
-     *            19X, '*        VERIFICATION OF READ DATA         *',/,
-     *            19X, '*            ON STEERING FILE              *',/,
-     *            19X, '********************************************',/)
-C
-C-----------------------------------------------------------------------
-C
-C INITIALISATIONS :
-C
+     &            19X, '*        SUBROUTINE LECDON_TOMAWAC         *',/,
+     &            19X, '*           CALL OF DAMOCLES               *',/,
+     &            19X, '*        VERIFICATION OF READ DATA         *',/,
+     &            19X, '*            ON STEERING FILE              *',/,
+     &            19X, '********************************************',/)
+!
+!-----------------------------------------------------------------------
+!
+! INITIALISES THE VARIABLES FOR DAMOCLES CALL :
+!
       DO K=1,NMAX
-C       UN FICHIER NON DONNE PAR DAMOCLES SERA RECONNU PAR UN BLANC
-C       (IL N'EST PAS SUR QUE TOUS LES COMPILATEURS INITIALISENT AINSI)
+!       A FILENAME NOT GIVEN BY DAMOCLES WILL BE RECOGNIZED AS A WHITE SPACE
+!       (IT MAY BE THAT NOT ALL COMPILERS WILL INITIALISE LIKE THAT)
         MOTCAR(K)(1:1)=' '
-C
+!
         DIMEN(1,K) = 0
         DIMEN(2,K) = 0
         DIMEN(3,K) = 0
         DIMEN(4,K) = 0
       ENDDO
-C
-C     IMPRESSION DE LA DOC
+!
+!     WRITES OUT INFO
       DOC = .FALSE.
-C
-C-----------------------------------------------------------------------
-C     OUVERTURE DES FICHIERS DICTIONNAIRE ET CAS
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!     OPENS DICTIONNARY AND STEERING FILES
+!-----------------------------------------------------------------------
+!
       IF(NCAR.GT.0) THEN
-C
+!
         NOM_DIC=PATH(1:NCAR)//'WACDICO'
         NOM_CAS=PATH(1:NCAR)//'WACCAS'
-C
+!
       ELSE
-C
+!
         NOM_DIC='WACDICO'
         NOM_CAS='WACCAS'
-C
+!
       ENDIF
-C
+!
       OPEN(2,FILE=NOM_DIC,FORM='FORMATTED',ACTION='READ')
       OPEN(3,FILE=NOM_CAS,FORM='FORMATTED',ACTION='READ')
-C
+!
       CALL DAMOCLE
-     *( ADRESS, DIMEN , NMAX  , DOC    , LNG   , LU    , MOTINT,
-     *  MOTREA, MOTLOG, MOTCAR, MOTCLE , TROUVE, 2  , 3  ,
-     *  .FALSE.,FILE_DESC)
-C
-C     DECRYPTAGE DES CHAINES SUBMIT
-C
-      CALL READ_SUBMIT(WAC_FILES,44,CODE,FILE_DESC,300)
-C
-C-----------------------------------------------------------------------
-C
-C     RETRIEVING FILES NUMBERS IN TOMAWAC FORTRAN PARAMETERS
-C     AT THIS LEVEL LOGICAL UNITS ARE EQUAL TO THE FILE NUMBER
-C
-      DO I=1,44
+     &( ADRESS, DIMEN , NMAX  , DOC    , LNG   , LU    , MOTINT,
+     &  MOTREA, MOTLOG, MOTCAR, MOTCLE , TROUVE, 2  , 3  ,
+     &  .FALSE.,FILE_DESC)
+!
+!     DECODES 'SUBMIT' CHAINS
+!
+      CALL READ_SUBMIT(WAC_FILES,MAXLU_WAC,CODE,FILE_DESC,300)
+!
+!-----------------------------------------------------------------------
+!
+!     RETRIEVES FILE NUMBERS FROM TOMAWAC FORTRAN PARAMETERS
+!     AT THIS LEVEL LOGICAL UNITS ARE EQUAL TO THE FILE NUMBER
+!
+      DO I=1,MAXLU_WAC
         IF(WAC_FILES(I)%TELNAME.EQ.'WACGEO') THEN
           WACGEO=I
         ELSEIF(WAC_FILES(I)%TELNAME.EQ.'WACCAS') THEN
@@ -168,15 +194,15 @@ C
           WACMAF=I
         ENDIF
       ENDDO
-C
-C-----------------------------------------------------------------------
-C
-C   AFFECTATION DES PARAMETRES SOUS LEUR NOM EN FORTRAN
-C
-C-----------------------------------------------------------------------
-C
-C MOTS CLES ENTIERS
-C
+!
+!-----------------------------------------------------------------------
+!
+!   ASSIGNS THE STEERING FILE VALUES TO THE PARAMETER FORTRAN NAME
+!
+!-----------------------------------------------------------------------
+!
+! INTEGER KEYWORDS
+!
       GRAPRD = MOTINT( ADRESS(1,  1) )
       LISPRD = MOTINT( ADRESS(1,  2) )
       NIT    = MOTINT( ADRESS(1,  3) )
@@ -207,9 +233,9 @@ C
       IFRIH  = MOTINT( ADRESS(1, 28) )
       NDTBRK = MOTINT( ADRESS(1, 29) )
       LIMIT  = MOTINT( ADRESS(1, 30) )
-C
-C         NPRIV     = MOTINT( ADRESS(1, 32?) ) 'ajouter dans le dico'
-C
+!GM V6P1 - NEW SOURCE TERMS
+      LVENT  = MOTINT( ADRESS(1, 31) )
+!GM Fin
       STRIA  = MOTINT( ADRESS(1, 32) )
       LIMSPE = MOTINT( ADRESS(1, 33) )
       LAM    = MOTINT( ADRESS(1, 34) )
@@ -218,20 +244,40 @@ C
       FRABI  = MOTINT( ADRESS(1, 37) )
       NPRIV  = MOTINT( ADRESS(1, 38) )
       FRABL  = MOTINT( ADRESS(1, 39) )
-C     COORDONNEES DU POINT ORIGINE EN (X,Y)
+!     COORDINATES OF THE ORIGIN IN (X, Y)
       I_ORIG = MOTINT( ADRESS(1, 40) )
       J_ORIG = MOTINT( ADRESS(1, 40)+1 )
-C     MOT-CLEF DEBUGGER
+!     DEBUG KEYWORD
       DEBUG  = MOTINT( ADRESS(1, 41) )
-C
-C     STANDARD DU FICHIER GEOMETRIE
+!GM V6P1 - NEW SOURCE TERMS
+      IQ_OM1 = MOTINT( ADRESS(1, 42) )
+      NQ_TE1 = MOTINT( ADRESS(1, 43) )
+      NQ_OM2 = MOTINT( ADRESS(1, 44) )
+!GM Fin
+!     GEOMETRY FILE STANDARD
       STDGEO = 3
-C
-C MOTS CLES REELS
-C
+!
+! REAL KEYWORDS
+!
       DT     = MOTREA( ADRESS(2,  1) )
       F1     = MOTREA( ADRESS(2,  2) )
       RAISF  = MOTREA( ADRESS(2,  3) )
+      IF(DIMEN(2,4).NE.DIMEN(2,5)) THEN
+        IF(LNG.EQ.1) THEN
+          WRITE(LU,*) 'ABSCISSES ET ORDONNEES DES POINTS DE SORTIE'
+          WRITE(LU,*) 'DU SPECTRE DOIVENT ETRE DONNEES EN NOMBRE'
+          WRITE(LU,*) 'EGAL, OR IL Y A ',DIMEN(2,4),' ABSCISSES ET '
+          WRITE(LU,*) DIMEN(2,5),' ORDONNEES'
+        ENDIF
+        IF(LNG.EQ.2) THEN
+          WRITE(LU,*) 'ABSCISSAE AND ORDINATES OF SPECTRUM PRINTOUT'
+          WRITE(LU,*) 'POINTS MUST BE GIVEN IN EQUAL NUMBERS'
+          WRITE(LU,*) 'THERE ARE HERE',DIMEN(2,4),' ABCISSAE AND '
+          WRITE(LU,*) DIMEN(2,5),' ORDINATES'
+        ENDIF
+        CALL PLANTE(1)
+        STOP
+      ENDIF
       NPLEO  = DIMEN(2,4)
       DO K=1,DIMEN(2,4)
         XLEO(K)= MOTREA( ADRESS(2,  4) + K-1)
@@ -302,9 +348,22 @@ C
       VX_CTE = MOTREA( ADRESS(2, 66) )
       VY_CTE = MOTREA( ADRESS(2, 67) )
       CIMPLI = MOTREA( ADRESS(2, 68) )
-C
-C MOTS CLES LOGIQUES
-C
+!GM V6P1 - NEW SOURCE TERMS
+      COEFWD = MOTREA( ADRESS(2, 69) )
+      COEFWE = MOTREA( ADRESS(2, 70) )
+      COEFWF = MOTREA( ADRESS(2, 71) )
+      COEFWH = MOTREA( ADRESS(2, 72) )
+      CMOUT3 = MOTREA( ADRESS(2, 73) )
+      CMOUT4 = MOTREA( ADRESS(2, 74) )
+      CMOUT5 = MOTREA( ADRESS(2, 75) )
+      CMOUT6 = MOTREA( ADRESS(2, 76) )
+      SEUIL  = MOTREA( ADRESS(2, 77) )
+      SEUIL1 = MOTREA( ADRESS(2, 78) )
+      SEUIL2 = MOTREA( ADRESS(2, 79) )
+!GM Fin
+!
+! LOGICAL KEYWORDS
+!
       TSOU   = MOTLOG( ADRESS(3,  1) )
       SPHE   = MOTLOG( ADRESS(3,  2) )
       GLOB   = MOTLOG( ADRESS(3,  3) )
@@ -319,14 +378,14 @@ C
       MAREE  = MOTLOG( ADRESS(3, 12) )
       TRIGO  = MOTLOG( ADRESS(3, 13) )
       SPEULI = MOTLOG( ADRESS(3, 14) )
-C
-C MOTS CLES CHAINES DE CARACTERES
-C
+!
+! STRING KEYWORDS
+!
       TITCAS = MOTCAR( ADRESS(4, 1) ) (1:72)
       SORT2D = MOTCAR( ADRESS(4, 2) ) (1:72)
-C
-C FICHIERS ECRITS DANS LE FICHIER CAS
-C
+!
+! FILES IN THE STEERING FILE
+!
       WAC_FILES(WACGEO)%NAME=MOTCAR( ADRESS(4,3) )
 !     NOMFOR = MOTCAR( ADRESS(4, 4) )
 !     NOMCAS = MOTCAR( ADRESS(4, 5) )
@@ -347,9 +406,9 @@ C
       BINRBI = MOTCAR( ADRESS(4,20) )(1:3)
       BINPRE = MOTCAR( ADRESS(4,21) )(1:3)
       VERS   = MOTCAR( ADRESS(4,22) )(1:4)
-C
-C     DE 23 a 28 MOTS CLES POUR LE CRAY NON UTILES ICI
-C
+!
+!     FROM 23 TO 28 : FOR CRAY, NOT USEFUL HERE
+!
       BINVEN = MOTCAR( ADRESS(4,29) )(1:3)
       BINBI1 = MOTCAR( ADRESS(4,30) )(1:3)
       WAC_FILES(WACVEB)%NAME=MOTCAR( ADRESS(4,31) )
@@ -360,40 +419,40 @@ C
       WAC_FILES(WACMAF)%NAME=MOTCAR( ADRESS(4,36) )
       BINMAR = MOTCAR( ADRESS(4,37) )(1:3)
       EQUA   = 'TOMAWAC-COWADIS'
-!BD_INCKA format d'ecriture des fichiers
-!     FORMAT DU FICHIER DE RESULTATS
+!BD_INCKA FILE FORMATS
+!     RESULTS FILE FORMAT
       WAC_FILES(WACRES)%FMT = MOTCAR( ADRESS(4,40) )(1:8)
       CALL MAJUS(WAC_FILES(WACRES)%FMT)
-!     FORMAT DU FICHIER DE RESULTATS DU CALCUL PRECEDENT
+!     INITIAL RESULTS FILE FORMAT (< PREVIOUS COMPUTATION)
 !     SEDIMENT...
       WAC_FILES(WACPRE)%FMT = MOTCAR( ADRESS(4,41) )(1:8)
       CALL MAJUS(WAC_FILES(WACPRE)%FMT)
-!     FORMAT DU FICHIER DE REFERENCE
+!     REFERENCE FILE FORMAT
       WAC_FILES(WACREF)%FMT = MOTCAR( ADRESS(4,42) )(1:8)
       CALL MAJUS(WAC_FILES(WACREF)%FMT)
-!     FORMAT DU FICHIER BINAIRE 1
+!     BINARY FILE 1 FORMAT
       WAC_FILES(WACBI1)%FMT = MOTCAR( ADRESS(4,43) )(1:8)
       CALL MAJUS(WAC_FILES(WACBI1)%FMT)
-!     FORMAT DU FICHIER DE SPECTRE
+!     SPECTRAL FILE FORMAT
       WAC_FILES(WACLEO)%FMT = MOTCAR( ADRESS(4,44) )(1:8)
       CALL MAJUS(WAC_FILES(WACLEO)%FMT)
-C
-C  CORRECTIONS ET CALCULS D'AUTRES PARAMETRES QUI SE DEDUISENT
-C  DE CEUX QUE L'ON VIENT DE LIRE
-C
+!
+!  CORRECTS OR COMPUTES OTHER PARAMETERS FROM THOSE THAT
+!  HAVE JUST BEEN READ
+!
       IF(COUSTA.OR.MAREE) THEN
         COURAN=.TRUE.
       ELSE
         COURAN=.FALSE.
       ENDIF
       IF(.NOT.VENT.AND.SVENT.NE.0) THEN
-         IF(LNG.EQ.1) 
-     *         WRITE(LU,*)
-     *      'INCOHERENCE DES MOTS CLES DU VENT => PAS DE VENT'
-         IF(LNG.EQ.2) 
-     *         WRITE(LU,*)
-     *      'INCOMPATIBILITY OF KEY-WORDS CONCERNING WIND => NO
-     * WIND'
+         IF(LNG.EQ.1)
+     &         WRITE(LU,*)
+     &      'INCOHERENCE DES MOTS CLES DU VENT => PAS DE VENT'
+         IF(LNG.EQ.2)
+     &         WRITE(LU,*)
+     &      'INCOMPATIBILITY OF KEY-WORDS CONCERNING WIND => NO
+     & WIND'
         SVENT=0
       ENDIF
       IF(TRIGO) THEN
@@ -409,7 +468,7 @@ C
           WRITE(LU,*) 'INCOHERENCE DE L OPTION DE LIMITEUR'
           WRITE(LU,*) 'VALEUR LUE = ',LIMIT
           WRITE(LU,*) 'ON PREND LA VALEUR PAR DEFAUT LIMIT=1'
-        ENDIF  
+        ENDIF
         IF(LNG.EQ.2) THEN
           WRITE(LU,*) 'INCOMPATIBILITY OF LIMITER OPTION'
           WRITE(LU,*) 'VALUE READ = ',LIMIT
@@ -422,38 +481,51 @@ C
           WRITE(LU,*) 'INCOHERENCE DU COEFFICIENT D IMPLICITATION'
           WRITE(LU,*) 'VALEUR LUE = ',CIMPLI
           WRITE(LU,*) 'ON PREND LA VALEUR PAR DEFAUT CIMPLI=0.5'
-        ENDIF  
+        ENDIF
         IF(LNG.EQ.2) THEN
           WRITE(LU,*) 'INCOMPATIBILITY OF IMPLICITATION COEFFICIENT'
           WRITE(LU,*) 'VALUE READ = ',CIMPLI
           WRITE(LU,*) 'WE TAKE THE DEFAULT VALUE CIMPLI=0.5'
         ENDIF
         CIMPLI=0.5D0
-      ENDIF     
-C
-C
-C-----------------------------------------------------------------------
-C  NOMS DES VARIABLES POUR LES FICHIERS DE RESULTATS ET DE GEOMETRIE:
-C-----------------------------------------------------------------------
-C
-C TABLEAU DE LOGIQUES POUR LES SORTIES DE VARIABLES
-C
+      ENDIF
+!GM V6P1 - NEW SOURCE TERMS
+      IF(.NOT.PROINF.AND.STRIF.EQ.3) THEN
+        IF(LNG.EQ.1) THEN
+          WRITE(LU,*) 'INCOHERENCE DE LA PROFONDEUR ET DU' 
+          WRITE(LU,*) 'TERME DE TRANSFERT NON LINEAIRE' 
+        ENDIF  
+        IF(LNG.EQ.2) THEN
+          WRITE(LU,*) 'INCOMPATIBILITY OF DEPTH AND'
+          WRITE(LU,*) 'NON-LINEAR TRANSFER TERM'
+        ENDIF
+        STOP
+      ENDIF
+!GM Fin
+!
+!
+!-----------------------------------------------------------------------
+!  NAME OF THE VARIABLES FOR THE RESULTS AND GEOMETRY FILES:
+!-----------------------------------------------------------------------
+!
+! LOGICAL ARRAY FOR OUTPUT
+!
       CALL NOMVAR_TOMAWAC(TEXTE,TEXTPR,MNEMO,MAXVAR)
-C      
-C$DC$ BUG : tableaux MNEMO et SORLEO DIMENionnes a MAXVAR      
-C             tres inferieur a 100 !          
+!
+!$DC$ BUG : ARRAYS MNEMO AND SORLEO OF SIZE MAXVAR
+!             MUCH LESS THAN 100 !
       CALL SORTIE(SORT2D , MNEMO , MAXVAR , SORLEO )
-C
-C.....Si pas de vent, on n'imprime pas les composantes du vent en sortie.
+!
+!.....IF NO WIND, THERE SHOULD BE NO INFORMATION WRITTEN ABOUT WINDS
       IF (.NOT.VENT) THEN
         SORLEO( 9)=.FALSE.
         SORLEO(10)=.FALSE.
       ENDIF
-C
-C.....Si profondeur infinie, pas de calcul des contraintes de radiation.
+!
+!.....IF INFINITE DEPTH, THE RADIATION STRESSES ARE NOT COMPUTED
       IF (PROINF) THEN
         IF (SORLEO(11) .OR. SORLEO(12) .OR. SORLEO(13) .OR.
-     *      SORLEO(14) .OR. SORLEO(15) ) THEN
+     &      SORLEO(14) .OR. SORLEO(15) ) THEN
            IF (LNG.EQ.1) THEN
              WRITE(LU,*) '******************************************'
              WRITE(LU,*) ' LE CALCUL DES CONTRAINTES DE RADIATION ET'
@@ -468,21 +540,21 @@ C.....Si profondeur infinie, pas de calcul des contraintes de radiation.
            ENDIF
            DO K=11,15
              SORLEO(K) = .FALSE.
-           ENDDO         
+           ENDDO
         ENDIF
       ENDIF
-C
+!
       DO K=1,MAXVAR
         SORIMP(K)=.FALSE.
       ENDDO
-C
-C
+!
+!
  1001 FORMAT('*** INCOMPATIBILITE DES MOTS CLES ***
-     *                ARRET DU PROGRAMME')
+     &                ARRET DU PROGRAMME')
  1002 FORMAT('*** INCOMPATIBILITY OF THE KEY WORDS ***
-     *                   PROGRAM STOP')
-C
-C-----------------------------------------------------------------------
-C
+     &                   PROGRAM STOP')
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

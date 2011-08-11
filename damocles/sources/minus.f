@@ -1,51 +1,65 @@
-C                       ****************
-                        SUBROUTINE MINUS
-C                       ****************
-     *(CHAINE)
-C
-C***********************************************************************
-C DAMOCLES VERSION 5.1       06/10/97     A. DESITTER (BRISTOL)
-C                            30/01/92    J-M HERVOUET (LNH) 30 87 80 18
-C***********************************************************************
-C
-C FONCTION : TRANSFORME LES MAJUSCULES D'UNE CHAINE DE CARACTERES EN
-C            MINUSCULES
-C
-C----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C | CHAINE         |<-->| CHAINE DE CARACTERES A MODIFIER
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C**********************************************************************
-C
+!                    ****************
+                     SUBROUTINE MINUS
+!                    ****************
+!
+     &(CHAINE)
+!
+!***********************************************************************
+! DAMOCLES   V6P0                                   21/08/2010
+!***********************************************************************
+!
+!brief    CONVERTS A CHARACTER STRING FROM UPPER TO LOWER CASE.
+!
+!history  J-M HERVOUET (LNH)
+!+        30/01/1992
+!+
+!+
+!
+!history  A. DESITTER (BRISTOL)
+!+        06/10/1997
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CHAINE         |<->| CHAINE DE CARACTERES A MODIFIER
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
+!
       CHARACTER*26 STMAJ,STMIN
       CHARACTER*(*) CHAINE
-C
+!
       INTEGER I,IPOS
-C
+!
       INTRINSIC LEN,INDEX
-C
+!
       DATA STMAJ /'ABCDEFGHIJKLMNOPQRSTUVWXYZ'/
       DATA STMIN /'abcdefghijklmnopqrstuvwxyz'/
-C
-C----------------------------------------------------------------------
-C
+!
+!----------------------------------------------------------------------
+!
       DO 10 I=1,LEN(CHAINE)
-C
+!
       IPOS=INDEX(STMAJ,CHAINE(I:I))
       IF(IPOS.NE.0) CHAINE(I:I)=STMIN(IPOS:IPOS)
-C
+!
 10    CONTINUE
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END
- 

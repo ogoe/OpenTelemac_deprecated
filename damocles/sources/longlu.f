@@ -1,56 +1,59 @@
-                        INTEGER FUNCTION LONGLU
-C                       ***********************
-C
-     *( LIGNE )
-C
-C***********************************************************************
-C DAMOCLES VERSION 5.1     16/08/94   J.M. HERVOUET (LNH)   30 87 80 18
-C                                       A. YESSAYAN
-C                                       L. LEGUE
-C                          15/12/93     O. QUIQUEMPOIX (LNH) 30 87 78 70
-C
-C Copyright EDF 1994
-C
-C
-C***********************************************************************
-C
-C FONCTION: RENVOIE LA POSITION DU DERNIER CARACTERE NON BLANC ET NON
-C           TABULATION DE L'ARGUMENT LIGNE
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C !      NOM       !MODE!                   ROLE                       !
-C !________________!____!______________________________________________!
-C !                !    !                                              !
-C !  LIGNE         ! -->! ARGUMENT A ANALYSER                          !
-C !________________!____!______________________________________________!
-C
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C     - PORTABILITE : IBM,CRAY,HP,SUN
-C
-C     - APPELE PAR :  CARLU,CMD,DAMOC,DICO,INFLU,MAJUS
-C
-C***********************************************************************
-C
+!                    ***********************
+                     INTEGER FUNCTION LONGLU
+!                    ***********************
+!
+     &( LIGNE )
+!
+!***********************************************************************
+! DAMOCLES   V6P0                                   21/08/2010
+!***********************************************************************
+!
+!brief    RETURNS THE POSITION OF THE LAST NON-WHITE AND NON-
+!+             TABULATION CHARACTER OF THE LINE IN ARGUMENT.
+!
+!note     PORTABILITY : IBM,CRAY,HP,SUN
+!
+!history  O. QUIQUEMPOIX (LNH)
+!+        15/12/1993
+!+
+!+
+!
+!history  J.M. HERVOUET (LNH); A. YESSAYAN; L. LEGUE
+!+        16/08/1994
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| LIGNE          |-->| ARGUMENT A ANALYSER
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
+!
       CHARACTER*(*) LIGNE
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       INTEGER       I,LONG
       CHARACTER*1   TABUL
       INTRINSIC CHAR
-C
-C***********************************************************************
-C                                    MARQUAGE RCS ET SCCS
-C
-C***********************************************************************
-C
+!
+!***********************************************************************
+!                                    RCS AND SCCS MARKING
+!
+!***********************************************************************
+!
       TABUL = CHAR(9)
       LONG = LEN(LIGNE)
       IF (LONG .EQ. 0) THEN
@@ -62,9 +65,8 @@ C
 100   CONTINUE
 110   CONTINUE
       LONGLU = I
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END
- 

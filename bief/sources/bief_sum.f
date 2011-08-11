@@ -1,72 +1,76 @@
-C                       **********************************
-                        DOUBLE PRECISION FUNCTION BIEF_SUM
-C                       **********************************
-C
-     *( X )
-C
-C***********************************************************************
-C BIEF VERSION 6.0      11/05/2009    J-M HERVOUET (LNHE) 01 30 87 80 18
-C***********************************************************************
-C
-C   FONCTION : SOMME DES COMPOSANTES D'UN VECTEUR
-C
-C              X PEUT ETRE UN VECTEUR OU
-C
-C              UNE STRUCTURE DE BLOC DE VECTEURS EN NOMBRE ET
-C
-C              CARACTERISTIQUES IDENTIQUES
-C
-C              ATTENTION ||||
-C
-C              SI LES VECTEURS ONT UNE DEUXIEME DIMENSION
-C              ELLE EST POUR L'INSTANT IGNOREE
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|_______________________________________________
-C |      X         | -->| LA STRUCTURE DONT ON VEUT LA SOMME
-C |________________|____|_______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES   :
-C
-C***********************************************************************
-C
+!                    **********************************
+                     DOUBLE PRECISION FUNCTION BIEF_SUM
+!                    **********************************
+!
+     &( X )
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    SUMS UP THE COMPONENTS OF A VECTOR.
+!+
+!+            X CAN BE A VECTOR, OR
+!+
+!+            A BLOCK STRUCTURE OF VECTORS IN IDENTICAL NUMBER
+!+                AND CHARACTERISTICS.
+!
+!warning  IF THE VECTORS HAVE A SECOND DIMENSION,
+!+            IT IS PRESENTLY IGNORED
+!
+!history  J-M HERVOUET (LNHE)
+!+        11/05/2009
+!+        V6P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| X              |-->| BIEF_OBJ STRUCTURE OF WHICH X%R WILL BE SUMMED
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_BIEF_SUM => BIEF_SUM
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C-----------------------------------------------------------------------
-C
-C     STRUCTURES : VECTEURS OU BLOCS
-C
+!
+!-----------------------------------------------------------------------
+!
+!     STRUCTURES: VECTORS OR BLOCKS
+!
       TYPE(BIEF_OBJ), INTENT(IN) :: X
-C
-C-----------------------------------------------------------------------
-C
-C  CAS D'UN VECTEUR
-C
+!
+!-----------------------------------------------------------------------
+!
+!  CASE OF A VECTOR
+!
       IF(X%TYPE.EQ.2) THEN
-C
+!
         BIEF_SUM = SOMME(X%R,X%DIM1*X%DIM2)
-C
-C-----------------------------------------------------------------------
-C
-C  CAS OU LES STRUCTURES SONT DES BLOCS (A PROGRAMMER)
-C
-C     ELSEIF(X%TYPE.EQ.4) THEN
-C
-C-----------------------------------------------------------------------
-C
-C  ERREUR
-C
+!
+!-----------------------------------------------------------------------
+!
+!  CASE WHERE THE STRUCTURES ARE BLOCKS (TO BE CODED UP)
+!
+!     ELSEIF(X%TYPE.EQ.4) THEN
+!
+!-----------------------------------------------------------------------
+!
+!  ERROR
+!
       ELSE
-C
+!
          IF (LNG.EQ.1) WRITE(LU,50) X%NAME,X%TYPE
          IF (LNG.EQ.1) WRITE(LU,53)
          IF (LNG.EQ.2) WRITE(LU,60) X%NAME,X%TYPE
@@ -77,10 +81,10 @@ C
 63       FORMAT(1X,'                 CASE NOT IMPLEMENTED')
          CALL PLANTE(1)
          STOP
-C
+!
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

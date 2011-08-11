@@ -1,38 +1,47 @@
-C                       ************************
-                        SUBROUTINE FRICTION_READ
-C                       ************************
-C
-     & (NCOF, NZONMX, ITURB, LISRUG, LINDNER, NOMCOF, NZONES, FRTAB)
-C
-C***********************************************************************
-C  TELEMAC-2D VERSION 5.5                 J-M HERVOUET (LNH) 30 87 80 18
-C***********************************************************************
-C
-C 20/04/04 : subroutine written by F. Huvelin
-C
-C
-! ----------------------------------------------- !
-!             FRICTION FILE READ                  !
-! ----------------------------------------------- !
-C
-C
-C
-C----------------------------------------------------------------------C
-C                             ARGUMENTS                                C
-C .________________.____.______________________________________________C
-C |      NOM       |MODE|                   ROLE                       C
-C |________________|____|______________________________________________C
-C |                | => |                                              C
-C |________________|____|______________________________________________C
-C                    <=  input value                                   C
-C                    =>  output value                                  C 
-C ---------------------------------------------------------------------C
+!                    ************************
+                     SUBROUTINE FRICTION_READ
+!                    ************************
 !
-!=======================================================================!
-!=======================================================================!
-!                    DECLARATION DES TYPES ET DIMENSIONS                !
-!=======================================================================!
-!=======================================================================!
+     &(NCOF,NZONMX,ITURB,LISRUG,LINDNER,NOMCOF,NZONES,FRTAB)
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    FRICTION FILE READ.
+!
+!history  F. HUVELIN
+!+        20/04/2004
+!+
+!+
+!
+!history  J-M HERVOUET (LNHE)
+!+
+!+        V5P5
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| FRTAB          |-->| FRICTION_OBJ STRUCTURE WITH DATA ON FRICTION
+!| ITURB          |-->| TURBULENCE MODEL
+!| LINDNER        |-->| IF YES, THERE IS NON-SUBMERGED VEGETATION FRICTION
+!| LISRUG         |-->| TURBULENCE REGIME (1: SMOOTH 2: ROUGH)
+!| NCOF           |-->| LOGICAL UNIT OF FRICTION FILE
+!| NOMCOF         |-->| NAME OF FRICTION FILE
+!| NZONES         |-->| NUMBER OF FRICTION ZONES
+!| NZONMX         |-->| MAXIMUM NUMBER OF FRICTION ZONES
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       USE FRICTION_DEF
       USE INTERFACE_TELEMAC2D, EX_FRICTION_READ => FRICTION_READ
@@ -40,18 +49,18 @@ C ---------------------------------------------------------------------C
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER,            INTENT(IN)    :: NCOF, NZONMX
       INTEGER,            INTENT(IN)    :: ITURB, LISRUG
       LOGICAL,            INTENT(IN)    :: LINDNER
       CHARACTER(LEN=144), INTENT(IN)    :: NOMCOF
       INTEGER,            INTENT(OUT)   :: NZONES
       TYPE(FRICTION_OBJ), INTENT(INOUT) :: FRTAB
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER          :: I, J, LOOP, NLOOP, N, IZ1, IZ2
       INTEGER          :: IZONE, TYP, LINE
       DOUBLE PRECISION :: R1, R2
@@ -64,7 +73,7 @@ C
 !=======================================================================!
 !=======================================================================!
 !
-      ! Check that there is a friction file
+      ! CHECK THAT THERE IS A FRICTION FILE
       ! -----------------------------------
       IF (NOMCOF(1:1) == ' ') THEN
          IF (LNG == 1) WRITE(LU,1)
@@ -86,42 +95,42 @@ C
          FRTAB%ADR(I)%P%SP          = 0.D0
       ENDDO
 !
-      ! K-epsilon : read parameters for 2 laws (bottom and boundary conditions)
-      ! Else      : read parameters for 1 law  (bottom)
+      ! K-EPSILON : READ PARAMETERS FOR 2 LAWS (BOTTOM AND BOUNDARY CONDITIONS)
+      ! ELSE      : READ PARAMETERS FOR 1 LAW  (BOTTOM)
       ! ----------------------------------------------------------------------
-      IF ((ITURB == 3).AND.(LISRUG == 2)) THEN
-         NLOOP=2
+      IF(ITURB.EQ.3.AND.LISRUG.EQ.2) THEN
+        NLOOP=2
       ELSE
-         NLOOP=1
+        NLOOP=1
       ENDIF
 !
-      ! Listing
+      ! LISTING
       ! -------
       WRITE(LU,3)
       WRITE(LU,4)
 !
-      ! Read data for each zones
+      ! READ DATA FOR EACH ZONES
       ! ------------------------
       IZONE = 0
       LINE = 0
       DO I = 1, NZONMX
 !
-         ! Find the next zone index and law
+         ! FIND THE NEXT ZONE INDEX AND LAW
          ! --------------------------------
          CALL FRICTION_SCAN(NCOF,NOMCOF,TYP,LINE)
 !
-         ! End of file => exit
+         ! END OF FILE => EXIT
          ! -------------------
          IF (TYP == 3) THEN
             NZONES = IZONE
             EXIT
          ENDIF
 !
-         ! Increment number of zones
+         ! INCREMENT NUMBER OF ZONES
          ! -------------------------
          IZONE = IZONE + 1
 !
-         ! Not enough zones allocated
+         ! NOT ENOUGH ZONES ALLOCATED
          ! --------------------------
          IF (IZONE > NZONMX) THEN
             IF (LNG == 1) WRITE(LU,5)
@@ -130,7 +139,7 @@ C
             STOP
          ENDIF
 !
-         ! Read and save parameters of the zone
+         ! READ AND SAVE PARAMETERS OF THE ZONE
          ! ------------------------------------
          IF (TYP == 1) N = 1
          IF (TYP == 2) N = 4
@@ -138,8 +147,7 @@ C
          DO LOOP = 1, NLOOP
 !
             IF (LOOP == 2) BACKSPACE(NCOF)
-
-            ! Read the name of the law and numbering of the zone
+            ! READ THE NAME OF THE LAW AND NUMBERING OF THE ZONE
             ! --------------------------------------------------
             CHAINE(1) = ' '
             IF (TYP == 1) THEN
@@ -150,7 +158,7 @@ C
      &                                      (CHAINE(J),J=5,N),LAW
             ENDIF
 !
-            ! Local-Global number of the zone
+            ! LOCAL-GLOBAL NUMBER OF THE ZONE
             ! -------------------------------
             IF (LOOP == 1) FRTAB%ADR(I)%P%GNUMB(1) = IZ1
             IF (LOOP == 1) FRTAB%ADR(I)%P%GNUMB(2) = IZ2
@@ -158,7 +166,7 @@ C
             BACKSPACE(NCOF)
             CALL MAJUS(LAW)
 !
-            ! Find the law and the number of parameters to read
+            ! FIND THE LAW AND THE NUMBER OF PARAMETERS TO READ
             ! -------------------------------------------------
             SELECT CASE (LAW)
 !
@@ -174,8 +182,8 @@ C
                FRTAB%ADR(I)%P%RCOEF(LOOP) = R1
                FRTAB%ADR(I)%P%NDEF (LOOP) = 0.D0
 !
-               ! The boundary coefficient coef must be the same as the bottom
-               ! -----------------------------------------------------------    
+               ! THE BOUNDARY COEFFICIENT COEF MUST BE THE SAME AS THE BOTTOM
+               ! -----------------------------------------------------------
                IF ( ( ((N>1).AND.(TYP==1)).OR.((N>4).AND.(TYP==2)) )
      &             .AND.
      &              (FRTAB%ADR(I)%P%RCOEF(1)/=FRTAB%ADR(I)%P%RCOEF(2))
@@ -239,8 +247,8 @@ C
             END SELECT
          ENDDO
 !
-         ! Read non-submerged coefficient if needed
-         ! ----------------------------------------  
+         ! READ NON-SUBMERGED COEFFICIENT IF NEEDED
+         ! ----------------------------------------
          IF (LINDNER) THEN
             BACKSPACE(NCOF)
             READ(NCOF,*,END=999,ERR=888) (CHAINE(J),J=1,N),R1,R2
@@ -250,7 +258,6 @@ C
             FRTAB%ADR(I)%P%DP = 0.D0
             FRTAB%ADR(I)%P%SP = 0.D0
          ENDIF
-
          WRITE(LU,11) FRTAB%ADR(I)%P%GNUMB(1),
      &                FRTAB%ADR(I)%P%GNUMB(2),
      &                FRTAB%ADR(I)%P%RTYPE(1),
@@ -264,7 +271,7 @@ C
       ENDDO
 !
 !
-      ! End
+      ! END
       ! ---
       WRITE(LU,3)
 !
@@ -274,60 +281,53 @@ C
       GOTO 997
 !
       ! ============ !
-      ! Error format !
+      ! ERROR FORMAT !
       ! ============ !
 !
 1     FORMAT('PAS DE FICHIER DE DONNEES POUR LE FROTTEMENT')
 2     FORMAT('NO FRICTION DATA FILE')
-
 3     FORMAT('-------------------------------------------------------'
      &     , '------------------------------------------------------')
-4     FORMAT('                      Bottom                         '
-     &     , 'Boundary Condition              Non-submerged vegetation'
-     &     ,/'no                    Law   RCoef        NDef        '
-     &     , 'Law   RCoef        NDef         dp           sp')
-
+4     FORMAT('                      BOTTOM                         '
+     &     , 'BOUNDARY CONDITION              NON-SUBMERGED VEGETATION'
+     &     ,/'NO                    LAW   RCOEF        NDEF        '
+     &     , 'LAW   RCOEF        NDEF         DP           SP')
 5     FORMAT('NOMBRE DE ZONES DE FROTTEMENT DEFINI TROP NOMBREUSES'
      &     ,/'AUGMENTER LE NOMBRE DE ZONES MAXIMALES AVEC LE MOT-CLE :'
      &     ,/'NOMBRE MAXIMALE DE ZONES POUR LE FROTTEMENT')
 6     FORMAT('TOO MANY NUMBER OF FRICTION ZONES DEFINED'
      &     ,/'INCREASED THE NUMBER OF MAXIMAL ZONES WITH THE KEYWORD :'
      &     ,/'MAXIMUM NUMBER OF ZONES FOR THE FRICTION')
-
-7     FORMAT('FICHIER DE DONNEES POUR LE FROTTEMENT : ',a144
-     &      ,/'ZONE : ',i9
+7     FORMAT('FICHIER DE DONNEES POUR LE FROTTEMENT : ',A144
+     &      ,/'ZONE : ',I9
      &      ,/'LA LOI LOG NE PEUT ETRE UTILISEE SUR LE FOND')
-8     FORMAT('FRICTION DATA FILE : ',a144
-     &      ,/'ZONE : ',i9
+8     FORMAT('FRICTION DATA FILE : ',A144
+     &      ,/'ZONE : ',I9
      &      ,/'LOG LAW CAN''T BE USED FOR THE BOTTOM')
-
 9     FORMAT('FICHIER DE DONNEES POUR LE FROTTEMENT'
-     &     ,/'ERREUR DE LECTURE LIGNE : ',i10
-     &     ,/'ZONE DE ',i10,' A ',i10
-     &     ,/'LOI ',a4)
-
+     &     ,/'ERREUR DE LECTURE LIGNE : ',I10
+     &     ,/'ZONE DE ',I10,' A ',I10
+     &     ,/'LOI ',A4)
 10    FORMAT('FRICTION DATA FILE'
-     &     ,/'READ ERROR LINE',i10
-     &     ,/'ZONE FROM ',i10,' TO ',i10
-     &     ,/'LAW ',a4)
-
-11    FORMAT(2(1x,i9),1x,i4,2(1x,e12.4),1x,i4,4(1x,e12.4))
+     &     ,/'READ ERROR LINE',I10
+     &     ,/'ZONE FROM ',I10,' TO ',I10
+     &     ,/'LAW ',A4)
+11    FORMAT(2(1X,I9),1X,I4,2(1X,E12.4),1X,I4,4(1X,E12.4))
 !
-13    FORMAT(i5,' types de zones definies')
-14    FORMAT(i5,' zones type specifications') 
-
-15    FORMAT('FICHIER DE DONNEES POUR LE FROTTEMENT : ',a144
-     &      ,/'ZONE : ',i9
+13    FORMAT(I5,' TYPES DE ZONES DEFINIES')
+14    FORMAT(I5,' ZONES TYPE SPECIFICATIONS')
+15    FORMAT('FICHIER DE DONNEES POUR LE FROTTEMENT : ',A144
+     &      ,/'ZONE : ',I9
      &      ,/'LE COEFFICIENT DE FROTTEMENT DE LA LOI DE HAALAND POUR'
      &      ,/'LES CONDITIONS LIMITES DOIT ETER EGALE A CELUI DU FOND :'
-     &      , e12.4)
-16    FORMAT('FRICTION DATA FILE : ',a144
-     &      ,/'ZONE : ',i9
+     &      , E12.4)
+16    FORMAT('FRICTION DATA FILE : ',A144
+     &      ,/'ZONE : ',I9
      &      ,/'FRICTION COEFFICIENT OF HAALAND LAW FOR'
      &      ,/'BOUNDARY CONDITION MUST BE THE SAME AS THE BOTTOM :'
-     &      , e12.4)
+     &      , E12.4)
 !
-      ! End of File
+      ! END OF FILE
       ! -----------
 999   CONTINUE
       IF (LNG.EQ.1) THEN
@@ -343,7 +343,7 @@ C
       CALL PLANTE(1)
       STOP
 !
-      ! Index and first law of the zone
+      ! INDEX AND FIRST LAW OF THE ZONE
       ! -------------------------------
 998   CONTINUE
       IF (LNG.EQ.1) THEN
@@ -356,8 +356,7 @@ C
       ENDIF
       CALL PLANTE(0)
       STOP
-
-      ! Non-submerged vegetation parameter
+      ! NON-SUBMERGED VEGETATION PARAMETER
       ! ----------------------------------
 888   CONTINUE
       IF (LNG.EQ.1) THEN
@@ -371,52 +370,52 @@ C
       CALL PLANTE(0)
       STOP
 !
-      ! No friction Law
+      ! NO FRICTION LAW
       ! ---------------
 900   CONTINUE
       IF (LNG.EQ.1) THEN
          WRITE(LU,*)'FICHIER DE DONNEES POUR LE FROTTEMENT'
          WRITE(LU,*) 'ERREUR DE LECTURE ZONE  : ',CHAINE(1)
          IF ((ITURB==3).AND.(LISRUG==2)) THEN
-            IF (LOOP==1) WRITE(LU,*) 'Pour la 1ere loi definir '//
-     &                               'seulement le nom de la loi : NOFR'
-            IF (LOOP==2) WRITE(LU,*) 'Pour la 2nde loi definir'//
-     &                               'seulement le nom de la loi : NOFR'
+            IF (LOOP==1) WRITE(LU,*) 'POUR LA 1ERE LOI DEFINIR '//
+     &                               'SEULEMENT LE NOM DE LA LOI : NOFR'
+            IF (LOOP==2) WRITE(LU,*) 'POUR LA 2NDE LOI DEFINIR'//
+     &                               'SEULEMENT LE NOM DE LA LOI : NOFR'
          ELSE
-            WRITE(LU,*) 'Definir seulement le nom de la loi'
+            WRITE(LU,*) 'DEFINIR SEULEMENT LE NOM DE LA LOI'
          ENDIF
       ENDIF
       IF (LNG.EQ.2) THEN
          WRITE(LU,*) 'FRICTION DATA FILE'
          WRITE(LU,*) 'READ ERROR ZONE : ',CHAINE(1)
          IF ((ITURB==3).AND.(LISRUG==2)) THEN
-            IF (LOOP==1) WRITE(LU,*) 'For the 1st law define '//
-     &                               'only the name of the law : NOFR'
-            IF (LOOP==2) WRITE(LU,*) 'For the 2nd law define '//
-     &                               'only the name of the law : NOFR'
+            IF (LOOP==1) WRITE(LU,*) 'FOR THE 1ST LAW DEFINE '//
+     &                               'ONLY THE NAME OF THE LAW : NOFR'
+            IF (LOOP==2) WRITE(LU,*) 'FOR THE 2ND LAW DEFINE '//
+     &                               'ONLY THE NAME OF THE LAW : NOFR'
          ELSE
-            WRITE(LU,*) 'Define only the name of the law : NOFR'
+            WRITE(LU,*) 'DEFINE ONLY THE NAME OF THE LAW : NOFR'
          ENDIF
       ENDIF
       CALL PLANTE(1)
       STOP
 !
-      ! Haaland-Chezy-Strickler-Manning-Nikuradse-Log Wall Laws
+      ! HAALAND-CHEZY-STRICKLER-MANNING-NIKURADSE-LOG WALL LAWS
       ! -------------------------------------------------------
 901   CONTINUE
       IF (LNG.EQ.1) THEN
          WRITE(LU,*)'FICHIER DE DONNEES POUR LE FROTTEMENT : ',NOMCOF
          WRITE(LU,*) 'ERREUR DE LECTURE ZONE: ',CHAINE(1)
          IF ((ITURB==3).AND.(LISRUG==2)) THEN
-            IF (LOOP==1) WRITE(LU,*) 'Pour la 1ere loi definir ' //
-     &                               'le nom de la loi : ',LAW,' et'//
-     &                               ' le coefficient de frottement'
-            IF (LOOP==1) WRITE(LU,*) 'Pour la 2nde loi definir ' //
-     &                               'le nom de la loi : ',LAW,' et'//
-     &                               ' le coefficient de frottement'
+            IF (LOOP==1) WRITE(LU,*) 'POUR LA 1ERE LOI DEFINIR ' //
+     &                               'LE NOM DE LA LOI : ',LAW,' ET'//
+     &                               ' LE COEFFICIENT DE FROTTEMENT'
+            IF (LOOP==1) WRITE(LU,*) 'POUR LA 2NDE LOI DEFINIR ' //
+     &                               'LE NOM DE LA LOI : ',LAW,' ET'//
+     &                               ' LE COEFFICIENT DE FROTTEMENT'
          ELSE
-            WRITE(LU,*) 'Definir le nom de la loi : ',LAW,' et'//
-     &                  ' le coefficient de frottement'
+            WRITE(LU,*) 'DEFINIR LE NOM DE LA LOI : ',LAW,' ET'//
+     &                  ' LE COEFFICIENT DE FROTTEMENT'
          ENDIF
       ENDIF
 !
@@ -424,61 +423,60 @@ C
          WRITE(LU,*) 'FRICTION DATA FILE : ',NOMCOF
          WRITE(LU,*) 'READ ERROR ZONE : ',CHAINE(1)
          IF ((ITURB==3).AND.(LISRUG==2)) THEN
-            IF (LOOP==1) WRITE(LU,*) 'For the 1st law define '//
-     &                               'the name of the law : ',LAW//
-     &                               ' and the friction coefficient'
-            IF (LOOP==2) WRITE(LU,*) 'For the 2nd law define '//
-     &                               'the name of the law : ',LAW//
-     &                               ' and the friction coefficient'
+            IF (LOOP==1) WRITE(LU,*) 'FOR THE 1ST LAW DEFINE '//
+     &                               'THE NAME OF THE LAW : ',LAW//
+     &                               ' AND THE FRICTION COEFFICIENT'
+            IF (LOOP==2) WRITE(LU,*) 'FOR THE 2ND LAW DEFINE '//
+     &                               'THE NAME OF THE LAW : ',LAW//
+     &                               ' AND THE FRICTION COEFFICIENT'
          ELSE
-            WRITE(LU,*) 'Define the name of the law : ',LAW//
-     &                  ' and the friction coefficient'
+            WRITE(LU,*) 'DEFINE THE NAME OF THE LAW : ',LAW//
+     &                  ' AND THE FRICTION COEFFICIENT'
          ENDIF
       ENDIF
       CALL PLANTE(1)
       STOP
 !
-      ! Colebrook White Law
+      ! COLEBROOK WHITE LAW
       ! -------------------
 907   CONTINUE
       IF (LNG.EQ.1) THEN
          WRITE(LU,*)'FICHIER DE DONNEES POUR LE FROTTEMENT : ',NOMCOF
          WRITE(LU,*) 'ERREUR DE LECTURE ZONE : ',CHAINE(1)
          IF ((ITURB==3).AND.(LISRUG==2)) THEN
-            IF (LOOP==1) WRITE(LU,*) 'Pour la 1ere loi definir ' //
-     &                               'le nom de la loi : ',LAW,' et'//
-     &                               ' le coefficient de frottement'//
-     &                               ' et le Manning'
-            IF (LOOP==1) WRITE(LU,*) 'Pour la 2nde loi definir ' //
-     &                               'le nom de la loi : ',LAW,' et'//
-     &                               ' le coefficient de frottement'//
-     &                               ' et le Manning'
+            IF (LOOP==1) WRITE(LU,*) 'POUR LA 1ERE LOI DEFINIR ' //
+     &                               'LE NOM DE LA LOI : ',LAW,' ET'//
+     &                               ' LE COEFFICIENT DE FROTTEMENT'//
+     &                               ' ET LE MANNING'
+            IF (LOOP==1) WRITE(LU,*) 'POUR LA 2NDE LOI DEFINIR ' //
+     &                               'LE NOM DE LA LOI : ',LAW,' ET'//
+     &                               ' LE COEFFICIENT DE FROTTEMENT'//
+     &                               ' ET LE MANNING'
          ELSE
-            WRITE(LU,*) 'Definir le nom de la loi : ',LAW,' et'//
-     &                  ' le coefficient de frottement et le Manning'
+            WRITE(LU,*) 'DEFINIR LE NOM DE LA LOI : ',LAW,' ET'//
+     &                  ' LE COEFFICIENT DE FROTTEMENT ET LE MANNING'
          ENDIF
       ENDIF
-
       IF (LNG.EQ.2) THEN
          WRITE(LU,*) 'FRICTION DATA FILE : ',NOMCOF
          WRITE(LU,*) 'READ ERROR ZONE : ',CHAINE(1)
          IF ((ITURB==3).AND.(LISRUG==2)) THEN
-            IF (LOOP==1) WRITE(LU,*) 'For the 1st law define '//
-     &                               'the name of the law : ',LAW//
-     &                               ' and the friction coefficient'//
-     &                               ' and default Manning'
-            IF (LOOP==2) WRITE(LU,*) 'For the 2nd law define '//
-     &                               'the name of the law : ',LAW//
-     &                               ' and the friction coefficient'//
-     &                               ' and default Manning'
+            IF (LOOP==1) WRITE(LU,*) 'FOR THE 1ST LAW DEFINE '//
+     &                               'THE NAME OF THE LAW : ',LAW//
+     &                               ' AND THE FRICTION COEFFICIENT'//
+     &                               ' AND DEFAULT MANNING'
+            IF (LOOP==2) WRITE(LU,*) 'FOR THE 2ND LAW DEFINE '//
+     &                               'THE NAME OF THE LAW : ',LAW//
+     &                               ' AND THE FRICTION COEFFICIENT'//
+     &                               ' AND DEFAULT MANNING'
          ELSE
-            WRITE(LU,*) 'Define the name of the law : ',LAW//
-     &                  ' and the friction coefficient'//
-     &                  ' and default Manning'
+            WRITE(LU,*) 'DEFINE THE NAME OF THE LAW : ',LAW//
+     &                  ' AND THE FRICTION COEFFICIENT'//
+     &                  ' AND DEFAULT MANNING'
          ENDIF
       ENDIF
       CALL PLANTE(1)
-      STOP     
+      STOP
 !
 997   CONTINUE
 !

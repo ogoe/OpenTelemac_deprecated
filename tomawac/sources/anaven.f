@@ -1,59 +1,79 @@
-C                       *****************
-                        SUBROUTINE ANAVEN
-C                       *****************
-C
-     *( UV    , VV    , X     , Y     , NPOIN2, AT    , DDC   , VX_CTE,
-     *  VY_CTE) 
-C
-C***********************************************************************
-C  TOMAWAC VERSION 1.0    07/06/95       M. BENOIT (LNH) 30 87 72 66
-C***********************************************************************
-C
-C     FONCTION  : PERMET LA SPECIFICATION D'UN VENT ANALYTIQUE
-C                 (EVENTUELLEMENT VARIABLE EN TEMPS) 
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C !      NOM       !MODE!                   ROLE                       !
-C !________________!____!______________________________________________!
-C !    UV,VV       !<-- ! COMPOSANTES DU CHAMP DE VENT INITIAL         !
-C !    X,Y         ! -->! COORDONNEES DES POINTS DU MAILLAGE 2D        !
-C !    NPOIN2      ! -->! NOMBRE DE POINTS 2D                          !
-C !    AT          ! -->! TEMPS DU CALCUL                              !
-C !    DDC         ! -->! DATE DE DEBUT DU CALCUL                      !
-C !________________!____!______________________________________________!
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C  APPELE PAR : CONDIW,SEMIMP
-C
-C  SOUS-PROGRAMME APPELE : NEANT
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE ANAVEN
+!                    *****************
+!
+     &( UV    , VV    , X     , Y     , NPOIN2, AT    , DDC   , VX_CTE,
+     &  VY_CTE)
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   08/06/2011
+!***********************************************************************
+!
+!brief    SPECIFIES AN ANALYTICAL WIND
+!+               (CAN BE VARIABLE IN TIME).
+!
+!warning  USER SUBROUTINE; MUST BE CODED BY THE USER; THIS IS MERELY AN EXAMPLE
+!code
+!+      DO IP=1,NPOIN2
+!+        UV(IP)=VX_CTE
+!+        VV(IP)=VY_CTE
+!+      ENDDO
+!
+!history  M. BENOIT (LNH)
+!+        07/06/95
+!+        V1P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        08/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| AT             |-->| COMPUTATION TIME
+!| DDC            |-->| DATE OF COMPUTATION BEGINNING
+!| NPOIN2         |-->| NUMBER OF POINTS IN 2D
+!| UV             |<--| WIND VELOCITY ALONG X AT THE MESH POINTS
+!| VV             |<--| WIND VELOCITY ALONG Y AT THE MESH POINTS
+!| VX_CTE         |-->| WIND ALONG X (CONSTANT VALUE IN STEERING FILE)
+!| VY_CTE         |-->| WIND ALONG Y (CONSTANT VALUE IN STEERING FILE)
+!| X              |-->| ABSCISSAE OF POINTS IN THE MESH
+!| Y              |-->| ORDINATES OF POINTS IN THE MESH
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
+!
       INTEGER LNG,LU
       COMMON/INFO/ LNG,LU
-C
-C.....VARIABLES TRANSMISES
-C     """"""""""""""""""""
+!
+!.....VARIABLES IN ARGUMENT
+!     """"""""""""""""""""
       INTEGER  NPOIN2
       DOUBLE PRECISION AT    , DDC   , VX_CTE, VY_CTE
       DOUBLE PRECISION X (NPOIN2)    , Y (NPOIN2)
       DOUBLE PRECISION UV(NPOIN2)    , VV(NPOIN2)
-C
-C.....VARIABLES LOCALES
-C     """""""""""""""""
+!
+!.....LOCAL VARIABLES
+!     """""""""""""""""
       INTEGER  IP
-C
-C
+!
+!
       DO IP=1,NPOIN2
         UV(IP)=VX_CTE
         VV(IP)=VY_CTE
       ENDDO
-C
+!
       RETURN
       END

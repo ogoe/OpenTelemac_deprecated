@@ -36,7 +36,7 @@ find_package(MPI)
 #Project-data
 project(telemac Fortran)
 SET(TELEMAC_VERSION_MAJOR 6)
-SET(TELEMAC_VERSION_MINOR 0)
+SET(TELEMAC_VERSION_MINOR 1)
 SET(TELEMAC_VERSION v${TELEMAC_VERSION_MAJOR}p${TELEMAC_VERSION_MINOR})
 
 set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR})
@@ -46,18 +46,22 @@ set(CMAKE_INCLUDE_CURRENT_DIR On)
 add_subdirectory(bief/sources)
 add_subdirectory(damocles/sources)
 add_subdirectory(paravoid/sources)
+add_subdirectory(mumpsvoid/sources)
+add_subdirectory(special/sources)
 
 if (MPI_Fortran_FOUND)
 add_subdirectory(parallel/sources)
 endif (MPI_Fortran_FOUND)
 
-add_subdirectory(mumpsvoid/sources)
-add_subdirectory(special/sources)
 add_subdirectory(artemis/sources)
+add_subdirectory(postel3d/sources)
+add_subdirectory(stbtel/sources)
+add_subdirectory(spartacus2d/sources)
 add_subdirectory(sisyphe/sources)
 add_subdirectory(tomawac/sources)
 add_subdirectory(telemac2d/sources)
-add_subdirectory(bin/sel2vtk_dir)
+add_subdirectory(telemac3d/sources)
+#add_subdirectory(bin/sel2vtk_dir)
 
 #Dependencies
 add_dependencies(special${TELEMAC_VERSION} bief${TELEMAC_VERSION} )
@@ -70,9 +74,17 @@ add_dependencies(sisyphe${TELEMAC_VERSION}.exe sisyphe${TELEMAC_VERSION} )
 
 add_dependencies(telemac2d${TELEMAC_VERSION} 
                  bief${TELEMAC_VERSION} damo${TELEMAC_VERSION} paravoid${TELEMAC_VERSION}
-                 mumpsvoid${TELEMAC_VERSION} special${TELEMAC_VERSION} sisyphe${TELEMAC_VERSION})
+                 mumpsvoid${TELEMAC_VERSION} special${TELEMAC_VERSION} sisyphe${TELEMAC_VERSION}
+                 tomawac${TELEMAC_VERSION} )
 
 add_dependencies(telemac2d${TELEMAC_VERSION}.exe telemac2d${TELEMAC_VERSION} )
+
+add_dependencies(telemac3d${TELEMAC_VERSION} 
+                 bief${TELEMAC_VERSION} damo${TELEMAC_VERSION} paravoid${TELEMAC_VERSION}
+                 mumpsvoid${TELEMAC_VERSION} special${TELEMAC_VERSION} sisyphe${TELEMAC_VERSION}
+                 telemac2d${TELEMAC_VERSION} tomawac${TELEMAC_VERSION} )
+
+add_dependencies(telemac3d${TELEMAC_VERSION}.exe telemac3d${TELEMAC_VERSION} )
 
 add_dependencies(tomawac${TELEMAC_VERSION}
                  bief${TELEMAC_VERSION} damo${TELEMAC_VERSION} paravoid${TELEMAC_VERSION}
@@ -86,10 +98,32 @@ add_dependencies(artemis${TELEMAC_VERSION}
 
 add_dependencies(artemis${TELEMAC_VERSION}.exe artemis${TELEMAC_VERSION} )
 
+add_dependencies(spartacus2d${TELEMAC_VERSION}
+                 bief${TELEMAC_VERSION} damo${TELEMAC_VERSION} paravoid${TELEMAC_VERSION}
+                 mumpsvoid${TELEMAC_VERSION} special${TELEMAC_VERSION} )
 
+add_dependencies(spartacus2d${TELEMAC_VERSION}.exe spartacus2d${TELEMAC_VERSION} )
+
+add_dependencies(postel3d${TELEMAC_VERSION}
+                 bief${TELEMAC_VERSION} damo${TELEMAC_VERSION} paravoid${TELEMAC_VERSION}
+                 special${TELEMAC_VERSION} )
+
+add_dependencies(postel3d${TELEMAC_VERSION}.exe postel3d${TELEMAC_VERSION} )
+
+add_dependencies(stbtel${TELEMAC_VERSION}
+                 bief${TELEMAC_VERSION} damo${TELEMAC_VERSION} paravoid${TELEMAC_VERSION}
+                 special${TELEMAC_VERSION} )
+
+add_dependencies(stbtel${TELEMAC_VERSION}.exe stbteld${TELEMAC_VERSION} )
+
+
+
+#Parallel dependencies
 if (MPI_Fortran_FOUND)
   add_dependencies(artemis${TELEMAC_VERSION}_MP.exe artemis${TELEMAC_VERSION} parallel${TELEMAC_VERSION})
   add_dependencies(sisyphe${TELEMAC_VERSION}_MP.exe sisyphe${TELEMAC_VERSION} parallel${TELEMAC_VERSION})
   add_dependencies(telemac2d${TELEMAC_VERSION}_MP.exe telemac2d${TELEMAC_VERSION} parallel${TELEMAC_VERSION})
+  add_dependencies(telemac3d${TELEMAC_VERSION}_MP.exe telemac3d${TELEMAC_VERSION} parallel${TELEMAC_VERSION})
   add_dependencies(tomawac${TELEMAC_VERSION}_MP.exe tomawac${TELEMAC_VERSION} parallel${TELEMAC_VERSION})
+  add_dependencies(spartacus2d${TELEMAC_VERSION}_MP.exe spartacus2d${TELEMAC_VERSION} parallel${TELEMAC_VERSION})
 endif (MPI_Fortran_FOUND)

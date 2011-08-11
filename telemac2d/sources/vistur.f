@@ -1,66 +1,67 @@
-C                       *****************
-                        SUBROUTINE VISTUR
-C                       *****************
-C
-     *(VISC,AK,EP,NPOIN,CMU,PROPNU)
-C
-C***********************************************************************
-C  TELEMAC 2D VERSION 5.2    17/08/94    J-M HERVOUET (LNH) 30 87 80 18
-C
-C***********************************************************************
-C
-C     FONCTION  : CALCUL DE LA VISCOSITE TURBULENTE EN FONCTION DE K ET
-C                 EPSILON.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |     VISC       |<-- | DIFFUSION TURBULENTE                         |
-C |     AK         | -->| ENERGIE TURBULENTE                           |
-C |     EP         | -->| DISSIPATION TURBULENTE                       |
-C |     NPOIN      | -->| NOMBRE DE POINTS DANS LE MAILLAGE            |
-C |     CMU        | -->| CONSTANTE DU MODELE K-EPSILON                |
-C |     PROPNU     | -->| VISCOSITE LAMINAIRE                          |
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : TELMAC
-C
-C SOUS-PROGRAMME APPELE : NEANT
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE VISTUR
+!                    *****************
+!
+     &(VISC,AK,EP,NPOIN,CMU,PROPNU)
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    COMPUTES THE TURBULENT VISCOSITY ACCORDING TO K AND EPSILON.
+!
+!history  J-M HERVOUET (LNH)
+!+        17/08/1994
+!+        V5P2
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| AK             |-->| TURBULENT KINETIC ENERGY
+!| CMU            |-->| CONSTANT OF K-EPSILON MODEL
+!| EP             |-->| DISSIPATION OF TURBULENT KINETIC ENERGY
+!| NPOIN          |-->| NUMBER OF POINTS IN THE MESH
+!| PROPNU         |-->| LAMINAR VISCOSITY
+!| VISC           |<--| TURBULENT DIFFUSION
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C 
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN)           :: NPOIN
       DOUBLE PRECISION, INTENT(IN)  :: CMU,PROPNU
       TYPE(BIEF_OBJ), INTENT(IN)    :: AK,EP
       TYPE(BIEF_OBJ), INTENT(INOUT) :: VISC
-C   
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-      INTEGER I  
-C
-C-----------------------------------------------------------------------
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+      INTEGER I
+!
+!-----------------------------------------------------------------------
+!
       DO I = 1 , NPOIN
-C
+!
         VISC%R(I) = PROPNU + CMU * AK%R(I)**2 / EP%R(I)
-C
+!
       ENDDO
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END
- 

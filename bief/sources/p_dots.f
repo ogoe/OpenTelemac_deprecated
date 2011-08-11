@@ -1,98 +1,100 @@
-C                       ********************************
-                        DOUBLE PRECISION FUNCTION P_DOTS
-C                       ********************************
-C
-     *( X , Y , MESH )
-C
-C***********************************************************************
-C BIEF VERSION 5.1           24/04/97    J-M HERVOUET (LNH) 30 87 80 18
-C COPYRIGHT 1997              AFTER REINHARD HINKELMANN (HANNOVER UNI.)
-C***********************************************************************
-C
-C   FONCTION : COMME DOTS MAIS EN TENANT COMPTE DU PARALLELISME.
-C
-C              PRODUIT SCALAIRE DE DEUX OBJETS QUI PEUVENT ETRE :
-C
-C              DEUX STRUCTURES DE VECTEURS
-C
-C              OU
-C
-C              DEUX STRUCTURES DE BLOCS DE VECTEURS EN NOMBRE ET
-C              CARACTERISTIQUES IDENTIQUES
-C
-C              ATTENTION ||||
-C
-C              SI LES VECTEURS ONT UNE DEUXIEME DIMENSION
-C              ELLE EST POUR L'INSTANT IGNOREE
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|_______________________________________________
-C |      X ET Y    | -->| LES DEUX STRUCTURES DONT ON VEUT LE PRODUIT
-C |                |    | SCALAIRE.
-C |      MESH      | -->| MAILLAGE.
-C |________________|____|_______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES   :  PLANTE
-C
-C***********************************************************************
-C
+!                    ********************************
+                     DOUBLE PRECISION FUNCTION P_DOTS
+!                    ********************************
+!
+     &( X , Y , MESH )
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    SAME AS DOTS BUT TAKING PARALLELISM INTO ACCOUNT.
+!+
+!+            SCALAR PRODUCT OF TWO OBJECTS, WHICH CAN BE:
+!+
+!+            TWO VECTORS STRUCTURES, OR
+!+
+!+            TWO VECTOR BLOCKS STRUCTURES OF IDENTICAL NUMBER AND
+!+                CHARACTERISTICS.
+!
+!warning  IF THE VECTORS HAVE A SECOND DIMENSION, IT IS IGNORED
+!+            FOR THE TIME BEING
+!
+!history  J-M HERVOUET (LNH)
+!+        24/04/97
+!+        V5P1
+!+   AFTER REINHARD HINKELMANN (HANNOVER UNI.)
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| MESH           |-->| MESH STRUCTURE
+!| X              |-->| BIEF_OBJ STRUCTURE (MAY BE A BLOCK)
+!| Y              |-->| BIEF_OBJ STRUCTURE (MAY BE A BLOCK)
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_P_DOTS => P_DOTS
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-C
+!
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+!
       TYPE(BIEF_MESH), INTENT(IN) :: MESH
       TYPE(BIEF_OBJ), INTENT(IN)  :: X,Y
-C
-C+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-C
+!
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+!
       INTEGER NPX,IBL,TYPX
-C
+!
       DOUBLE PRECISION P_DSUM
       EXTERNAL         P_DSUM
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       TYPX = X%TYPE
-C
-C-----------------------------------------------------------------------
-C
-C  CAS OU LES STRUCTURES SONT DES BLOCS
-C
+!
+!-----------------------------------------------------------------------
+!
+!  CASE WHERE THE STRUCTURES ARE BLOCKS
+!
       IF(TYPX.EQ.4) THEN
-C
+!
        P_DOTS = 0.D0
-C
+!
        IF(NCSIZE.LE.1.OR.NPTIR.EQ.0) THEN
-         DO 99 IBL = 1 , X%N
+         DO IBL = 1 , X%N
            P_DOTS=P_DOTS+DOT(X%ADR(IBL)%P%DIM1,X%ADR(IBL)%P%R,
-     *                                         Y%ADR(IBL)%P%R)
-99       CONTINUE
+     &                                         Y%ADR(IBL)%P%R)
+         ENDDO
        ELSE
-         DO 100 IBL = 1 , X%N
+         DO IBL = 1 , X%N
            P_DOTS=P_DOTS+P_DOT(X%ADR(IBL)%P%DIM1,X%ADR(IBL)%P%R,
-     *                                           Y%ADR(IBL)%P%R,
-     *                                           MESH%FAC%R)
-100      CONTINUE
+     &                                           Y%ADR(IBL)%P%R,
+     &                                           MESH%FAC%R)
+         ENDDO
        ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C  CAS OU LES STRUCTURES NE SONT PAS DES BLOCS
-C  (ON SUPPOSE ICI QUE Y EST DU MEME TYPE QUE X)
-C
+!
+!-----------------------------------------------------------------------
+!
+!  CASE WHERE THE STRUCTURES ARE NOT BLOCKS
+!  (ASSUMES THAT Y HAS THE SAME TYPE AS X)
+!
       ELSEIF(TYPX.EQ.2) THEN
-C
+!
         NPX = X%DIM1
-C
+!
         IF(Y%DIM1.NE.NPX) THEN
           IF (LNG.EQ.1) WRITE(LU,50) X%NAME,X%TYPE
           IF (LNG.EQ.1) WRITE(LU,51) Y%NAME,Y%TYPE
@@ -105,19 +107,19 @@ C
           CALL PLANTE(1)
           STOP
         ENDIF
-C
+!
         IF(NCSIZE.LE.1.OR.NPTIR.EQ.0) THEN
           P_DOTS=DOT(NPX,X%R,Y%R)
         ELSE
           P_DOTS=P_DOT(NPX,X%R,Y%R,MESH%FAC%R)
         ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C  ERREUR
-C
+!
+!-----------------------------------------------------------------------
+!
+!  ERROR
+!
       ELSE
-C
+!
          IF (LNG.EQ.1) WRITE(LU,50) X%NAME,X%TYPE
          IF (LNG.EQ.1) WRITE(LU,51) Y%NAME,Y%TYPE
          IF (LNG.EQ.1) WRITE(LU,53)
@@ -132,17 +134,16 @@ C
 63       FORMAT(1X,'                NOT IMPLEMENTED')
          CALL PLANTE(1)
          STOP
-C
+!
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C SOMME FINALE SUR TOUS LES SOUS-DOMAINES
-C
+!
+!-----------------------------------------------------------------------
+!
+! FINAL SUM ON ALL THE SUB-DOMAINS
+!
       IF(NCSIZE.GT.1) P_DOTS = P_DSUM(P_DOTS)
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-      END 
- 
+      END

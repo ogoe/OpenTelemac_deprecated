@@ -1,109 +1,124 @@
-C                       ***************************
-                        SUBROUTINE LECDON_TELEMAC2D
-C                       ***************************
-C
-     *(MOTCAR,FILE_DESC,PATH,NCAR)
-C
-C***********************************************************************
-C  TELEMAC 2D VERSION 6.0  20/04/2010 J-M HERVOUET (LNHE) 01 30 87 80 18
-C
-C***********************************************************************
-C
-C  FONCTION : LECTURE DU FICHIER CAS PAR APPEL DU LOGICIEL DAMOCLES.
-C
-C----------------------------------------------------------------------
-C
-C APPELE PAR : HOMERE
-C
-C SOUS-PROGRAMME APPELE : DAMOC
-C
-C**********************************************************************
-C
+!                    ***************************
+                     SUBROUTINE LECDON_TELEMAC2D
+!                    ***************************
+!
+     &(MOTCAR,FILE_DESC,PATH,NCAR)
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    READS THE STEERING FILE THROUGH A DAMOCLES CALL.
+!
+!history  J-M HERVOUET (LNHE)
+!+        20/04/2010
+!+        V6P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| FILE_DESC      |<--| STORES STRINGS 'SUBMIT' OF DICTIONARY
+!| MOTCAR         |<--| VALUES OF KEY-WORDS OF TYPE CHARACTER
+!| NCAR           |-->| NUMBER OF LETTERS IN STRING PATH
+!| PATH           |-->| FULL PATH TO CODE DICTIONARY
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
       USE DECLARATIONS_TELEMAC
       USE DECLARATIONS_TELEMAC2D
-C
+!
       USE INTERFACE_TELEMAC2D, EX_LECDON_TELEMAC2D => LECDON_TELEMAC2D
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN)               :: NCAR
       CHARACTER(LEN=250), INTENT(IN)    :: PATH
       CHARACTER(LEN=144), INTENT(INOUT) :: FILE_DESC(4,300)
       CHARACTER(LEN=144), INTENT(INOUT) :: MOTCAR(300)
-C                                                 NMAX
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!                                                 NMAX
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER I,K,ERR,ITRAC,NTRTOT
       INTEGER NREJEX,NREJEY,NCOSUP,NREJEV,NCRITE
-C
+!
       CHARACTER*8 MNEMO(MAXVAR)
-      CHARACTER(LEN=250) NOM_CAS,NOM_DIC 
-C
-C-----------------------------------------------------------------------
-C
+      CHARACTER(LEN=250) NOM_CAS,NOM_DIC
+!
+!-----------------------------------------------------------------------
+!
       CHARACTER(LEN=2) I_IN_2_LETTERS(32)
       DATA I_IN_2_LETTERS /'1 ','2 ','3 ','4 ','5 ','6 ','7 ','8 ','9 ',
-     *                     '10','11','12','13','14','15','16','17','18',
-     *                     '19','20','21','22','23','24','25','26','27',
-     *                     '28','29','30','31','32'/ 
-C
-      CHARACTER(LEN=24), PARAMETER :: CODE1='TELEMAC2D               '    
-C
-C-----------------------------------------------------------------------
-C
-C     DECLARATION DES TABLEAUX POUR L'APPEL DE DAMOCLES
-C
+     &                     '10','11','12','13','14','15','16','17','18',
+     &                     '19','20','21','22','23','24','25','26','27',
+     &                     '28','29','30','31','32'/
+!
+      CHARACTER(LEN=24), PARAMETER :: CODE1='TELEMAC2D               '
+!
+!-----------------------------------------------------------------------
+!
+!     ARRAYS USED IN THE DAMOCLES CALL
+!
       INTEGER, PARAMETER :: NMAX = 300
-C
+!
       INTEGER              ADRESS(4,NMAX),DIMEN(4,NMAX)
       DOUBLE PRECISION     MOTREA(NMAX)
       INTEGER              MOTINT(NMAX)
       LOGICAL              MOTLOG(NMAX)
       CHARACTER*72         MOTCLE(4,NMAX,2)
-      INTEGER              TROUVE(4,NMAX) 
+      INTEGER              TROUVE(4,NMAX)
       LOGICAL DOC
-C            
-C     FIN DES VARIABLES POUR DAMOCLES :
-C
-C-----------------------------------------------------------------------
-C
+!
+!     END OF DECLARATIONS FOR DAMOCLES CALL :
+!
+!-----------------------------------------------------------------------
+!
       INTRINSIC MAX,INT,MOD
-C
-C-----------------------------------------------------------------------
-C
-C VALEURS PAR DEFAUT DE TABLEAUX (NON PREVUES DANS DAMOCLES)
-C
+!
+!-----------------------------------------------------------------------
+!
+! INITIALISES THE ARRAYS TO DEFAULT VALUES (NOT DONE IN DAMOCLES)
+!
       ICONVF(1) = ADV_CAR
-C     NO ADVECTION IS CONSIDERED ON H
+!     NO ADVECTION IS CONSIDERED ON H
       ICONVF(2) = 5
       ICONVF(3) = ADV_CAR
       ICONVF(4) = ADV_CAR
-C
+!
       DISCRE(1) = 11
       DISCRE(2) = 11
       DISCRE(3) = 11
       DISCRE(4) = 11
-C
+!
       COSUPG(1) = 1.D0
       COSUPG(2) = 1.D0
       COSUPG(3) = 1.D0
       COSUPG(4) = 1.D0
-C
+!
       OPTSUP(1) = 2
       OPTSUP(2) = 2
       OPTSUP(3) = 2
       OPTSUP(4) = 2
-C
+!
       OPTHYB(1) = 1
       OPTHYB(2) = 1
       OPTHYB(3) = 1
       OPTHYB(4) = 1
-C
+!
       BORNES(1) = -1000.D0
       BORNES(2) = +9000.D0
       BORNES(3) = -1000.D0
@@ -112,76 +127,76 @@ C
       BORNES(6) = +1000.D0
       BORNES(7) = -1000.D0
       BORNES(8) = +1000.D0
-C
+!
       CRIPER(1) = 1.D-4
       CRIPER(2) = 1.D-4
       CRIPER(3) = 1.D-4
-C
+!
       DO 5 K=1,MAXFRO
         FRTYPE(K)=1
         PROVEL(K)=1
         STA_DIS_CURVES(K)=0
 5     CONTINUE
-C
-C-----------------------------------------------------------------------
-C
-C INITIALISATIONS POUR APPEL A DAMOCLES :
-C
+!
+!-----------------------------------------------------------------------
+!
+! INITIALISES THE VARIABLES FOR DAMOCLES CALL :
+!
       DO 10 K=1,NMAX
-C       UN FICHIER NON DONNE PAR DAMOCLES SERA RECONNU PAR UN BLANC
-C       (IL N'EST PAS SUR QUE TOUS LES COMPILATEURS INITIALISENT AINSI)
+!       A FILENAME NOT GIVEN BY DAMOCLES WILL BE RECOGNIZED AS A WHITE SPACE
+!       (IT MAY BE THAT NOT ALL COMPILERS WILL INITIALISE LIKE THAT)
         MOTCAR(K)(1:1)=' '
-C
+!
         DIMEN(1,K) = 0
         DIMEN(2,K) = 0
         DIMEN(3,K) = 0
         DIMEN(4,K) = 0
 10    CONTINUE
-C     IMPRESSION DE LA DOC
+!     WRITES OUT INFO
       DOC = .FALSE.
-C
-C-----------------------------------------------------------------------
-C     OUVERTURE DES FICHIERS DICTIONNAIRE ET CAS
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!     OPENS DICTIONNARY AND STEERING FILES
+!-----------------------------------------------------------------------
+!
       IF(NCAR.GT.0) THEN
-C
+!
         NOM_DIC=PATH(1:NCAR)//'T2DDICO'
         NOM_CAS=PATH(1:NCAR)//'T2DCAS'
-C
+!
       ELSE
-C
+!
         NOM_DIC='T2DDICO'
         NOM_CAS='T2DCAS'
-C
+!
       ENDIF
-C
+!
       OPEN(2,FILE=NOM_DIC,FORM='FORMATTED',ACTION='READ')
       OPEN(3,FILE=NOM_CAS,FORM='FORMATTED',ACTION='READ')
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       CALL DAMOCLE( ADRESS , DIMEN , NMAX   , DOC     , LNG    , LU ,
-     *              MOTINT , MOTREA , MOTLOG , MOTCAR  , MOTCLE ,
-     *              TROUVE , 2      , 3      , .FALSE. , FILE_DESC )
-C
-C-----------------------------------------------------------------------
-C     FERMETURE DES FICHIERS DICTIONNAIRE ET CAS
-C-----------------------------------------------------------------------
-C
+     &              MOTINT , MOTREA , MOTLOG , MOTCAR  , MOTCLE ,
+     &              TROUVE , 2      , 3      , .FALSE. , FILE_DESC )
+!
+!-----------------------------------------------------------------------
+!     CLOSES DICTIONNARY AND STEERING FILES
+!-----------------------------------------------------------------------
+!
       CLOSE(2)
       CLOSE(3)
-C
-C     DECRYPTAGE DES CHAINES SUBMIT
-C
-      CALL READ_SUBMIT(T2D_FILES,MAXLU_T2D,CODE1,FILE_DESC,300) 
-C
-C-----------------------------------------------------------------------
-C
-C     RETRIEVING FILES NUMBERS IN TELEMAC-2D FORTRAN PARAMETERS
-C     AT THIS LEVEL LOGICAL UNITS ARE EQUAL TO THE FILE NUMBER
-C
-      DO I=1,MAXLU_T2D 
+!
+!     DECODES 'SUBMIT' CHAINS
+!
+      CALL READ_SUBMIT(T2D_FILES,MAXLU_T2D,CODE1,FILE_DESC,300)
+!
+!-----------------------------------------------------------------------
+!
+!     RETRIEVES FILES NUMBERS IN TELEMAC-2D FORTRAN PARAMETERS
+!     HERE LOGICAL UNITS EQUAL TO THE FILE NUMBER
+!
+      DO I=1,MAXLU_T2D
         IF(T2D_FILES(I)%TELNAME.EQ.'T2DGEO') THEN
 !         T2DGEO=T2D_FILES(I)%LU  (IS EQUIVALENT)
           T2DGEO=I
@@ -237,40 +252,48 @@ C
           T2DMAB=I
         ELSEIF(T2D_FILES(I)%TELNAME.EQ.'T2DVEF') THEN
           T2DVEF=I
-        ELSEIF(T2D_FILES(I)%TELNAME.EQ.'T2DSEC') THEN !jaj #### added 
+        ELSEIF(T2D_FILES(I)%TELNAME.EQ.'T2DSEC') THEN !JAJ #### ADDED
           T2DSEC=I
-        ELSEIF(T2D_FILES(I)%TELNAME.EQ.'T2DSEO') THEN !jaj #### added 
+        ELSEIF(T2D_FILES(I)%TELNAME.EQ.'T2DSEO') THEN !JAJ #### ADDED
           T2DSEO=I
-        ELSEIF(T2D_FILES(I)%TELNAME.EQ.'T2DMIG') THEN 
+        ELSEIF(T2D_FILES(I)%TELNAME.EQ.'T2DMIG') THEN
           T2DMIG=I
+        ELSEIF(T2D_FILES(I)%TELNAME.EQ.'T2DHAR') THEN
+          T2DHAR=I
+        ELSEIF(T2D_FILES(I)%TELNAME.EQ.'T2DTID') THEN
+          T2DTID=I
+        ELSEIF(T2D_FILES(I)%TELNAME.EQ.'T2DBDD') THEN
+          T2DBDD=I
         ENDIF
       ENDDO
-C
-C-----------------------------------------------------------------------
-C
-C AFFECTATION DES PARAMETRES SOUS LEUR NOM EN FORTRAN :
-C
-C-----------------------------------------------------------------------
-C
-C MOTS-CLES ENTIERS :
-C
+!
+!-----------------------------------------------------------------------
+!
+! ASSIGNS THE STEERING FILE VALUES TO THE PARAMETER FORTRAN NAME :
+!
+!-----------------------------------------------------------------------
+!
+! INTEGER KEYWORDS:
+!
          LEOPRD           = MOTINT( ADRESS(1, 1) )
-C
-C        'PERIODE DE SORTIE LISTING'
+!
+!        'LISTING PRINTOUT PERIOD'
          LISPRD           = MOTINT( ADRESS(1, 2) )
-C        ALIAS 'PERIODE POUR LES SORTIES LISTING'
+!        ALIAS 'LISTING PRINTOUT PERIOD'
          IF(TROUVE(1,64).EQ.2) THEN
            LISPRD = MOTINT( ADRESS(1,64) )
          ENDIF
-C
+!
          NIT              = MOTINT( ADRESS(1, 3) )
-         ICONVC           = MOTINT( ADRESS(1, 4) )
+!        FREE KEYWORD
+!        ??????           = MOTINT( ADRESS(1, 4) )
          IF(DIMEN(1,5).NE.0) THEN
            DO 20 K=1,DIMEN(1,5)
             ICONVF(K)     = MOTINT( ADRESS(1,5) + K-1 )
 20         CONTINUE
          ENDIF
-         ICONVI           = MOTINT( ADRESS(1, 6) )
+!        FREE KEYWORD
+!        ??????           = MOTINT( ADRESS(1, 6) )
          ITURB            = MOTINT( ADRESS(1, 7) )
          KFROT            = MOTINT( ADRESS(1, 8) )
          SLVTRA%NITMAX    = MOTINT( ADRESS(1, 9) )
@@ -330,14 +353,14 @@ C
          PRODUC    = MOTINT( ADRESS(1,43) )
          NCP=DIMEN(1,44)
          ALLOCATE(CTRLSC(NCP),STAT=ERR)
-C
+!
          IF(ERR.NE.0) THEN
           IF(LNG.EQ.1) WRITE(LU,1039) ERR
           IF(LNG.EQ.2) WRITE(LU,2039) ERR
 1039      FORMAT(1X,'LECDON : ERREUR A L''ALLOCATION DE CTRLSC : ',/,1X,
-     *              'CODE D''ERREUR : ',1I6)
+     &              'CODE D''ERREUR : ',1I6)
 2039      FORMAT(1X,'LECDON: ERROR DURING ALLOCATION OF CTRLSC: ',/,1X,
-     *              'ERROR CODE: ',1I6)
+     &              'ERROR CODE: ',1I6)
          ENDIF
          IF(NCP.NE.0) THEN
            DO K=1,NCP
@@ -355,9 +378,9 @@ C
 32         CONTINUE
          ENDIF
          SOLSYS    = MOTINT( ADRESS(1,48) )
-C        NOMBRE DE PROCESSEURS (DEJA OBTENU DANS INIT_FILES2
-C        IL DOIT ETRE LE MEME, MAIS EN CAS DE COULPAGE IL PEUT
-C        ETRE DIFFERENT PAR ERREUR).
+!
+!        NUMBER OF PROCESSORS (ALREADY IN INIT_FILES2; MUST BE THE
+!        SAME, BUT IT CAN (ERRONEOUSLY) BE DIFFERENT WHEN COUPLING).
          IF(NCSIZE.NE.MOTINT(ADRESS(1,49))) THEN
            IF(LNG.EQ.1) THEN
              WRITE(LU,*) 'NOMBRE DE PROCESSEURS PARALLELES DIFFERENT :'
@@ -374,17 +397,17 @@ C        ETRE DIFFERENT PAR ERREUR).
          ENDIF
          IF(DIMEN(1,50).NE.0) THEN
            DO K=1,DIMEN(1,50)
-            PROVEL(K) = MOTINT( ADRESS(1,50) + K-1 )
+             PROVEL(K) = MOTINT( ADRESS(1,50) + K-1 )
            ENDDO
          ENDIF
          OPDTRA    = MOTINT( ADRESS(1,51) )
          OPDVIT    = MOTINT( ADRESS(1,52) )
          OPTSOU    = MOTINT( ADRESS(1,53) )
          NPRIV     = MOTINT( ADRESS(1,54) )
-C        CHANGEMENT DE LANGUE : NE MARCHE PAS EN CAS DE SUITE, A VOIR
-C        LNG       = MOTINT( ADRESS(1,55) )
+!        CHANGE OF LANGUAGE: DOES NOT WORK IN THE EVENT OF CONTINUATION, INVESTIGATE
+!        LNG       = MOTINT (ADRESS (1,55))
          NPTH      = MOTINT( ADRESS(1,56) )
-C        OPTION POUR L'IDENTIFICATION DE PARAMETRES
+!        OPTION FOR THE IDENTIFICATION OF PARAMETERS
          OPTID     = MOTINT( ADRESS(1,57) )
          NPTS      = DIMEN(1,58)
          IF(NPTS.GT.0) THEN
@@ -395,40 +418,48 @@ C        OPTION POUR L'IDENTIFICATION DE PARAMETRES
          ENDIF
          OPTCOST= MOTINT( ADRESS(1,59) )
          MAXEST = MOTINT( ADRESS(1,60) )
-C        COUPLING PERIOD
+!        COUPLING PERIOD
          PERCOU = MOTINT( ADRESS(1,61) )
-C        FINITE VOLUME SCHEME
+!        FINITE VOLUME SCHEME
          OPTVF  = MOTINT( ADRESS(1,62) )
-C        NB MAX OF ZONE DEFINED FOR FRICTION COEFF.
+!        MAX NUMBER OF ZONES TO DEFINE FRICTION COEFF.
          NZONMX = MOTINT( ADRESS(1,63) )
-C        ORIGIN COORDINATES
+!        COORDINATES OF THE ORIGIN
          I_ORIG = MOTINT( ADRESS(1,65)   )
          J_ORIG = MOTINT( ADRESS(1,65)+1 )
-C        DELWAQ PRINTOUT PERIOD
+!        DELWAQ PRINTOUT PERIOD
          WAQPRD = MOTINT( ADRESS(1,66)   )
-C        NUMBER OF TRACERS
+!        NUMBER OF TRACERS
          NTRAC  = MOTINT( ADRESS(1,67)   )
-C        STAGE-DISCHARGE CURVES
+!        STAGE-DISCHARGE CURVES
          IF(DIMEN(1,68).NE.0) THEN
            DO K=1,DIMEN(1,68)
-            STA_DIS_CURVES(K) = MOTINT( ADRESS(1,68) + K-1 )
+             STA_DIS_CURVES(K) = MOTINT( ADRESS(1,68) + K-1 )
            ENDDO
          ENDIF
-C        MOT-CLE DEBUGGER
+!        DEBUGGER KEYWORD
          DEBUG  = MOTINT(ADRESS(1,69))
-C        TRAITEMENT DES HAUTEURS NEGATIVES
+!        NEGATIVE DEPTHS OPTION
          OPT_HNEG = MOTINT(ADRESS(1,70))
-C        DEPTH IN FRICTION TERMS
+!        DEPTH IN FRICTION TERMS
          HFROT = MOTINT(ADRESS(1,71))
-C
-C MOTS-CLES REELS :
-C
+!        LAW OF FRICTION ON LATERAL BOUNDARIES
+         KFROTL     = MOTINT(ADRESS(1,72))
+!        COUPLING PERIOD FOR TOMAWAC
+         PERCOU_WAC = MOTINT(ADRESS(1,73))
+!        TREATMENT OF FLUXES AT THE BOUNDARIES
+         DIRFLU     = MOTINT(ADRESS(1,74))
+!        OPTION FOR TIDAL BOUNDARY CONDITIONS
+         TIDALTYPE  = MOTINT(ADRESS(1,75))
+!
+! REAL KEYWORDS:
+!
          DT           = MOTREA( ADRESS(2, 1) )
          GRAV         = MOTREA( ADRESS(2, 2) )
          SLVPRO%ZERO  = MOTREA( ADRESS(2, 3) )
          SLVTRA%ZERO  = SLVPRO%ZERO
          SLVK%ZERO    = SLVPRO%ZERO
-         SLVEP%ZERO   = SLVPRO%ZERO 
+         SLVEP%ZERO   = SLVPRO%ZERO
          FFON      = MOTREA( ADRESS(2, 4) )
          FCOR      = MOTREA( ADRESS(2, 5) )
          FAIR      = MOTREA( ADRESS(2, 6) )
@@ -445,9 +476,9 @@ C
          PROPNU    = MOTREA( ADRESS(2,13) )
          SLVPRO%EPS= MOTREA( ADRESS(2,14) )
          IF(DIMEN(2,15).NE.0) THEN
-           DO 40 K=1,DIMEN(2,15)
-            BORNES(K) = MOTREA( ADRESS(2,15) + K-1 )
-40         CONTINUE
+           DO K=1,DIMEN(2,15)
+             BORNES(K) = MOTREA( ADRESS(2,15) + K-1 )
+           ENDDO
          ENDIF
          EPSOUI    = MOTREA( ADRESS(2,16) )
          TETAC     = MOTREA( ADRESS(2,17) )
@@ -465,26 +496,26 @@ C
          SB        = MOTREA( ADRESS(2,29) )
          COTINI    = MOTREA( ADRESS(2,33) )
          HAUTIN    = MOTREA( ADRESS(2,34) )
-C
-C  TABLEAUX DE REELS
-C
+!
+!  ARRAYS OF REALS
+!
          NDEBIT = DIMEN(2,30)
          IF(NDEBIT.NE.0) THEN
-           DO 50 K=1,NDEBIT
-            DEBIT(K) = MOTREA( ADRESS(2,30) + K-1 )
-50         CONTINUE
+           DO K=1,NDEBIT
+             DEBIT(K) = MOTREA( ADRESS(2,30) + K-1 )
+           ENDDO
          ENDIF
          NCOTE  = DIMEN(2,31)
          IF(NCOTE.NE.0) THEN
-           DO 60 K=1,NCOTE
-            COTE(K) = MOTREA( ADRESS(2,31) + K-1 )
-60         CONTINUE
+           DO K=1,NCOTE
+             COTE(K) = MOTREA( ADRESS(2,31) + K-1 )
+           ENDDO
          ENDIF
          NVITES = DIMEN(2,32)
          IF(NVITES.NE.0) THEN
-           DO 70 K=1,NVITES
-            VITES(K) = MOTREA( ADRESS(2,32) + K-1 )
-70         CONTINUE
+           DO K=1,NVITES
+             VITES(K) = MOTREA( ADRESS(2,32) + K-1 )
+           ENDDO
          ENDIF
          NTRACE = DIMEN(2,35)
          IF(NTRACE.NE.0) THEN
@@ -492,57 +523,92 @@ C
              TRACER(K)=MOTREA(ADRESS(2,35)+K-1)
            ENDDO
          ENDIF
-         NREJEX = DIMEN(2,36)
-         IF(NREJEX.NE.0) THEN
-           DO 90 K=1,NREJEX
-            XSCE(K) = MOTREA( ADRESS(2,36) + K-1 )
-90         CONTINUE
-         ENDIF
-         NREJEY = DIMEN(2,37)
-         IF(NREJEY.NE.0) THEN
-           DO 100 K=1,NREJEY
-            YSCE(K) = MOTREA( ADRESS(2,37) + K-1 )
-100        CONTINUE
-         ENDIF
          NREJET = DIMEN(2,38)
          IF(NREJET.NE.0) THEN
-           DO 110 K=1,NREJET
-            DSCE(K) = MOTREA( ADRESS(2,38) + K-1 )
-110        CONTINUE
+           DO K=1,NREJET
+             DSCE(K) = MOTREA( ADRESS(2,38) + K-1 )
+           ENDDO
+         ENDIF
+         NREJEX = DIMEN(2,36)
+         IF(NREJEX.EQ.NREJET) THEN
+           DO K=1,NREJEX
+             XSCE(K) = MOTREA( ADRESS(2,36) + K-1 )
+           ENDDO
+         ELSE
+          IF(LNG.EQ.1) THEN
+            WRITE(LU,*) NREJET,' ABSCISSES DES SOURCES ATTENDUES'
+            WRITE(LU,*) NREJEX,' TROUVEES'
+          ENDIF
+          IF(LNG.EQ.2) THEN
+            WRITE(LU,*) NREJET,' ABSCISSAE OF SOURCES EXPECTED'
+            WRITE(LU,*) NREJEX,' FOUND'
+          ENDIF
+          CALL PLANTE(1)
+          STOP
+         ENDIF
+         NREJEY = DIMEN(2,37)
+         IF(NREJEY.EQ.NREJET) THEN
+           DO K=1,NREJEY
+             YSCE(K) = MOTREA( ADRESS(2,37) + K-1 )
+           ENDDO
+         ELSE
+          IF(LNG.EQ.1) THEN
+            WRITE(LU,*) NREJET,' ABSCISSES DES SOURCES ATTENDUES'
+            WRITE(LU,*) NREJEY,' TROUVEES'
+          ENDIF
+          IF(LNG.EQ.2) THEN
+            WRITE(LU,*) NREJET,' ABSCISSAE OF SOURCES EXPECTED'
+            WRITE(LU,*) NREJEY,' FOUND'
+          ENDIF
+          CALL PLANTE(1)
+          STOP
          ENDIF
          NREJTR = DIMEN(2,39)
-         IF(NREJTR.NE.0) THEN
+         IF(NREJTR.EQ.NTRAC*NREJET) THEN
            IF(NTRAC.GT.0) THEN
              DO ITRAC=1,NTRAC
-             DO K=1,NREJTR
+             DO K=1,NREJET
                TSCE(K,ITRAC)=MOTREA(ADRESS(2,39)+(K-1)*NTRAC+ITRAC-1)
              ENDDO
              ENDDO
            ENDIF
+         ELSE
+          IF(LNG.EQ.1) THEN
+            WRITE(LU,*) NREJET*NTRAC,
+     &      ' VALEURS DES TRACEURS DES SOURCES ATTENDUES'
+            WRITE(LU,*) NREJTR,' TROUVEES'
+          ENDIF
+          IF(LNG.EQ.2) THEN
+            WRITE(LU,*) NREJET*NTRAC,
+     &      ' VALUES OF THE TRACERS AT THE SOURCES EXPECTED'
+            WRITE(LU,*) NREJTR,' FOUND'
+          ENDIF
+          CALL PLANTE(1)
+          STOP
          ENDIF
          NCOSUP = DIMEN(2,40)
          IF(NCOSUP.NE.0) THEN
-           DO 130 K=1,NCOSUP
-            COSUPG(K) = MOTREA( ADRESS(2,40) + K-1 )
-130        CONTINUE
+           DO K=1,NCOSUP
+             COSUPG(K) = MOTREA( ADRESS(2,40) + K-1 )
+           ENDDO
          ENDIF
          NCRITE = DIMEN(2,41)
          IF(NCRITE.NE.0) THEN
            DO K=1,NCRITE
-            CRIPER(K) = MOTREA( ADRESS(2,41) + K-1 )
+             CRIPER(K) = MOTREA( ADRESS(2,41) + K-1 )
            ENDDO
          ENDIF
          TMOY = MOTREA( ADRESS(2,42) )
          NREJEU = DIMEN(2,43)
          IF(NREJEU.NE.0) THEN
            DO K=1,NREJEU
-            USCE(K) = MOTREA( ADRESS(2,43) + K-1 )
+             USCE(K) = MOTREA( ADRESS(2,43) + K-1 )
            ENDDO
          ENDIF
          NREJEV = DIMEN(2,44)
          IF(NREJEV.NE.0) THEN
            DO K=1,NREJEV
-            VSCE(K) = MOTREA( ADRESS(2,44) + K-1 )
+             VSCE(K) = MOTREA( ADRESS(2,44) + K-1 )
            ENDDO
          ENDIF
          DUREE = MOTREA( ADRESS(2,45) )
@@ -558,11 +624,11 @@ C
          IF(NPERIAF.GT.0) THEN
            DO K=1,MAX(NPERIAF,50)
              PERIAF(K) = MOTREA( ADRESS(2,51) + K-1 )
-           ENDDO 
+           ENDDO
          ENDIF
          DO K=1,4
            TOLEST(K) = MOTREA( ADRESS(2,52) + K-1 )
-         ENDDO 
+         ENDDO
          NDEF     = MOTREA( ADRESS(2,53) )
          DP       = MOTREA( ADRESS(2,54) )
          SP       = MOTREA( ADRESS(2,55) )
@@ -571,15 +637,16 @@ C
          TETAZCOMP= MOTREA( ADRESS(2,58) )
          TAFBGN   = MOTREA( ADRESS(2,59) )
          TAFEND   = MOTREA( ADRESS(2,59)+1 )
-C
-C MOTS-CLES LOGIQUES :
-C
+         GAMMA    = MOTREA( ADRESS(2,60) )
+!
+! LOGICAL KEYWORDS:
+!
          IF(MOTLOG( ADRESS(3,1) )) THEN
            DEBU = .FALSE.
          ELSE
            DEBU = .TRUE.
          ENDIF
-C
+!
          LISTIN    = MOTLOG( ADRESS(3, 3) )
          DIFVIT    = MOTLOG( ADRESS(3, 4) )
          ATMOS     = MOTLOG( ADRESS(3, 5) )
@@ -596,7 +663,7 @@ C
          BILMAS    = MOTLOG( ADRESS(3,16) )
          CLIPH     = MOTLOG( ADRESS(3,17) )
          SPHERI    = MOTLOG( ADRESS(3,18) )
-C        FROVAR    = MOTLOG( ADRESS(3,19) )
+!        FROVAR    = MOTLOG( ADRESS(3,19) )
          PROLIN    = MOTLOG( ADRESS(3,20) )
          VALID     = MOTLOG( ADRESS(3,21) )
          INFOKE    = MOTLOG( ADRESS(3,22) )
@@ -618,25 +685,25 @@ C        FROVAR    = MOTLOG( ADRESS(3,19) )
          LINDNER   = MOTLOG( ADRESS(3,38) )
          CUMFLO    = MOTLOG( ADRESS(3,39) )
          COMFLU    = MOTLOG( ADRESS(3,40) )
-C SALINITY AND TEMPERATURE OUTPUT FOR DELWAQ
+! SALINITY AND TEMPERATURE OUTPUT FOR DELWAQ
          SALI_DEL  = MOTLOG( ADRESS(3,41) )
          TEMP_DEL  = MOTLOG( ADRESS(3,42) )
          VELO_DEL  = MOTLOG( ADRESS(3,43) )
          DIFF_DEL  = MOTLOG( ADRESS(3,44) )
-C        OIL SPILL MODEL
+!        OIL SPILL MODEL
          SPILL_MODEL  = MOTLOG( ADRESS(3,45) )
-C
+!
          IF(.NOT.DEFZON) NZONE=0
-C
-C MOTS-CLES CHAINES DE CARACTERES : CERTAINS SONT UTILISES PAR
-C                                   LA PROCEDURE DE LANCEMENT
-C
+!
+! CHARACTER STRING KEYWORDS : SOME ARE USED BY THE LAUNCHING
+!                             PROCEDURE
+!
          TITCAS    = MOTCAR( ADRESS(4, 1) )(1:72)
          VARDES    = MOTCAR( ADRESS(4, 2) )(1:72)
          CALL MAJUS(VARDES)
          VARIMP    = MOTCAR( ADRESS(4, 3) )(1:72)
          CALL MAJUS(VARIMP)
-C        DE 4 A 5 : LU ET UTILISE PAR LA PROCEDURE DE LANCEMENT
+!        FROM 4 TO 5 : READ AND USED BY THE LAUNCHING PROCEDURE
 !        NOMGEO    = MOTCAR( ADRESS(4, 6) )
          T2D_FILES(T2DGEO)%NAME=MOTCAR( ADRESS(4, 6) )
 !        NOMFOR    = MOTCAR( ADRESS(4, 7) )
@@ -644,14 +711,14 @@ C        DE 4 A 5 : LU ET UTILISE PAR LA PROCEDURE DE LANCEMENT
          T2D_FILES(T2DCLI)%NAME=MOTCAR( ADRESS(4, 9) )
          T2D_FILES(T2DPRE)%NAME=MOTCAR( ADRESS(4,10) )
          T2D_FILES(T2DRES)%NAME=MOTCAR( ADRESS(4,11) )
-C        DE 12 A 14 : LU ET UTILISE PAR LA PROCEDURE DE LANCEMENT
+!        FROM 12 TO 14 : READ AND USED BY THE LAUNCHING PROCEDURE
          T2D_FILES(T2DFON)%NAME=MOTCAR( ADRESS(4,15) )
-C        16 : NUMERO DE COMPTE (NON CONSERVE)
+!        16 : ACCOUNT NUMBER (NOT KEPT)
          T2D_FILES(T2DBI1)%NAME=MOTCAR( ADRESS(4,17) )
          T2D_FILES(T2DBI2)%NAME=MOTCAR( ADRESS(4,18) )
          T2D_FILES(T2DFO1)%NAME=MOTCAR( ADRESS(4,19) )
          T2D_FILES(T2DFO2)%NAME=MOTCAR( ADRESS(4,20) )
-C        DE 21 A 22 : LU ET UTILISE PAR LA PROCEDURE DE LANCEMENT
+!        FROM 21 TO 22 : READ AND USED BY THE LAUNCHING PROCEDURE
          NVARCL = DIMEN(4,23)
          IF(NVARCL.NE.0) THEN
            DO K=1,NVARCL
@@ -665,22 +732,22 @@ C        DE 21 A 22 : LU ET UTILISE PAR LA PROCEDURE DE LANCEMENT
          T2D_FILES(T2DRFO)%NAME=MOTCAR( ADRESS(4,25) )
          CDTINI    = MOTCAR( ADRESS(4,26) )(1:72)
          CALL MAJUS(CDTINI)
-!        FORMAT DU FICHIER DE GEOMETRIE
+!        GEOMETRY FILE FORMAT
          T2D_FILES(T2DGEO)%FMT = MOTCAR( ADRESS(4,27) )(1:8)
          CALL MAJUS(T2D_FILES(T2DGEO)%FMT)
-!        FORMAT DU FICHIER DE RESULTATS
+!        RESULTS FILE FORMAT
          T2D_FILES(T2DRES)%FMT = MOTCAR( ADRESS(4,28) )(1:8)
          CALL MAJUS(T2D_FILES(T2DRES)%FMT)
-!        FORMAT DU FICHIER DE RESULTATS DU CALCUL PRECEDENT
+!        PREVIOUS COMPUTATION FILE FORMAT
          T2D_FILES(T2DPRE)%FMT = MOTCAR( ADRESS(4,29) )(1:8)
          CALL MAJUS(T2D_FILES(T2DPRE)%FMT)
-C        DE 30 A 33 : LU ET UTILISE PAR LA PROCEDURE DE LANCEMENT
-C                30 : BIBLIOTHEQUES
-C                31 : PRIORITE
-C                32 : BIBLIOTHEQUE PVM
-C                33 : BIBLIOTHEQUE CALCIUM 1
-C                34 : BIBLIOTHEQUE CALCIUM 2
-C                35 : NOM DU CRAY
+!        FROM 30 TO 33 : READ AND USED BY THE LAUNCHING PROCEDURE
+!                   30 : LIBRARIES
+!                   31 : PRIORITY
+!                   32 : PVM LIBRARY
+!                   33 : CALCIUM 1 LIBRARY
+!                   34 : CALCIUM 2 LIBRARY
+!                   35 : CRAY NAME
          EQUA      = MOTCAR( ADRESS(4,36) )(1:20)
          CALL MAJUS(EQUA)
 !        NOMREF    = MOTCAR( ADRESS(4,37) )
@@ -690,9 +757,9 @@ C                35 : NOM DU CRAY
 !        DOSSIER_COUPLAGE = MOTCAR( ADRESS(4,39) )
          COUPLING  = MOTCAR( ADRESS(4,40) )
          CALL MAJUS(COUPLING)
-C
-C        ENTRE 41 ET 58 : MOTS-CLES "DESCRIPTION DE"
-C
+!
+!        FROM 41 TO 58 : "DESCRIPTION OF" KEYWORDS
+!
          ESTIME  = MOTCAR( ADRESS(4,60) )(1:72)
          CALL MAJUS(ESTIME)
          IF(ESTIME.EQ.' ') ADJO=.FALSE.
@@ -702,12 +769,12 @@ C
              NAME_PTS(K)=MOTCAR(ADRESS(4,61)+K-1)(1:32)
            ENDDO
          ENDIF
-C        62 : Sisyphe steering file (read by perl scripts)  
-C      
-C        63 : friction data file 
+!        62 : SISYPHE STEERING FILE (READ BY PERL SCRIPTS)
+!
+!        63 : FRICTION DATA FILE
 !        NOMCOF=MOTCAR( ADRESS(4,63))
          T2D_FILES(T2DCOF)%NAME=MOTCAR( ADRESS(4,63) )
-C        64-72 : Delwaq Files
+!        64-72 : DELWAQ FILES
 !        NOMSOU=MOTCAR( ADRESS(4,64) )
          T2D_FILES(T2DDL1)%NAME=MOTCAR( ADRESS(4,64) )
 !        NOSUIS=MOTCAR( ADRESS(4,65) )
@@ -730,18 +797,18 @@ C        64-72 : Delwaq Files
          T2D_FILES(T2DDL9)%NAME=MOTCAR( ADRESS(4,76) )
 !        NOMPRI=MOTCAR( ADRESS(4,77) )
          T2D_FILES(T2DL10)%NAME=MOTCAR( ADRESS(4,77) )
-C        STAGE-DISCHARGE CURVES FILE
+!        STAGE-DISCHARGE CURVES FILE
 !        NOMMAB=MOTCAR( ADRESS(4,73) )
          T2D_FILES(T2DMAB)%NAME=MOTCAR( ADRESS(4,73) )
-C        INITIALISING AND READING THE NAMES OF TRACERS
+!        INITIALISES AND READS THE NAMES OF TRACERS
          IF(NTRAC.GT.0) THEN
            DO I=1,NTRAC
              IF(LNG.EQ.1) THEN
               NAMETRAC(I) =  'TRACEUR '//I_IN_2_LETTERS(I)//'      '
-     *                      // '??              '
+     &                      // '??              '
              ELSEIF(LNG.EQ.2) THEN
               NAMETRAC(I) =  'TRACER '//I_IN_2_LETTERS(I)//'       '
-     *                      // '??              '
+     &                      // '??              '
              ENDIF
            ENDDO
          ENDIF
@@ -751,78 +818,85 @@ C        INITIALISING AND READING THE NAMES OF TRACERS
              NAMETRAC(I) = MOTCAR(ADRESS(4,74)+I-1)(1:32)
            ENDDO
          ENDIF
-C        SOURCES FILE 
+!        SOURCES FILE
          T2D_FILES(T2DVEF)%NAME=MOTCAR( ADRESS(4,75) )
-C        76 AND 77 IN DELWAQ FILES ABOVE
-!        FORMAT DU FICHIER DE REFERENCE
+!        76 AND 77 IN DELWAQ FILES ABOVE
+!        REFERENCE FILE FORMAT
          T2D_FILES(T2DREF)%FMT = MOTCAR( ADRESS(4,78) )(1:8)
          CALL MAJUS(T2D_FILES(T2DREF)%FMT)
-C        SECTIONS INPUT FILE
+!        SECTIONS INPUT FILE
          T2D_FILES(T2DSEC)%NAME=MOTCAR( ADRESS(4,79) )
-C        SECTIONS OUTPUT FILE
+!        SECTIONS OUTPUT FILE
          T2D_FILES(T2DSEO)%NAME=MOTCAR( ADRESS(4,80) )
-C        MIGRHYCAR STEERING FILE
+!        MIGRHYCAR STEERING FILE
          T2D_FILES(T2DMIG)%NAME=MOTCAR( ADRESS(4,81) )
-C
+!        82 : TOMAWAC STEERING FILE (READ BY PERL SCRIPTS)
+!
+!        HARMONIC CONSTANTS FILE
+         T2D_FILES(T2DHAR)%NAME=MOTCAR( ADRESS(4,83) )
+!        TIDAL MODEL FILE
+         T2D_FILES(T2DTID)%NAME=MOTCAR( ADRESS(4,84) )
+!        TIDE DATA BASE FILE
+         T2D_FILES(T2DBDD)%NAME=MOTCAR( ADRESS(4,85) )
       IF(LISTIN) THEN
          IF(LNG.EQ.1) WRITE(LU,1000)
          IF(LNG.EQ.2) WRITE(LU,1001)
       ENDIF
 1000  FORMAT(1X,/,19X, '********************************************',/,
-     *            19X, '*               LECDON:                    *',/,
-     *            19X, '*        APRES APPEL DE DAMOCLES           *',/,
-     *            19X, '*     VERIFICATION DES DONNEES LUES        *',/,
-     *            19X, '*     SUR LE FICHIER DES PARAMETRES        *',/,
-     *            19X, '********************************************',/)
+     &            19X, '*               LECDON:                    *',/,
+     &            19X, '*        APRES APPEL DE DAMOCLES           *',/,
+     &            19X, '*     VERIFICATION DES DONNEES LUES        *',/,
+     &            19X, '*     SUR LE FICHIER DES PARAMETRES        *',/,
+     &            19X, '********************************************',/)
 1001  FORMAT(1X,/,19X, '********************************************',/,
-     *            19X, '*               LECDON:                    *',/,
-     *            19X, '*        AFTER CALLING DAMOCLES            *',/,
-     *            19X, '*        CHECKING OF DATA  READ            *',/,
-     *            19X, '*         IN THE STEERING FILE             *',/,
-     *            19X, '********************************************',/)
-C
-C-----------------------------------------------------------------------
-C  CORRECTIONS ET CALCULS D'AUTRES PARAMETRES QUI SE DEDUISENT
-C  DE CEUX QUE L'ON VIENT DE LIRE
-C-----------------------------------------------------------------------
-C
-C  VARIABLES A CONVECTER :
-C
+     &            19X, '*               LECDON:                    *',/,
+     &            19X, '*        AFTER CALLING DAMOCLES            *',/,
+     &            19X, '*        CHECKING OF DATA  READ            *',/,
+     &            19X, '*         IN THE STEERING FILE             *',/,
+     &            19X, '********************************************',/)
+!
+!-----------------------------------------------------------------------
+!  CORRECTS AND COMPUTES OTHER VARIABLES THAT CAN BE DEDUCTED
+!  FROM THE ONES JUST READ
+!-----------------------------------------------------------------------
+!
+!  ADVECTION VARIABLES :
+!
       IF (.NOT.CONV) THEN
         CONVV(1)  =  .FALSE.
         CONVV(2)  =  .FALSE.
         CONVV(3)  =  .FALSE.
         CONVV(4)  =  .FALSE.
       ENDIF
-C
-C-----------------------------------------------------------------------
-C  S'IL N'Y A PAS DE TRACEUR, PAS DE DIFFUSION DU TRACEUR:
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!  IF NO TRACER, THERE SHOULD BE NO TRACER DIFFUSION:
+!-----------------------------------------------------------------------
+!
       IF (NTRAC.EQ.0) THEN
         DIFT = .FALSE.
       ENDIF
-C
-C-----------------------------------------------------------------------
-C  POSSIBLE ERROR OF ENGLISH USERS
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!  POSSIBLE ERROR OF ENGLISH USERS
+!-----------------------------------------------------------------------
+!
       IF (EQUA(1:15).EQ.'SAINT-VENANT FE') EQUA(14:15)='EF'
       IF (EQUA(1:15).EQ.'SAINT-VENANT FV') EQUA(14:15)='VF'
-C
-C-----------------------------------------------------------------------
-C  NOMS DES VARIABLES POUR LES FICHIERS DE RESULTATS ET DE GEOMETRIE:
-C-----------------------------------------------------------------------
-C
-C TABLEAU DE LOGIQUES POUR LES SORTIES DE VARIABLES
-C
+!
+!-----------------------------------------------------------------------
+!  NAME OF THE VARIABLES FOR THE RESULTS AND GEOMETRY FILES:
+!-----------------------------------------------------------------------
+!
+! ARRAY OF LOGICALS FOR OUTPUT
+!
       CALL NOMVAR_TELEMAC2D(TEXTE,TEXTPR,MNEMO,NPERIAF,NTRAC,NAMETRAC)
       CALL SORTIE(VARDES , MNEMO , MAXVAR , SORLEO )
       CALL SORTIE(VARIMP , MNEMO , MAXVAR , SORIMP )
-C
-C     OVERWITING FOR PARAMETER ESTIMATION DEVELOPPERS
-C     CHECKING FILES
-C
+!
+!     OVERWRITES FOR PARAMETER ESTIMATION DEVELOPPERS
+!     CHECKS FILES
+!
       IF(ESTIME.NE.' ') THEN
         TEXTE (20) = 'CV1                             '
         TEXTE (21) = 'CV2                             '
@@ -843,12 +917,12 @@ C
           STOP
         ENDIF
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C CORRECTION D'UNE POSSIBLE ERREUR DE DONNEES (PAS DE SORTIE DE
-C TRACEUR , DE VENT, ETC S'IL N'Y EN A PAS DANS LE CALCUL).
-C
+!
+!-----------------------------------------------------------------------
+!
+! CORRECTS A POTENTIAL ERROR IN THE DATA (THERE SHOULD BE NO TRACER
+! WIND, ETC OUTPUT IF THE COMPUTATION WAS WITHOUT TRACER, WIND, ETC).
+!
       IF(.NOT.ATMOS) THEN
         SORLEO(18)  = .FALSE.
         SORIMP(18)  = .FALSE.
@@ -869,100 +943,100 @@ C
         SORLEO(11) = .FALSE.
         SORIMP(11) = .FALSE.
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C EN CAS DE SUITE, IL FAUT UN FICHIER DU CALCUL PRECEDENT
-C
+!
+!-----------------------------------------------------------------------
+!
+! IN CASE OF A CONTINUATION RUN, A PREVIOUS COMPUTATION FILE NEEDS TO BE GIVEN
+!
       IF(.NOT.DEBU.AND.T2D_FILES(T2DPRE)%NAME(1:1).EQ.' ') THEN
         IF(LISTIN) THEN
           IF(LNG.EQ.1) WRITE(LU,1002)
           IF(LNG.EQ.2) WRITE(LU,1003)
         ENDIF
 1002    FORMAT(1X,'LECDON : UNE SUITE DE CALCUL EST DEMANDEE',/,10X,
-     *  'IL FAUT DONNER UN FICHIER DE RESULTATS DU CALCUL PRECEDENT',/)
+     &  'IL FAUT DONNER UN FICHIER DE RESULTATS DU CALCUL PRECEDENT',/)
 1003    FORMAT(1X,'LECDON : COMPUTATION CONTINUED, SO A PREVIOUS',/,
-     *         1X,'         RESULTS FILE IS NECESSARY',/)
+     &         1X,'         RESULTS FILE IS NECESSARY',/)
         CALL PLANTE(1)
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C EN CAS DE VALIDATION, IL FAUT UN FICHIER DE REFERENCE
-C
+!
+!-----------------------------------------------------------------------
+!
+! IN CASE OF A VALIDATION, A REFERENCE FILE SHOULD BE GIVEN
+!
       IF(VALID.AND.T2D_FILES(T2DREF)%NAME(1:1).EQ.' ') THEN
         IF(LISTIN) THEN
           IF(LNG.EQ.1) WRITE(LU,1004)
           IF(LNG.EQ.2) WRITE(LU,1005)
         ENDIF
 1004    FORMAT(1X,'LECDON : UNE VALIDATION EST DEMANDEE',/,10X,
-     *  'IL FAUT DONNER UN FICHIER DE REFERENCE',/,10X,
-     *  '(MOT-CLE : FICHIER DE REFERENCE)',/,10X,
-     *  'QUI SERVIRA POUR LA COMPARAISON. ARRET DU PROGRAMME',
-     *  ////)
+     &  'IL FAUT DONNER UN FICHIER DE REFERENCE',/,10X,
+     &  '(MOT-CLE : FICHIER DE REFERENCE)',/,10X,
+     &  'QUI SERVIRA POUR LA COMPARAISON. ARRET DU PROGRAMME',
+     &  ////)
 1005    FORMAT(1X,'LECDON: A VALIDATION IS ASKED, SO A',/,
-     *         9X,'REFERENCE FILE IS NECESSARY',/,
-     *         9X,'(KEY-WORD: REFERENCE FILE)',/,
-     *         9X,'FOR COMPARISON. INTERRUPTION OF PROGRAM',
-     *  ////)
+     &         9X,'REFERENCE FILE IS NECESSARY',/,
+     &         9X,'(KEY-WORD: REFERENCE FILE)',/,
+     &         9X,'FOR COMPARISON. INTERRUPTION OF PROGRAM',
+     &  ////)
         CALL PLANTE(1)
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C  COHERENCE SUR LES REJETS
-C
+!
+!-----------------------------------------------------------------------
+!
+!  COHERENCE OF THE DISCHARGE POINTS
+!
       IF(NREJEX.NE.NREJEY) THEN
        IF(LNG.EQ.1) WRITE(LU,1012) NREJEX,NREJEY
        IF(LNG.EQ.2) WRITE(LU,1013) NREJEX,NREJEY
 1012  FORMAT(1X,'ABSCISSES ET ORDONNEES DES REJETS EN NOMBRE DIFFERENT',
-     *       I6,1X,I6)
+     &       I6,1X,I6)
 1013  FORMAT(1X,'DIFFERENT NUMBERS OF ABSCISSAE AND ORDINATES ',/,1X,
-     *           'OF SOURCE POINTS',I6,1X,I6)
+     &           'OF SOURCE POINTS',I6,1X,I6)
       ENDIF
-C
+!
       IF(NREJET.GT.NREJEX.OR.NREJTR.GT.NREJEX.OR.
-     *   NREJET.GT.NREJEY.OR.NREJTR.GT.NREJEY) THEN
+     &   NREJET.GT.NREJEY.OR.NREJTR.GT.NREJEY) THEN
        IF(LNG.EQ.1) WRITE(LU,1014)
        IF(LNG.EQ.2) WRITE(LU,1015)
 1014   FORMAT(1X,'COORDONNEES DES REJETS EN NOMBRE INSUFFISANT')
 1015   FORMAT(1X,'NOT ENOUGH COORDINATES OF SOURCE POINTS')
       ENDIF
-C
+!
       IF(NREJEU.NE.NREJEV) THEN
         IF(LNG.EQ.1) WRITE(LU,1016) NREJEU,NREJEV
         IF(LNG.EQ.2) WRITE(LU,1017) NREJEU,NREJEV
 1016    FORMAT(1X,
-     *  'VITESSES DES SOURCES SELON X ET SELON Y EN NOMBRE DIFFERENT :',
-     *  I6,1X,I6)
+     &  'VITESSES DES SOURCES SELON X ET SELON Y EN NOMBRE DIFFERENT :',
+     &  I6,1X,I6)
 1017    FORMAT(1X,'DIFFERENT NUMBERS OF VELOCITIES OF SOURCES ',/,1X,
-     *  'ALONG X AND ALONG Y: ',I6,1X,I6)
+     &  'ALONG X AND ALONG Y: ',I6,1X,I6)
       ENDIF
-C
+!
       IF(NTRAC.GT.0.AND.NREJET.NE.NREJTR) THEN
-C       DANS LE CAS DE BUSES ET SIPHONS, LE CODE CALCULE LES
-C       VALEURS DU TRACEUR AUX SOURCES.
+!       IN THE CASE OF NOZZLES AND SIPHONS, THE CODE COMPUTES THE
+!       TRACER VALUES AT THE SOURCES
         IF(NSIPH.EQ.NREJET/2) THEN
           NREJTR = NREJET
         ELSE
-C       SI IL Y A AU MOINS UNE SOURCE QUI N'EST PAS UNE BUSE
-C       IL FAUT DONNER TOUTES LES VALEURS.
+!       IF AT LEAST ONE OF THE SOURCES IS NOT A NOZZLE
+!       ALL THE VALUES SHOULD BE GIVEN
          IF(LNG.EQ.1) WRITE(LU,1018)
          IF(LNG.EQ.2) WRITE(LU,1019)
 1018     FORMAT(1X,'VALEURS DU TRACEUR AUX SOURCES EN NOMBRE INCORRECT')
 1019     FORMAT(1X,'INCORRECT NUMBER OF VALUES OF THE TRACER AT THE',/,
-     *          1X,'SOURCES, CHECK OR GIVE THIS KEY-WORD')
+     &          1X,'SOURCES, CHECK OR GIVE THIS KEY-WORD')
         ENDIF
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C  OPTBAN REMPLACE BANDEC DANS LA PROGRAMMATION
-C  POUR DES RAISONS DE COMPATIBILITE, BANDEC EST GARDE
-C  OPTBAN EST MODIFIE ICI EN FONCTION DE BANDEC
-C
+!
+!-----------------------------------------------------------------------
+!
+!  OPTBAN REPLACES BANDEC
+!  FOR REASONS OF COMPATIBILITY, BANDEC IS KEPT
+!  OPTBAN IS HERE MODIFIED ACCORDING TO BANDEC
+!
       IF(.NOT.BANDEC) OPTBAN =0
       MSK = .FALSE.
       IF(OPTBAN.EQ.2.OR.MSKUSE) MSK = .TRUE.
@@ -973,99 +1047,99 @@ C
           IF(LNG.EQ.1) WRITE(LU,1020)
           IF(LNG.EQ.2) WRITE(LU,1021)
 1020      FORMAT(1X,'PAS DE TRAITEMENT DES BANCS DECOUVRANTS',/,1X,
-     *              ' EN VOLUMES FINIS')
+     &              ' EN VOLUMES FINIS')
 1021      FORMAT(1X,'NO SPECIFIC TREATMENT OF DRY ZONES',/,1X,
-     *              ' IN FINITE VOLUMES')
+     &              ' IN FINITE VOLUMES')
         ENDIF
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C  PRECONDITIONNEMENT DE TYPE CROUT AVEC GMRES : PAS EN VECTORIEL
-C
+!
+!-----------------------------------------------------------------------
+!
+!  PRECONDITIONING OF TYPE CROUT WITH GMRES: NOT FOR VECTORS
+!
       IF(LVMAC.NE.1) THEN
       IF((SLVPRO%SLV.EQ.7.AND.MOD(SLVPRO%PRECON, 7).EQ.0).OR.
-     *   (SLVPRO%SLV.EQ.7.AND.MOD(SLVPRO%PRECON,11).EQ.0).OR.
-     *   (SLVPRO%SLV.EQ.7.AND.MOD(SLVPRO%PRECON,13).EQ.0).OR.
-     *   (SLVTRA%SLV.EQ.7.AND.MOD(SLVTRA%PRECON, 7).EQ.0).OR.
-     *   (SLVTRA%SLV.EQ.7.AND.MOD(SLVTRA%PRECON,11).EQ.0).OR.
-     *   (SLVTRA%SLV.EQ.7.AND.MOD(SLVTRA%PRECON,13).EQ.0).OR.
-     *   (SLVK%SLV.EQ.7.AND.MOD(SLVK%PRECON, 7).EQ.0).OR.
-     *   (SLVK%SLV.EQ.7.AND.MOD(SLVK%PRECON,11).EQ.0).OR.
-     *   (SLVK%SLV.EQ.7.AND.MOD(SLVK%PRECON,13).EQ.0)) THEN
+     &   (SLVPRO%SLV.EQ.7.AND.MOD(SLVPRO%PRECON,11).EQ.0).OR.
+     &   (SLVPRO%SLV.EQ.7.AND.MOD(SLVPRO%PRECON,13).EQ.0).OR.
+     &   (SLVTRA%SLV.EQ.7.AND.MOD(SLVTRA%PRECON, 7).EQ.0).OR.
+     &   (SLVTRA%SLV.EQ.7.AND.MOD(SLVTRA%PRECON,11).EQ.0).OR.
+     &   (SLVTRA%SLV.EQ.7.AND.MOD(SLVTRA%PRECON,13).EQ.0).OR.
+     &   (SLVK%SLV.EQ.7.AND.MOD(SLVK%PRECON, 7).EQ.0).OR.
+     &   (SLVK%SLV.EQ.7.AND.MOD(SLVK%PRECON,11).EQ.0).OR.
+     &   (SLVK%SLV.EQ.7.AND.MOD(SLVK%PRECON,13).EQ.0)) THEN
         IF(LNG.EQ.1) WRITE(LU,2000)
         IF(LNG.EQ.2) WRITE(LU,2001)
 2000    FORMAT(1X,'MOT-CLES SOLVEURS ET PRECONDITIONNEMENTS :',/,1X,
-     *            'SUR MACHINE VECTORIELLE,',/,1X,
-     *            'NE PAS UTILISER GMRES + CROUT',///)
+     &            'SUR MACHINE VECTORIELLE,',/,1X,
+     &            'NE PAS UTILISER GMRES + CROUT',///)
 2001    FORMAT(1X,'KEY-WORDS SOLVERS AND PRECONDITONING:',/,1X,
-     *            'ON VECTOR MACHINES,',/,1X,
-     *            'DO NOT USE GMRES + CROUT',///)
+     &            'ON VECTOR MACHINES,',/,1X,
+     &            'DO NOT USE GMRES + CROUT',///)
         CALL PLANTE(1)
         STOP
       ENDIF
       ENDIF
-C
-C  PRECONDITIONNEMENT DE TYPE CROUT AVEC PARALLELISME IMPOSSIBLE
-C  SOLVEUR DIRECT AVEC PARALLELISME IMPOSSIBLE
-C
+!
+!  PRECONDITIONING OF TYPE CROUT WITH IMPOSSIBLE PARALLELISM
+!  DIRECT SOLVER WITH IMPOSSIBLE PARALLELISM
+!
       IF(NCSIZE.GT.1) THEN
       IF((MOD(SLVPRO%PRECON, 7).EQ.0.AND.SLVPRO%PRECON.NE.0).OR.
-     *   (MOD(SLVPRO%PRECON,11).EQ.0.AND.SLVPRO%PRECON.NE.0).OR.
-     *   (MOD(SLVPRO%PRECON,13).EQ.0.AND.SLVPRO%PRECON.NE.0).OR.
-     *   (MOD(SLVTRA%PRECON, 7).EQ.0.AND.SLVTRA%PRECON.NE.0).OR.
-     *   (MOD(SLVTRA%PRECON,11).EQ.0.AND.SLVTRA%PRECON.NE.0).OR.
-     *   (MOD(SLVTRA%PRECON,13).EQ.0.AND.SLVTRA%PRECON.NE.0).OR.
-     *   (MOD(SLVK%PRECON, 7).EQ.0.AND.SLVK%PRECON.NE.0).OR.
-     *   (MOD(SLVK%PRECON,11).EQ.0.AND.SLVK%PRECON.NE.0).OR.
-     *   (MOD(SLVK%PRECON,13).EQ.0.AND.SLVK%PRECON.NE.0) ) THEN
+     &   (MOD(SLVPRO%PRECON,11).EQ.0.AND.SLVPRO%PRECON.NE.0).OR.
+     &   (MOD(SLVPRO%PRECON,13).EQ.0.AND.SLVPRO%PRECON.NE.0).OR.
+     &   (MOD(SLVTRA%PRECON, 7).EQ.0.AND.SLVTRA%PRECON.NE.0).OR.
+     &   (MOD(SLVTRA%PRECON,11).EQ.0.AND.SLVTRA%PRECON.NE.0).OR.
+     &   (MOD(SLVTRA%PRECON,13).EQ.0.AND.SLVTRA%PRECON.NE.0).OR.
+     &   (MOD(SLVK%PRECON, 7).EQ.0.AND.SLVK%PRECON.NE.0).OR.
+     &   (MOD(SLVK%PRECON,11).EQ.0.AND.SLVK%PRECON.NE.0).OR.
+     &   (MOD(SLVK%PRECON,13).EQ.0.AND.SLVK%PRECON.NE.0) ) THEN
          IF(LNG.EQ.1) WRITE(LU,2014)
          IF(LNG.EQ.2) WRITE(LU,2015)
 2014     FORMAT(1X,'AVEC PARALLELISME,',/,1X,
-     *             'PAS DE PRECONDITIONNEMENT DE TYPE CROUT',///)
+     &             'PAS DE PRECONDITIONNEMENT DE TYPE CROUT',///)
 2015     FORMAT(1X,'WITH PARALLELISM,',/,1X,
-     *             'NO CROUT-TYPE PRECONDITIONNING',///)
+     &             'NO CROUT-TYPE PRECONDITIONNING',///)
          CALL PLANTE(1)
          STOP
       ENDIF
       IF( SLVPRO%SLV.EQ.8.OR.
-     *    SLVTRA%SLV.EQ.8.OR.
-     *    SLVK%SLV  .EQ.8     ) THEN
+     &    SLVTRA%SLV.EQ.8.OR.
+     &    SLVK%SLV  .EQ.8     ) THEN
          IF(LNG.EQ.1) WRITE(LU,2018)
          IF(LNG.EQ.2) WRITE(LU,2019)
 2018     FORMAT(1X,'AVEC PARALLELISME,',/,1X,
-     *             'PAS DE SOLVEUR DIRECT',///)
+     &             'PAS DE SOLVEUR DIRECT',///)
 2019     FORMAT(1X,'WITH PARALLELISM,',/,1X,
-     *             'NO DIRECT SYSTEM SOLVER',///)
+     &             'NO DIRECT SYSTEM SOLVER',///)
          CALL PLANTE(1)
          STOP
       ENDIF
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF( ( SLVPRO%SLV.EQ.8.OR.
-     *      SLVTRA%SLV.EQ.8.OR.
-     *      SLVK%SLV  .EQ.8     ).AND.OPTASS.NE.3 ) THEN
+     &      SLVTRA%SLV.EQ.8.OR.
+     &      SLVK%SLV  .EQ.8     ).AND.OPTASS.NE.3 ) THEN
          IF(LNG.EQ.1) WRITE(LU,2022)
          IF(LNG.EQ.2) WRITE(LU,2023)
 2022     FORMAT(1X,'AVEC SOLVEUR DIRECT, STOCKAGE PAR SEGMENT',/,1X,
-     *             'OBLIGATOIRE',///)
+     &             'OBLIGATOIRE',///)
 2023     FORMAT(1X,'WITH DIRECT SYSTEM SOLVER, EDGE-BASED STORAGE',/,1X,
-     *             'IS MANDATORY',///)
+     &             'IS MANDATORY',///)
          CALL PLANTE(1)
          STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(INCLUS(COUPLING,'DELWAQ').AND.OPTASS.NE.3) THEN
         IF(LNG.EQ.1) WRITE(LU,2024)
         IF(LNG.EQ.2) WRITE(LU,2025)
 2024    FORMAT(1X,'AVEC COUPLAGE DELWAQ, STOCKAGE PAR SEGMENT',/,1X,
-     *            'OBLIGATOIRE',///)
+     &            'OBLIGATOIRE',///)
 2025    FORMAT(1X,'WITH COUPLING WITH DELWAQ, EDGE-BASED STORAGE',/,1X,
-     *            'IS MANDATORY',///)
+     &            'IS MANDATORY',///)
         CALL PLANTE(1)
         STOP
       ENDIF
@@ -1073,45 +1147,45 @@ C
         IF(LNG.EQ.1) WRITE(LU,2026)
         IF(LNG.EQ.2) WRITE(LU,2027)
 2026    FORMAT(1X,'AVEC COUPLAGE DELWAQ, VITESSE QUASI-BULLE',/,1X,
-     *            'INTERDITE',///)
+     &            'INTERDITE',///)
 2027    FORMAT(1X,'WITH COUPLING WITH DELWAQ, QUASI-BUBBLE VELOCITIES',
-     *       /,1X,'IS NOT ALLOWED',///)
+     &       /,1X,'IS NOT ALLOWED',///)
         CALL PLANTE(1)
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(INCLUS(COUPLING,'DELWAQ').AND.OPTSUP(2).NE.0) THEN
         IF(LNG.EQ.1) WRITE(LU,2028)
         IF(LNG.EQ.2) WRITE(LU,2029)
 2028    FORMAT(1X,'AVEC COUPLAGE DELWAQ, DECENTREMENT SUPG SUR H',/,1X,
-     *            'IMPOSSIBLE, MODIFIER LE MOT-CLE : OPTION DE SUPG',//)
+     &            'IMPOSSIBLE, MODIFIER LE MOT-CLE : OPTION DE SUPG',//)
 2029    FORMAT(1X,'WITH COUPLING WITH DELWAQ, SUPG UPWINDING ON H',/,1X,
-     *            'IS FORBIDDEN, CHECK KEY-WORD: SUPG OPTION',//)
+     &            'IS FORBIDDEN, CHECK KEY-WORD: SUPG OPTION',//)
         CALL PLANTE(1)
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C     CHECKING ADVECTION SOLVERS ON VELOCITY
-C
+!
+!-----------------------------------------------------------------------
+!
+!     CHECKS ADVECTION SOLVERS ON VELOCITY
+!
       IF(ICONVF(1).NE.ADV_CAR.AND.ICONVF(1).NE.ADV_SUP.AND.
-     *   ICONVF(1).NE.ADV_LPO.AND.ICONVF(1).NE.ADV_NSC.AND.
-     *   ICONVF(1).NE.ADV_PSI.AND.ICONVF(1).NE.ADV_NSC_NC.AND.
-     *   ICONVF(1).NE.ADV_PSI_NC.AND.
-     *   ICONVF(1).NE.ADV_LPO_TF.AND.ICONVF(1).NE.ADV_NSC_TF) THEN
+     &   ICONVF(1).NE.ADV_LPO.AND.ICONVF(1).NE.ADV_NSC.AND.
+     &   ICONVF(1).NE.ADV_PSI.AND.ICONVF(1).NE.ADV_NSC_NC.AND.
+     &   ICONVF(1).NE.ADV_PSI_NC.AND.
+     &   ICONVF(1).NE.ADV_LPO_TF.AND.ICONVF(1).NE.ADV_NSC_TF) THEN
          IF(LNG.EQ.1) WRITE(LU,72) ICONVF(1)
          IF(LNG.EQ.2) WRITE(LU,73) ICONVF(1)
 72       FORMAT(1X,'FORME DE LA CONVECTION POUR LA VITESSE : ',I3,/,1X,
-     *             'INCONNUE OU NON PROGRAMMEE')
+     &             'INCONNUE OU NON PROGRAMMEE')
 73       FORMAT(1X,'TYPE OF AVECTION FOR VELOCITY: ',I3,/,1X,
-     *             'UNKNOWN OR NOT IMPLEMENTED')
+     &             'UNKNOWN OR NOT IMPLEMENTED')
          IF(ICONVF(1).EQ.8.AND.LNG.EQ.1) THEN
            WRITE(LU,*) 'LE SCHEMA VOLUMES FINIS 8 EST MAINTENANT'
            WRITE(LU,*) 'LE SCHEMA N CONSERVATIF, AVEC LE NUMERO ',
-     *                                                           ADV_NSC
+     &                                                           ADV_NSC
          ENDIF
          IF(ICONVF(1).EQ.8.AND.LNG.EQ.2) THEN
            WRITE(LU,*) 'THE FINITE VOLUMES SCHEME 8 IS NOW'
@@ -1120,27 +1194,27 @@ C
          CALL PLANTE(1)
          STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C     CHECKING ADVECTION SOLVERS ON TRACERS
-C
+!
+!-----------------------------------------------------------------------
+!
+!     CHECKS ADVECTION SOLVERS ON TRACERS
+!
       IF(NTRAC.GT.0) THEN
       IF(ICONVF(3).NE.ADV_CAR.AND.ICONVF(3).NE.ADV_SUP.AND.
-     *   ICONVF(3).NE.ADV_LPO.AND.ICONVF(3).NE.ADV_NSC.AND.
-     *   ICONVF(3).NE.ADV_PSI.AND.ICONVF(3).NE.ADV_NSC_NC.AND.
-     *   ICONVF(3).NE.ADV_PSI_NC.AND.
-     *   ICONVF(3).NE.ADV_LPO_TF.AND.ICONVF(3).NE.ADV_NSC_TF) THEN
+     &   ICONVF(3).NE.ADV_LPO.AND.ICONVF(3).NE.ADV_NSC.AND.
+     &   ICONVF(3).NE.ADV_PSI.AND.ICONVF(3).NE.ADV_NSC_NC.AND.
+     &   ICONVF(3).NE.ADV_PSI_NC.AND.
+     &   ICONVF(3).NE.ADV_LPO_TF.AND.ICONVF(3).NE.ADV_NSC_TF) THEN
          IF(LNG.EQ.1) WRITE(LU,74) ICONVF(3)
          IF(LNG.EQ.2) WRITE(LU,75) ICONVF(3)
 74       FORMAT(1X,'FORME DE LA CONVECTION DES TRACEURS : ',I3,/,1X,
-     *             'INCONNUE OU NON PROGRAMMEE')
+     &             'INCONNUE OU NON PROGRAMMEE')
 75       FORMAT(1X,'TYPE OF AVECTION FOR TRACERS: ',I3,/,1X,
-     *             'UNKNOWN OR NOT IMPLEMENTED')
+     &             'UNKNOWN OR NOT IMPLEMENTED')
          IF(ICONVF(3).EQ.8.AND.LNG.EQ.1) THEN
            WRITE(LU,*) 'LE SCHEMA VOLUMES FINIS 8 EST MAINTENANT'
            WRITE(LU,*) 'LE SCHEMA N CONSERVATIF, AVEC LE NUMERO ',
-     *                                                           ADV_NSC
+     &                                                           ADV_NSC
          ENDIF
          IF(ICONVF(3).EQ.8.AND.LNG.EQ.2) THEN
            WRITE(LU,*) 'THE FINITE VOLUMES SCHEME 8 IS NOW'
@@ -1150,66 +1224,66 @@ C
          STOP
       ENDIF
       IF(ICONVF(3).EQ.ADV_LPO.OR.ICONVF(3).EQ.ADV_LPO_TF.OR.
-     *   ICONVF(3).EQ.ADV_NSC.OR.ICONVF(3).EQ.ADV_NSC_TF.OR.
-     *   ICONVF(3).EQ.ADV_PSI.OR.ICONVF(3).EQ.ADV_PSI_TF     ) THEN
+     &   ICONVF(3).EQ.ADV_NSC.OR.ICONVF(3).EQ.ADV_NSC_TF.OR.
+     &   ICONVF(3).EQ.ADV_PSI.OR.ICONVF(3).EQ.ADV_PSI_TF     ) THEN
         TETAT = 0.D0
         IF(LNG.EQ.1) WRITE(LU,6000)
         IF(LNG.EQ.2) WRITE(LU,6001)
 6000    FORMAT(1X,'LECDON : SCHEMA VOLUMES FINIS SUR LE TRACEUR. ',
-     *  'VALEUR FORCEE : IMPLICITATION = 0.')
+     &  'VALEUR FORCEE : IMPLICITATION = 0.')
 6001    FORMAT(1X,'LECDON : FINITE VOLUME SCHEME ON THE TRACER. ',
-     *  'IMPOSED VALUE: IMPLICITATION = 0.')
+     &  'IMPOSED VALUE: IMPLICITATION = 0.')
         OPTSUP(2)=0
         IF(LNG.EQ.1) WRITE(LU,8000)
         IF(LNG.EQ.2) WRITE(LU,8001)
 8000    FORMAT(1X,'LECDON : SCHEMA VOLUMES FINIS SUR LE TRACEUR. ',
-     *  'VALEUR FORCEE : OPTION DE SUPG = 0 POUR H')
+     &  'VALEUR FORCEE : OPTION DE SUPG = 0 POUR H')
 8001    FORMAT(1X,'LECDON : FINITE VOLUME SCHEME ON THE TRACER. ',
-     *  'IMPOSED VALUE: SUPG OPTION = 0 FOR DEPTH')
+     &  'IMPOSED VALUE: SUPG OPTION = 0 FOR DEPTH')
         IF(OPTASS.NE.3) THEN
           IF(LNG.EQ.1) WRITE(LU,2216)
           IF(LNG.EQ.2) WRITE(LU,2217)
 2216      FORMAT(1X,'STOCKAGE DES MATRICES = 3',/,1X,
-     *              'IMPOSE AVEC CONVECTEUR VOLUME FINIS')
+     &              'IMPOSE AVEC CONVECTEUR VOLUME FINIS')
 2217      FORMAT(1X,'MATRIX STORAGE = 3',/,1X,
-     *              'MANDATORY WITH FINITE VOLUME ADVECTION')
+     &              'MANDATORY WITH FINITE VOLUME ADVECTION')
           CALL PLANTE(1)
           STOP
-        ENDIF   
+        ENDIF
       ENDIF
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C  CAS OU IL FAUDRA APPELER LE CONVECTEUR EN VOLUMES FINIS
-C
+!
+!-----------------------------------------------------------------------
+!
+!  CASE WHERE ADVECTION IS DONE IN FINITE VOLUME
+!
       IF(ICONVF(1).EQ.ADV_LPO.OR.ICONVF(1).EQ.ADV_LPO_TF.OR.
-     *   ICONVF(1).EQ.ADV_NSC.OR.ICONVF(1).EQ.ADV_NSC_TF.OR.
-     *   ICONVF(1).EQ.ADV_PSI.OR.ICONVF(1).EQ.ADV_PSI_TF     ) THEN
+     &   ICONVF(1).EQ.ADV_NSC.OR.ICONVF(1).EQ.ADV_NSC_TF.OR.
+     &   ICONVF(1).EQ.ADV_PSI.OR.ICONVF(1).EQ.ADV_PSI_TF     ) THEN
         IF(OPTASS.NE.3) THEN
           IF(LNG.EQ.1) WRITE(LU,2216)
           IF(LNG.EQ.2) WRITE(LU,2217)
           CALL PLANTE(1)
           STOP
-        ENDIF   
+        ENDIF
       ENDIF
-C
+!
       IF(ITURB.EQ.3) THEN
       IF(ICONVF(4).NE.ADV_CAR.AND.ICONVF(4).NE.ADV_SUP.AND.
-     *   ICONVF(4).NE.ADV_LPO.AND.ICONVF(4).NE.ADV_NSC.AND.
-     *   ICONVF(4).NE.ADV_PSI.AND.ICONVF(4).NE.ADV_NSC_NC.AND.
-     *   ICONVF(4).NE.ADV_PSI_NC.AND.
-     *   ICONVF(4).NE.ADV_LPO_TF.AND.ICONVF(4).NE.ADV_NSC_TF) THEN
+     &   ICONVF(4).NE.ADV_LPO.AND.ICONVF(4).NE.ADV_NSC.AND.
+     &   ICONVF(4).NE.ADV_PSI.AND.ICONVF(4).NE.ADV_NSC_NC.AND.
+     &   ICONVF(4).NE.ADV_PSI_NC.AND.
+     &   ICONVF(4).NE.ADV_LPO_TF.AND.ICONVF(4).NE.ADV_NSC_TF) THEN
          IF(LNG.EQ.1) WRITE(LU,76) ICONVF(4)
          IF(LNG.EQ.2) WRITE(LU,77) ICONVF(4)
 76       FORMAT(1X,'FORME DE LA CONVECTION DE K ET EPSILON : ',I3,/,1X,
-     *             'INCONNUE OU NON PROGRAMMEE')
+     &             'INCONNUE OU NON PROGRAMMEE')
 77       FORMAT(1X,'TYPE OF AVECTION FOR K AND EPSILON: ',I3,/,1X,
-     *             'UNKNOWN OR NOT IMPLEMENTED')
+     &             'UNKNOWN OR NOT IMPLEMENTED')
          IF(ICONVF(4).EQ.8.AND.LNG.EQ.1) THEN
            WRITE(LU,*) 'LE SCHEMA VOLUMES FINIS 8 EST MAINTENANT'
            WRITE(LU,*) 'LE SCHEMA N CONSERVATIF, AVEC LE NUMERO ',
-     *                                                           ADV_NSC
+     &                                                           ADV_NSC
          ENDIF
          IF(ICONVF(4).EQ.8.AND.LNG.EQ.2) THEN
            WRITE(LU,*) 'THE FINITE VOLUMES SCHEME 8 IS NOW'
@@ -1219,90 +1293,90 @@ C
          STOP
       ENDIF
       IF(ICONVF(4).EQ.ADV_LPO.OR.ICONVF(4).EQ.ADV_LPO_TF.OR.
-     *   ICONVF(4).EQ.ADV_NSC.OR.ICONVF(4).EQ.ADV_NSC_TF.OR.
-     *   ICONVF(4).EQ.ADV_PSI.OR.ICONVF(4).EQ.ADV_PSI_TF     ) THEN
+     &   ICONVF(4).EQ.ADV_NSC.OR.ICONVF(4).EQ.ADV_NSC_TF.OR.
+     &   ICONVF(4).EQ.ADV_PSI.OR.ICONVF(4).EQ.ADV_PSI_TF     ) THEN
         IF(OPTASS.NE.3) THEN
           IF(LNG.EQ.1) WRITE(LU,2216)
           IF(LNG.EQ.2) WRITE(LU,2217)
           CALL PLANTE(1)
           STOP
-        ENDIF   
+        ENDIF
       ENDIF
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C  PRECONDITIONNEMENT DE CROUT AVEC DISCRETISATION DIFFERENTE DE H ET U
-C  NON PROGRAMME POUR L'INSTANT.
-C
+!
+!-----------------------------------------------------------------------
+!
+!  CROUT PRECONDITIONING WITH DIFFERENT DISCRETISATION FOR H AND U
+!  NOT PROGRAMMED FOR THE TIME BEING
+!
       IF(DISCRE(1).NE.DISCRE(2).AND.SLVPRO%PRECON.NE.0) THEN
       IF((MOD(SLVPRO%PRECON, 7).EQ.0).OR.
-     *   (MOD(SLVPRO%PRECON,11).EQ.0).OR.
-     *   (MOD(SLVPRO%PRECON,13).EQ.0)     ) THEN
+     &   (MOD(SLVPRO%PRECON,11).EQ.0).OR.
+     &   (MOD(SLVPRO%PRECON,13).EQ.0)     ) THEN
          IF(LNG.EQ.1) WRITE(LU,5002)
          IF(LNG.EQ.2) WRITE(LU,5003)
 5002     FORMAT(1X,'AVEC DISCRETISATION DIFFERENTE DE H ET DE U',/,1X,
-     *             'PAS DE PRECONDITIONNEMENT DE TYPE CROUT',///)
+     &             'PAS DE PRECONDITIONNEMENT DE TYPE CROUT',///)
 5003     FORMAT(1X,'WITH A DIFFERENT DISCRETIZATION OF H AND U',/,1X,
-     *             'NO CROUT-TYPE PRECONDITIONNING',///)
+     &             'NO CROUT-TYPE PRECONDITIONNING',///)
          CALL PLANTE(1)
          STOP
       ENDIF
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C  COHERENCES POUR LA PRISE EN COMPTE DES EFFETS DE DENSITE
-C
+!
+!-----------------------------------------------------------------------
+!
+!  COHERENCE FOR THE EFFECTS OF DENSITY
+!
       IF(ROVAR) THEN
-C
+!
         IF(NTRAC.EQ.0) THEN
           IF(LNG.EQ.1) WRITE(LU,2004)
           IF(LNG.EQ.2) WRITE(LU,2005)
 2004      FORMAT(1X,'AVEC DES EFFETS DE DENSITE, IL FAUT UN ',/,1X,
-     *              'TRACEUR EGAL A LA SALINITE')
+     &              'TRACEUR EGAL A LA SALINITE')
 2005      FORMAT(1X,'WITH DENSITY EFFECTS, A TRACER EQUAL TO',/,1X,
-     *              'THE SALINITY IS NEEDED')
+     &              'THE SALINITY IS NEEDED')
           CALL PLANTE(1)
           STOP
         ENDIF
-C
+!
         ROEAU = 999.972D0 * ( 1.D0 -7.D-6 *(TMOY-4.D0)**2 )
-C
+!
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C COHERENCES POUR LA PRISE EN COMPTE DE LA FORCE GENERATRICE DE LA MAREE
-C
+!
+!-----------------------------------------------------------------------
+!
+! COHERENCE FOR THE GENERATING FORCE OF THE TIDE
+!
       IF (MAREE) THEN
-C
+!
         IF (SPHERI) THEN
           CORIOL = .TRUE.
           IF(LNG.EQ.1) WRITE(LU,5000)
           IF(LNG.EQ.2) WRITE(LU,5001)
 5000      FORMAT(1X,'LECDON : PRISE EN COMPTE DE LA FORCE ',
-     *    'GENERATRICE DE LA MAREE ET DE LA FORCE DE CORIOLIS')
+     &    'GENERATRICE DE LA MAREE ET DE LA FORCE DE CORIOLIS')
 5001      FORMAT(1X,'LECDON : COMPUTATION WITH THE TIDE-GENERATING FORCE
-     * AND THE CORIOLIS FORCE')
+     & AND THE CORIOLIS FORCE')
         ELSE
           IF(LNG.EQ.1) WRITE(LU,4002)
           IF(LNG.EQ.2) WRITE(LU,4003)
 4002      FORMAT(1X,'LECDON : LA PRISE EN COMPTE DE LA FORCE ',
-     *            'GENERATRICE DE LA MAREE',/,10X,'N''EST PAS POSSIBLE',
-     *            ' EN COORDONNEES CARTESIENNES')
+     &            'GENERATRICE DE LA MAREE',/,10X,'N''EST PAS POSSIBLE',
+     &            ' EN COORDONNEES CARTESIENNES')
 4003      FORMAT(1X,'LECDON : COMPUTATION WITH TIDE-GENERATING FORCE',/,
-     *      10X,'IMPOSSIBLE IN CARTESIAN COORDINATES')
+     &      10X,'IMPOSSIBLE IN CARTESIAN COORDINATES')
           CALL PLANTE(1)
           STOP
         ENDIF
-C
+!
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C     DISCRETISATION DES DIFFERENTES VARIABLES
-C
+!
+!-----------------------------------------------------------------------
+!
+!     DISCRETISES THE VARIABLES
+!
       IELMU = DISCRE(1)
       IELMH = DISCRE(2)
       IELMT = DISCRE(3)
@@ -1310,7 +1384,7 @@ C
       IELME = DISCRE(4)
       IELM0 = 10*(IELMH/10)
       IELM1 = IELM0 + 1
-C
+!
       IF(IELMH.EQ.12) THEN
          IF(LNG.EQ.1) WRITE(LU,4102)
          IF(LNG.EQ.2) WRITE(LU,4103)
@@ -1319,9 +1393,9 @@ C
          CALL PLANTE(1)
          STOP
       ENDIF
-C
+!
       IF((IELMU.EQ.12.OR.IELMT.EQ.12).AND.PRODUC.EQ.2)
-     * THEN
+     & THEN
          IF(LNG.EQ.1) WRITE(LU,4000)
          IF(LNG.EQ.2) WRITE(LU,4001)
 4000     FORMAT(/1X,'PRODUIT FRONTAL NON PROGRAMME AVEC QUASI-BULLE')
@@ -1329,7 +1403,7 @@ C
          CALL PLANTE(1)
          STOP
       ENDIF
-C
+!
       IF(EQUA(1:15).EQ.'SAINT-VENANT VF') THEN
         IF(IELMU.EQ.12.OR.IELMH.EQ.12) THEN
           IELMU = 11
@@ -1340,69 +1414,68 @@ C
 2021      FORMAT(1X,'NO QUASI-BUBBLE IN FINITE VOLUMES')
         ENDIF
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C  NOMBRE DE PAS DE TEMPS SUIVANT LE PARAMETRE CHOISI PAR L'UTILISATEUR
-C
+!
+!-----------------------------------------------------------------------
+!
+!  NUMBER OF TIMESTEPS ACCORDING TO THE PARAMETER CHOSEN BY THE USER
+!
       NIT = MAX(NIT,INT(DUREE/DT +0.5D0))
-C
-C-----------------------------------------------------------------------
-C
-C  NOMBRE DE SORTIES POUR LES FLOTTEURS
-C
+!
+!-----------------------------------------------------------------------
+!
+!  NUMER OF OUTPUTS FOR FLOATS
+!
       NITFLO = (NIT-1)/FLOPRD + 1
-C
-C-----------------------------------------------------------------------
-C
-C  NPRIV MOFIFIED FOR OUTPUT OF USER-BUILT VARIABLES
-C  
+!
+!-----------------------------------------------------------------------
+!
+!  NPRIV MOFIFIED FOR OUTPUT OF USER-BUILT VARIABLES
+!
       DO I=1,4
         IF ((SORLEO(22+I).OR.SORIMP(22+I)).AND.(NPRIV.LT.I)) THEN
           NPRIV=MAX(NPRIV,I)
         ENDIF
       ENDDO
-C
-C-----------------------------------------------------------------------
-C
-C  STOCKAGE 2 SUPPRIME A PARTIR DE LA VERSION 5.1
-C
+!
+!-----------------------------------------------------------------------
+!
+!  STORAGE 2 OPTION HAS BEEN REMOVED FROM RELEASE 5.1
+!
       IF(OPTASS.EQ.2) THEN
         IF(LNG.EQ.1) WRITE(LU,2016)
         IF(LNG.EQ.2) WRITE(LU,2017)
 2016    FORMAT(1X,'STOCKAGE DES MATRICES = 2',/,1X,
-     *            'SUPPRIME DEPUIS LA VERSION 5.1',/,1X,
-     *            'ESSAYER LE STOCKAGE PAR SEGMENTS (3) A LA PLACE')
+     &            'SUPPRIME DEPUIS LA VERSION 5.1',/,1X,
+     &            'ESSAYER LE STOCKAGE PAR SEGMENTS (3) A LA PLACE')
 2017    FORMAT(1X,'MATRIX STORAGE = 2',/,1X,
-     *            'SUPPRESSED SINCE VERSION 5.1',/,1X,
-     *            'TRY EDGE-BASED STORAGE (3) INSTEAD')
+     &            'SUPPRESSED SINCE VERSION 5.1',/,1X,
+     &            'TRY EDGE-BASED STORAGE (3) INSTEAD')
         CALL PLANTE(1)
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C  CONTROLE DES OPTIONS NON PROGRAMMEES EN PARALLELISME
-C
+!
+!-----------------------------------------------------------------------
+!
+!  CHECKS NON-PROGRAMMED OPTIONS IN PARALLEL MODE
+!
       IF(NCSIZE.GT.1) THEN
         IF(PRODUC.EQ.2) THEN
            IF(LNG.EQ.1) WRITE(LU,2714)
            IF(LNG.EQ.2) WRITE(LU,2715)
 2714       FORMAT(1X,'PRODUIT FRONTAL',/,1X,
-     *               'NON PROGRAMME EN PARALLELISME',/,1X,
-     *               'L''OPTION 1 EST CHOISIE A LA PLACE')
+     &               'NON PROGRAMME EN PARALLELISME',/,1X,
+     &               'L''OPTION 1 EST CHOISIE A LA PLACE')
 2715       FORMAT(1X,'FRONTAL PRODUCT',/,1X,
-     *               'NOT IMPLEMENTED WITH PARALLELISM',/,1X,
-     *               'OPTION 1 IS TAKEN INSTEAD')
+     &               'NOT IMPLEMENTED WITH PARALLELISM',/,1X,
+     &               'OPTION 1 IS TAKEN INSTEAD')
            PRODUC = 1
         ENDIF
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C FRICTION COEFFICIENT CHECKING
-
-C FH-FRDATA
+!
+!-----------------------------------------------------------------------
+!
+! CHECKS FRICTION COEFFICIENT
+! FH-FRDATA
       IF ((FRICTB).AND.(ESTIME.NE.' ')) THEN
          IF (LNG.EQ.1) THEN
             WRITE(LU,*)'LES MOTS CLES :'
@@ -1417,146 +1490,146 @@ C FH-FRDATA
          ENDIF
          CALL PLANTE(1)
       ENDIF
-C
-      IF (FRICTB) KFROT = 0 !else the next test can be false
-C FH-FRDATA
-
+!
+      IF (FRICTB) KFROT = 0 !ELSE THE NEXT TEST CAN BE FALSE
+! FH-FRDATA
       IF(KFROT.NE.0.AND.TROUVE(2,4).NE.2) THEN
         IF(LNG.EQ.1) WRITE(LU,2716) KFROT
         IF(LNG.EQ.2) WRITE(LU,2717) KFROT
 2716    FORMAT(1X,'LA LOI DE FROTTEMENT ',1I2,' EST DEMANDEE',/,1X,
-     *            'DONNER LE COEFFICIENT DE FROTTEMENT CORRESPONDANT')
+     &            'DONNER LE COEFFICIENT DE FROTTEMENT CORRESPONDANT')
 2717    FORMAT(1X,'THE LAW OF BOTTOM FRICTION ',1I2,' IS ASKED',/,1X,
-     *            'GIVE THE CORRESPONDING FRICTION COEFICIENT')
+     &            'GIVE THE CORRESPONDING FRICTION COEFICIENT')
         CALL PLANTE(1)
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(SOLSYS.EQ.2.AND.ESTIME.NE.' ') THEN
         IF(LNG.EQ.1) THEN
           WRITE(LU,*) 'TRAITEMENT DU SYSTEME LINEAIRE OBLIGATOIREMENT 1'
-          WRITE(LU,*) 'EN MODE ESTIMATION DE PARAMETRES                '  
+          WRITE(LU,*) 'EN MODE ESTIMATION DE PARAMETRES                '
         ENDIF
         IF(LNG.EQ.2) THEN
           WRITE(LU,*) 'TREATMENT OF THE LINEAR SYSTEM MUST BE 1'
-          WRITE(LU,*) 'IN PARAMETER ESTIMATION MODE            '  
+          WRITE(LU,*) 'IN PARAMETER ESTIMATION MODE            '
         ENDIF
         CALL PLANTE(1)
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(SOLSYS.EQ.2.AND.EQUA(1:10).EQ.'BOUSSINESQ') THEN
         IF(LNG.EQ.1) THEN
           WRITE(LU,*) 'TRAITEMENT DU SYSTEME LINEAIRE 2'
-          WRITE(LU,*) 'ET BOUSSINESQ SONT INCOMPATIBLES'  
+          WRITE(LU,*) 'ET BOUSSINESQ SONT INCOMPATIBLES'
         ENDIF
         IF(LNG.EQ.2) THEN
           WRITE(LU,*) 'TREATMENT OF THE LINEAR SYSTEM 2'
-          WRITE(LU,*) 'AND BOUSSINESQ ARE NOT COMPATIBLE'  
+          WRITE(LU,*) 'AND BOUSSINESQ ARE NOT COMPATIBLE'
         ENDIF
         CALL PLANTE(1)
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(ESTIME.NE.' '.AND.BANDEC) THEN
         IF(OPTCOST.EQ.2.AND.LNG.EQ.1) THEN
           WRITE(LU,*) 'MOT-CLE FONCTION COUT OBLIGATOIREMENT EGAL A 1'
           WRITE(LU,*) 'AVEC DES BANCS DECOUVRANTS'
           CALL PLANTE(1)
-          STOP  
+          STOP
         ENDIF
         IF(OPTCOST.EQ.2.AND.LNG.EQ.2) THEN
           WRITE(LU,*) 'KEY-WORD COST FUNCTION MUST BE 1'
           WRITE(LU,*) 'WITH TIDAL FLATS'
           CALL PLANTE(1)
-          STOP  
+          STOP
         ENDIF
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C     OPTIONS OBLIGATOIRES OU MEILLEURES POUR L'EQUATION D'ONDE
-C
+!
+!-----------------------------------------------------------------------
+!
+!     REQUIRED OPTIONS OR BETTER OPTIONS FOR THE WAVE EQUATION
+!
       IF(SOLSYS.EQ.2) THEN
-C
-C       PRECONDITIONNEMENT DIAGONAL AVEC VALEURS ABSOLUES
+!
+!       DIAGONAL PRECONDITIONING WITH ABSOLUTE VALUES
         IF(2*(SLVPRO%PRECON/2).EQ.SLVPRO%PRECON) THEN
           SLVPRO%PRECON=SLVPRO%PRECON/2
           SLVPRO%PRECON=SLVPRO%PRECON*5
         ENDIF
-C       PAS DE PRECONDITIONNEMENT C-U
+!       NO C-U PRECONDITIONING
         PRECCU = .FALSE.
-C       DIFFUSION EXPLICITE
-C       TETAD  = 0.D0
-C       VITESSE ET HAUTEUR IMPLICITE (PAS OBLIGATOIRE MAIS PLUS STABLE)
-        TETAU = 1.D0
+!       EXPLICIT DIFFUSION
+!       TETAD  = 0.D0
+!       IMPLICIT VELOCITY AND DEPTH (NOT COMPULSORY BUT MORE STABLE)
+!       FOLLOWING LINE COMMENTED OUT AFTER USER CLUB 2010 (REMARK BY ALAN COOPER)
+!       TETAU = 1.D0
         TETAC = 1.D0
-C       MASS-LUMPING COMPLET SUR U
+!       MASS-LUMPING COMPLETE ON U
         AGGLOU = 1.D0
         IF(ICONVF(1).NE.ADV_CAR.AND.ICONVF(1).NE.ADV_PSI_NC.AND.
-     *     ICONVF(1).NE.ADV_LPO.AND.ICONVF(1).NE.ADV_LPO_TF.AND.
-     *     ICONVF(1).NE.ADV_NSC.AND.ICONVF(1).NE.ADV_NSC_TF.AND.
-     *     ICONVF(1).NE.ADV_PSI.AND.ICONVF(1).NE.ADV_PSI_TF     ) THEN
+     &     ICONVF(1).NE.ADV_LPO.AND.ICONVF(1).NE.ADV_LPO_TF.AND.
+     &     ICONVF(1).NE.ADV_NSC.AND.ICONVF(1).NE.ADV_NSC_TF.AND.
+     &     ICONVF(1).NE.ADV_PSI.AND.ICONVF(1).NE.ADV_PSI_TF     ) THEN
           IF(LNG.EQ.1) WRITE(LU,3002)
           IF(LNG.EQ.2) WRITE(LU,3003)
 3002      FORMAT(/1X,'AVEC LE TRAITEMENT DU SYSTEME LINEAIRE 2',/,
-     *            1X,'LA FORME DE LA CONVECTION DOIT ETRE EXPLICITE',/,
-     *            1X,'POUR LA VITESSE')
+     &            1X,'LA FORME DE LA CONVECTION DOIT ETRE EXPLICITE',/,
+     &            1X,'POUR LA VITESSE')
 3003      FORMAT(/1X,'WITH THE TREATMENT OF THE LINEAR SYSTEM NUMBER 2',
-     *            1X,'THE ADVECTION TYPE MUST BE EXPLICIT',/,
-     *            1X,'FOR THE VELOCITY') 
+     &            1X,'THE ADVECTION TYPE MUST BE EXPLICIT',/,
+     &            1X,'FOR THE VELOCITY')
           CALL PLANTE(1)
-          STOP         
+          STOP
         ENDIF
         IF(IELMU.EQ.13) THEN
           IF(LNG.EQ.1) WRITE(LU,3006)
           IF(LNG.EQ.2) WRITE(LU,3007)
 3006      FORMAT(/1X,'AVEC L''EQUATION D''ONDE',/,
-     *            1X,'VITESSE QUADRATIQUE NON PROGRAMMEE')
+     &            1X,'VITESSE QUADRATIQUE NON PROGRAMMEE')
 3007      FORMAT(/1X,'WITH THE WAVE EQUATION',
-     *            1X,'QUADRATIC VELOCITY IS NOT IMPLEMENTED') 
+     &            1X,'QUADRATIC VELOCITY IS NOT IMPLEMENTED')
           CALL PLANTE(1)
-          STOP         
+          STOP
         ENDIF
       ELSEIF(SOLSYS.NE.1) THEN
         IF(LNG.EQ.1) WRITE(LU,3004) SOLSYS
         IF(LNG.EQ.2) WRITE(LU,3005) SOLSYS
 3004    FORMAT(/,1X,'LE TRAITEMENT DU SYSTEME LINEAIRE :',1I6,1X,/,
-     *             'DOIT ETRE EGAL A 1 OU 2')
+     &             'DOIT ETRE EGAL A 1 OU 2')
 3005    FORMAT(/,1X,'THE TREATMENT OF THE LINEAR SYSTEM:',1I6,1X,/,
-     *             'MUST BE EQUAL TO 1 OR 2') 
+     &             'MUST BE EQUAL TO 1 OR 2')
         CALL PLANTE(1)
-        STOP                       
+        STOP
       ENDIF
-C
+!
       IF(TETAC.LT.0.5D0) THEN
         IF(LNG.EQ.1) WRITE(LU,3008) TETAC
         IF(LNG.EQ.2) WRITE(LU,3009) TETAC
 3008    FORMAT(/,1X,'L''IMPLICITATION POUR LA HAUTEUR :',G16.7,1X,/,
-     *             'DOIT ETRE SUPERIEURE A 0.5')
+     &             'DOIT ETRE SUPERIEURE A 0.5')
 3009    FORMAT(/,1X,'IMPLICITATION FOR DEPTH:',1I6,1X,/,
-     *             'MUST BE GREATER THAN 0.5') 
+     &             'MUST BE GREATER THAN 0.5')
         CALL PLANTE(1)
-        STOP                
+        STOP
       ENDIF
       IF(TETAU.LT.0.5D0) THEN
         IF(LNG.EQ.1) WRITE(LU,3010) TETAU
         IF(LNG.EQ.2) WRITE(LU,3011) TETAU
 3010    FORMAT(/,1X,'L''IMPLICITATION POUR LA VITESSE :',G16.7,1X,/,
-     *             'DOIT ETRE SUPERIEURE A 0.5')
+     &             'DOIT ETRE SUPERIEURE A 0.5')
 3011    FORMAT(/,1X,'IMPLICITATION FOR VELOCITY:',1I6,1X,/,
-     *             'MUST BE GREATER THAN 0.5') 
+     &             'MUST BE GREATER THAN 0.5')
         CALL PLANTE(1)
-        STOP                
+        STOP
       ENDIF
 !
-!  LOOKING FOR TEMPERATURE AND SALINITY IN THE TRACERS
+!  LOOKS FOR TEMPERATURE AND SALINITY IN THE TRACERS
 !
       IND_T=0
       IND_S=0
@@ -1567,7 +1640,7 @@ C
         ENDDO
       ENDIF
 !
-!  CHECKING THE EXISTENCE OF RELEVANT TRACERS FOR DELWAQ
+!  CHECKS THE EXISTENCE OF RELEVANT TRACERS FOR DELWAQ
 !
       IF(IND_T.EQ.0.AND.TEMP_DEL) THEN
         IF(LNG.EQ.1) THEN
@@ -1589,7 +1662,7 @@ C
         CALL PLANTE(1)
         STOP
       ENDIF
-C
+!
       IF(OPTBAN.EQ.1.AND.OPT_HNEG.EQ.2) THEN
         IF(ABS(AGGLOC-1.D0).GT.0.01D0) THEN
           IF(LNG.EQ.1) THEN
@@ -1614,7 +1687,7 @@ C
           ENDIF
           CALL PLANTE(1)
           STOP
-        ENDIF 
+        ENDIF
         IF(OPTSUP(2).NE.0) THEN
           IF(LNG.EQ.1) THEN
             WRITE(LU,*) 'TRAITEMENT DES HAUTEURS NEGATIVES=2'
@@ -1628,10 +1701,39 @@ C
           ENDIF
           CALL PLANTE(1)
           STOP
-        ENDIF                       
+        ENDIF
       ENDIF
 !
-!  CHECKING THE EXISTENCE OF A MIGRHYCAR STEERING FILE
+!     TIDAL FLATS VERSIONS OF FINITE VOLUME ADVECTION SCHEMES
+!     REQUEST POSITIVE DEPTHS
+!
+      IF(BANDEC.AND.OPTBAN.EQ.1.AND.OPT_HNEG.NE.2) THEN
+        IF(ICONVF(1).EQ.ADV_NSC_TF.OR.ICONVF(3).EQ.ADV_NSC_TF
+     & .OR.ICONVF(4).EQ.ADV_NSC_TF
+     & .OR.ICONVF(1).EQ.ADV_LPO_TF.OR.ICONVF(3).EQ.ADV_LPO_TF
+     & .OR.ICONVF(4).EQ.ADV_LPO_TF
+     & .OR.ICONVF(1).EQ.ADV_PSI_TF.OR.ICONVF(3).EQ.ADV_PSI_TF
+     & .OR.ICONVF(4).EQ.ADV_PSI_TF) THEN
+          IF(LNG.EQ.1) THEN
+            WRITE(LU,*) 'AVEC LES SCHEMAS DE CONVECTION'
+            WRITE(LU,*) ADV_LPO_TF,ADV_NSC_TF,' OU ',ADV_PSI_TF
+            WRITE(LU,*) 'TRAITEMENT DES HAUTEURS NEGATIVES'
+            WRITE(LU,*) 'DOIT ETRE EGAL A 2'
+          ENDIF
+          IF(LNG.EQ.2) THEN
+            WRITE(LU,*) 'WITH ADVECTION SCHEMES'
+            WRITE(LU,*) ADV_LPO_TF,ADV_NSC_TF,' OR ',ADV_PSI_TF
+            WRITE(LU,*) 'TREATMENT OF NEGATIVE DEPTHS'
+            WRITE(LU,*) 'MUST BE EQUAL TO 2'
+          ENDIF
+          CALL PLANTE(1)
+          STOP
+        ENDIF
+      ENDIF
+!
+!-----------------------------------------------------------------------
+!
+!  CHECKS THE EXISTENCE OF A MIGRHYCAR STEERING FILE
 !
       IF(SPILL_MODEL.AND.T2D_FILES(T2DMIG)%NAME(1:1).EQ.' ') THEN
         IF(LNG.EQ.1) THEN
@@ -1649,19 +1751,25 @@ C
         CALL PLANTE(1)
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C  IMPRESSION DU TITRE LU
-C
+!
+!-----------------------------------------------------------------------
+!
+!     WAVE DRIVEN CURRENTS MANDATORY IF COUPLING TO TOMAWAC
+!
+      IF(INCLUS(COUPLING,'TOMAWAC')) COUROU=.TRUE.
+!
+!-----------------------------------------------------------------------
+!
+!  WRITES OUT THE TITLE
+!
       IF(LISTIN) THEN
         IF(LNG.EQ.1) WRITE(LU,3000) TITCAS
         IF(LNG.EQ.2) WRITE(LU,3001) TITCAS
 3000    FORMAT(/1X,'SORTIE DE LECDON. TITRE DE L''ETUDE :',/,1X,A72,/)
 3001    FORMAT(/1X,'EXITING LECDON. NAME OF THE STUDY:',/,1X,A72,/)
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

@@ -1,88 +1,104 @@
-C                       *****************
-                        SUBROUTINE NOUMAR
-C                       *****************
-C
-     *(ZM , DZHDT, X  , Y  , NPOIN2, NDON , BINDON, NBOR , NPTFR,
-     * AT , DDC  , TM1, TM2, NP    , XRELV, YRELV , ZR   , TRA  ,
-     * Z1 , Z2   , INDIM, IDHMA , NVHMA )
-C
-C***********************************************************************
-C  TOMAWAC VERSION 5.0
-C***********************************************************************
-C
-C   FONCTION : CE SOUS-PROGRAMME CALCULE LA VALEUR DE LA MAREE
-C              A L'INSTANT COURANT
-C              SUR LE MAILLAGE DE CALCUL
-C             (INSPIRE DE LA ROUTINE FOND DE TELEMAC 2D)
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C !      NOM       !MODE!                   ROLE                       !
-C !________________!____!______________________________________________!
-C !    ZM          !<-- !  DONNEE AUX NOEUDS DU MAILLAGE               !
-C !    X,Y         ! -->!  COORDONNEES DU MAILLAGE                     !
-C !    NPOIN2      ! -->!  NOMBRE DE POINTS DU MAILLAGE                !
-C !    NDON        ! -->!  NUMERO D'UNITE LOGIQUE DU FICHIER DE DONNEES!
-C !    BINDON      ! -->!  BINAIRE DU FICHIER DE DONNEES               !
-C !    NBOR        ! -->!  NUMEROTATION DES POINTS FRONTIERE           !
-C !    NPTFR       ! -->!  NOMBRE DE  POINTS FRONTIERE                 !
-C !    AT          ! -->!  TEMPS                                       !
-C !    DDC         ! -->!  DATE DU DEBUT DU CALCUL                     !
-C !    TM1         !<-->!  TEMPS DU CHAMPS DE DONNEES 1                !
-C !    TM2         !<-->!  TEMPS DU CHAMPS DE DONNEES 2                !
-C !    NP          !<-->!  NOMBRE DE POINTS DU MAILLAGE DES DONNEES    !
-C !    XRELV       !<-- !  TABLEAU DES ABSCISSES DES POINTS RELEVES    !
-C !    YRELV       !<-- !  TABLEAU DES ORDONNEES DES POINTS RELEVES    !
-C !    ZR          !<-->!  TABLEAU DES COURANTS RELEVES                !
-C !    Z1,Z2       !<-->!  DONNEES AUX NOEUDS DU MAILLAGE              !
-C !    INDIM       ! -->!  TYPE DE FORMAT DE LECTURE                   !
-C !________________!____!______________________________________________!
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : SEMIMP
-C
-C SOUS-PROGRAMME APPELE : FASP
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE NOUMAR
+!                    *****************
+!
+     &(ZM , DZHDT, X  , Y  , NPOIN2, NDON , BINDON, NBOR , NPTFR,
+     & AT , DDC  , TM1, TM2, NP    , XRELV, YRELV , ZR   , TRA  ,
+     & Z1 , Z2   , INDIM, IDHMA , NVHMA )
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   21/06/2011
+!***********************************************************************
+!
+!brief    COMPUTES THE TIDE FOR THE CURRENT TIME STEP
+!+                AND ON THE COMPUTATION MESH.
+!+
+!+           (INSPIRED FROM SUBROUTINE FOND IN TELEMAC2D)
+!
+!history
+!+
+!+        V5P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        20/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| AT             |-->| COMPUTATION TIME
+!| BINDON         |-->| DATA FILE BINARY
+!| DDC            |-->| DATE OF COMPUTATION BEGINNING
+!| DZHDT          |<--| WATER DEPTH DERIVATIVE WITH RESPECT TO T
+!| IDHMA          |-->| RANK OF THE WATER LEVEL DATA IN THE TELEMAC FILE
+!| INDIM          |-->| FILE FORMAT
+!| NBOR           |-->| GLOBAL NUMBER OF BOUNDARY POINTS
+!| NDON           |-->| LOGICAL UNIT NUMBER OF THA DATA FILE
+!| NP             |<->| NUMBER OF POINTS READ FROM THE FILE
+!| NPOIN2         |-->| NUMBER OF POINTS IN 2D MESH
+!| NPTFR          |-->| NUMBER OF BOUNDARY POINTS
+!| NVHMA          |-->| N.OF VARIABLES OF THE FORMATTED WATER LEVEL FILE
+!| TM1            |<->| TIME T1 IN THE DATA FILE
+!| TM2            |<->| TIME T2 IN THE DATA FILE
+!| TRA            |<->| WORK TABLE
+!| X              |-->| ABSCISSAE OF POINTS IN THE MESH
+!| XRELV          |<--| TABLE OF THE ABSCISSAE OF THE FILE POINTS
+!| Y              |-->| ORDINATES OF POINTS IN THE MESH
+!| YRELV          |<--| TABLE OF THE ORDINATES OF THE FILE POINTS
+!| Z1             |<->| TIDAL HEIGTH AT TIME TM1, AT THE MESH POINTS
+!| Z2             |<->| TIDAL HEIGTH AT TIME TM2, AT THE MESH POINTS
+!| ZM             |<--| TIDAL HEIGTH AT TIME AT, AT THE MESH POINTS
+!| ZR             |<->| TABLE OF THE TIDAL HEIGHTS READ IN THE DATA FILE
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
       USE DECLARATIONS_TOMAWAC ,ONLY : MESH
+      USE INTERFACE_TOMAWAC, EX_NOUMAR => NOUMAR
       IMPLICIT NONE
-C
+!
       INTEGER LNG,LU
       COMMON/INFO/ LNG,LU
-C
+!
       INTEGER NP,NDON,NPOIN2,NPTFR,INDIM,I,ISTAT,IW(1)
-C
+!
       INTEGER NBOR(NPTFR,2), IDHMA,NVHMA
-C
+!
       DOUBLE PRECISION X(NPOIN2) ,Y(NPOIN2)
       DOUBLE PRECISION ZM(NPOIN2),ZR(NP), DZHDT(NPOIN2)
       DOUBLE PRECISION Z1(NPOIN2),Z2(NPOIN2)
       DOUBLE PRECISION XRELV(NP),YRELV(NP),TRA(NP)
       DOUBLE PRECISION AT,TM1,TM2
       DOUBLE PRECISION DDC,DAT2,DAT2B(1),Z(1),C,COE1,COE2,ATT
-C
+!
       CHARACTER*3 BINDON, C1
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       REAL, ALLOCATABLE :: W(:)
       ALLOCATE(W(NP))
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF (AT.GE.TM2) THEN
-C
-C       ----------------------------------------------------------------
-C        ON CHANGE D'ENREGISTREMENT : 2->1 ET ON LIT UN NOUVEAU 2
-C       ----------------------------------------------------------------
+!
+!       ----------------------------------------------------------------
+!       GOES TO NEXT RECORD : 2 BECOMES 1 AND READS A NEW 2
+!       ----------------------------------------------------------------
         TM1=TM2
         CALL OV('X=Y     ', Z1 , Z2 , Z , C , NPOIN2)
-C
+!
         IF(LNG.EQ.1) THEN
           WRITE(LU,*) '   NOUMAR : LECTURE D''UN NOUVEL ENREGISTREMENT'
           WRITE(LU,*) '            DE LA HAUTEUR DE LA MAREE          '
@@ -90,20 +106,20 @@ C
           WRITE(LU,*) '   NOUMAR : READING A NEW RECORDING '
           WRITE(LU,*) '            OF THE TIDE LEVEL       '
         ENDIF
-C
+!
         IF (INDIM.EQ.1) THEN
-C
-C     ------------------------------------------------------------------
-C          FICHIER DIFFERENCES FINIES FORMATTE DU TYPE WAM CYCLE 4
-C     ------------------------------------------------------------------
+!
+!     ------------------------------------------------------------------
+!          READS A FORMATTED FINITE DIFFERENCES FILE OF TYPE: WAM CYCLE 4
+!     ------------------------------------------------------------------
  90        CONTINUE
-C          LECTURE : DATE DE L'ENREGISTREMENT
+!          READS THE DATE OF THE RECORD
            READ(NDON,*,END=100,ERR=100) DAT2
            CALL TEMP(TM2,DAT2,DDC)
-C          LECTURE : DONNEES
+!          READS THE DATA
            READ(NDON,*,END=100,ERR=100)
            READ(NDON,20,END=100,ERR=100) (ZR(I),I=1,NP)
-C
+!
            IF (TM2.LE.AT) THEN
              IF(LNG.EQ.1) THEN
                WRITE(LU,*) ' NOUMAR : ON SAUTE 1 ENREGISTREMENT ..'
@@ -112,24 +128,24 @@ C
              ENDIF
              TM1=TM2
              CALL FASP(X,Y,Z1,NPOIN2,XRELV,YRELV,ZR,NP,NBOR,
-     *                                         MESH%KP1BOR%I,NPTFR,0.D0)
+     &                                         MESH%KP1BOR%I,NPTFR,0.D0)
              GOTO 90
            ENDIF
-C
+!
            CALL FASP(X,Y,Z2,NPOIN2,XRELV,YRELV,ZR,NP,NBOR,MESH%KP1BOR%I,
-     *                                                    NPTFR,0.D0)
-C
+     &                                                    NPTFR,0.D0)
+!
         ELSEIF (INDIM.EQ.2) THEN
-C
-C     ------------------------------------------------------------------
-C       FICHIER SELAFIN DU TYPE TELEMAC
-C     ------------------------------------------------------------------
-C
+!
+!     ------------------------------------------------------------------
+!       READS A SELAFIN FILE OF TYPE: TELEMAC
+!     ------------------------------------------------------------------
+!
  95     CONTINUE
-C       LECTURE : DATE DE L'ENREGISTREMENT
+!       READS THE DATE OF THE RECORD
         CALL LIT(DAT2B,W,IW,C1,1,'R4',NDON,BINDON,ISTAT)
         TM2=DAT2B(1)
-C       LECTURE : DONNEES
+!       READS THE DATA
         DO I =1,NVHMA
           IF(I.EQ.IDHMA) THEN
             CALL LIT(ZR,W,IW,C1,NP,'R4',NDON,BINDON,ISTAT)
@@ -137,7 +153,7 @@ C       LECTURE : DONNEES
             READ(NDON)
           ENDIF
         ENDDO
-C
+!
         IF (TM2.LE.AT) THEN
           IF(LNG.EQ.1) THEN
             WRITE(LU,*) ' NOUMAR : ON SAUTE 1 ENREGISTREMENT ..'
@@ -145,33 +161,31 @@ C
             WRITE(LU,*) ' NOUMAR : JUMP OF 1 RECORDED DATA SERIES'
           ENDIF
           TM1=TM2
-C         INTERPOLATION SPATIALE DES DONNEES AU TEMPS 1
+!         INTERPOLATES IN SPACE (TIME 1)
           CALL FASP(X,Y,Z1,NPOIN2,XRELV,YRELV,ZR,NP,NBOR,MESH%KP1BOR%I,
-     *                                                    NPTFR,1.D-6)
-!     *                                                    NPTFR,0.D0)
+     &                                                    NPTFR,1.D-6)
           GOTO 95
         ENDIF
-C
+!
         WRITE(LU,*) 'TMENT1=',TM1
         WRITE(LU,*) 'TMENT2=',TM2
-C       INTERPOLATION SPATIALE DES DONNEES AU TEMPS 2
+!       INTERPOLATES IN SPACE (TIME 2)
         CALL FASP(X,Y,Z2,NPOIN2,XRELV,YRELV,ZR,NP,NBOR,MESH%KP1BOR%I,
-     *                                                    NPTFR,1.D-6)
-!     *                                                    NPTFR,0.D0)
-C
+     &                                                    NPTFR,1.D-6)
+!
         ELSEIF (INDIM.EQ.3) THEN
-C
-C     ------------------------------------------------------------------
-C        LECTURE D'UN FORMAT DEFINI PAR L'UTILISATEUR
-C     ------------------------------------------------------------------
-C
+!
+!     ------------------------------------------------------------------
+!        READS A USER-DEFINED FILE FORMAT
+!     ------------------------------------------------------------------
+!
           CALL MARUTI
-     *    (X,Y,NPOIN2,NDON,BINDON,NBOR,NPTFR,AT,DDC,TM1,TM2,
-     *     NP,XRELV,YRELV,ZR,Z1,Z2,NP)
-C
-C
+     &    (X,Y,NPOIN2,NDON,BINDON,NBOR,NPTFR,AT,DDC,TM1,TM2,
+     &     NP,XRELV,YRELV,ZR,Z1,Z2,NP)
+!
+!
         ELSE
-C
+!
         WRITE(LU,*) '************************************************'
         IF(LNG.EQ.1) THEN
          WRITE(LU,*) 'NOUMAR : INDICATEUR DE FORMAT INCONNU : ',INDIM
@@ -181,14 +195,14 @@ C
         WRITE(LU,*) '************************************************'
         CALL PLANTE(1)
         ENDIF
-C
+!
       ENDIF
-C
-C     -------------------------------------------------
-C       INTERPOLATION TEMPORELLE DES DONNEES
-C        ET GRADIENT TEMPOREL DE LA MAREE
-C     -------------------------------------------------
-C
+!
+!     -------------------------------------------------
+!       INTERPOLATES IN TIME
+!       AND COMPUTES THE TEMPORAL GRADIENT OF THE TIDE
+!     -------------------------------------------------
+!
       COE1=(TM2-TM1)
       IF (COE1.LT.1.D-4) THEN
          WRITE(LU,*) '****************************************'
@@ -207,18 +221,18 @@ C
          ZM(I)   = ATT*COE2+Z1(I)
          DZHDT(I)= ATT/COE1
       ENDDO
-C
-C-----------------------------------------------------------------------
-C
-C     FORMATS
-C
+!
+!-----------------------------------------------------------------------
+!
+!     FORMATS
+!
 20    FORMAT (10F6.2)
-C
+!
       DEALLOCATE(W)
       RETURN
-C
-C     EN CAS DE PROBLEME DE LECTURE ...
-C
+!
+!     IF FAILED TO READ THE FILE ...
+!
 100   CONTINUE
       WRITE(LU,*)'*********************************************'
       IF (LNG.EQ.1) THEN
@@ -230,6 +244,6 @@ C
       ENDIF
       WRITE(LU,*)'*********************************************'
       CALL PLANTE(0)
-C
+!
       RETURN
       END

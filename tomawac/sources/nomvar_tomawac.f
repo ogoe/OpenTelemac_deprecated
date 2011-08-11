@@ -1,53 +1,65 @@
-C                       *************************
-                        SUBROUTINE NOMVAR_TOMAWAC
-C                       *************************
-C
-     *(TEXTE,TEXTPR,MNEMO,MAXVAR)
-C
-C**********************************************************************
-C  TOMAWAC - V5P5    Michel BENOIT (EDF R&D LNHE)            06/12/2004
-C**********************************************************************
-C
-C FONCTION  :  FIXE LES NOMS DES VARIABLES DU CODE POUR LES FICHIERS
-C              DE RESULTAT ET DE GEOMETRIE (TEXTE) ET POUR LE FICHIER
-C              DE RESULTATS DU CALCUL PRECEDENT (TEXTPR)
-C
-C              EN GENERAL TEXTE ET TEXTPR SONT EGAUX SAUF SI ON FAIT
-C              UNE SUITE A PARTIR D'UN AUTRE LOGICIEL.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |   TEXTE        |<-- | NOM DES VARIABLES                            |
-C |   TEXTPR       |<-- | NOM DES VARIABLES DU CALCUL PRECEDENT        |
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : LECDON_TOMAWAC
-C
-C SOUS-PROGAMME APPELE : NEANT
-C
-C**********************************************************************
-C
+!                    *************************
+                     SUBROUTINE NOMVAR_TOMAWAC
+!                    *************************
+!
+     &(TEXTE,TEXTPR,MNEMO,MAXVAR)
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   21/06/2011
+!***********************************************************************
+!
+!brief    GIVES THE VARIABLE NAMES FOR THE RESULTS AND GEOMETRY
+!+                FILES (TEXTE) AND FOR THE PREVIOUS COMPUTATION
+!+                RESULTS FILE (TEXTPR).
+!+
+!+
+!+            TEXTE AND TEXTPR ARE GENERALLY EQUAL EXCEPT IF THE
+!+                PREVIOUS COMPUTATION COMES FROM ANOTHER SOFTWARE.
+!
+!history  MICHEL BENOIT (EDF R&D LNHE)
+!+        06/12/2004
+!+        V5P5
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        20/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| MAXVAR         |-->| MAXIMUM NUMBER OF OUTPUT VARIABLES
+!| MNEMO          |<--| ALIASES FOR THE VARIABLES IN THE STEERING FILE
+!| TEXTE          |<--| NAMES OF VARIABLES
+!| TEXTPR         |<--| NAMES OF VARIABLES OF THE PREVIOUS COMPUTATION
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
+!
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
+!
       INTEGER      MAXVAR
       CHARACTER*32 TEXTE(MAXVAR),TEXTPR(MAXVAR)
-      CHARACTER*8  MNEMO(MAXVAR)                                            
-C
-C-----------------------------------------------------------------------
-C
-C  ENGLISH
-C
+      CHARACTER*8  MNEMO(MAXVAR)
+!
+!-----------------------------------------------------------------------
+!
+!  ENGLISH
+!
       IF (LNG.EQ.2) THEN
-C
+!
       TEXTE (1 ) = 'VARIANCE M0     M2              '
       TEXTE (2 ) = 'WAVE HEIGHT HM0 M               '
       TEXTE (3 ) = 'MEAN DIRECTION  DEG             '
@@ -83,12 +95,12 @@ C
       TEXTE (33) = 'PEAK PERIOD TPR8S               '
       TEXTE (34) = 'WAVE POWER      KW/M            '
       TEXTE (35) = 'BETA                            '
-C
-C TEXTPR IS USED FOR READING PREVIOUS COMPUTATION FILES.
-C IN GENERAL TEXTPR=TEXTE BUT YOU CAN FOLLOW UP A COMPUTATION
-C FROM ANOTHER CODE WITH DIFFERENT NAMES THAT YOU HAVE TO
-C WRITE HERE.
-C
+!
+! TEXTPR IS USED TO READ PREVIOUS COMPUTATION FILES.
+! IN GENERAL TEXTPR=TEXTE UNLESS ANOTHER CODE WAS USED TO
+! GENERATE THE PREVIOUS RESULT, IN WHICH CASE THE OUTPUT
+! VARIABLE NAMES HAVE TO BE WRITTEN HERE.
+!
       TEXTPR (1 ) = 'VARIANCE M0     M2              '
       TEXTPR (2 ) = 'WAVE HEIGHT HM0 M               '
       TEXTPR (3 ) = 'MEAN DIRECTION  DEG             '
@@ -124,13 +136,13 @@ C
       TEXTPR (33) = 'PEAK PERIOD TPR8S               '
       TEXTPR (34) = 'WAVE POWER      KW/M            '
       TEXTPR (35) = 'BETA                            '
-C
-C-----------------------------------------------------------------------
-C
-C  FRANCAIS OU AUTRE
-C
+!
+!-----------------------------------------------------------------------
+!
+!  FRENCH OR OTHER
+!
       ELSE
-C
+!
       TEXTE (1 ) = 'VARIANCE M0     M2              '
       TEXTE (2 ) = 'HAUTEUR HM0     M               '
       TEXTE (3 ) = 'DIRECTION MOY   DEG             '
@@ -166,11 +178,11 @@ C
       TEXTE (33) = 'PERIODE PIC TPR8S               '
       TEXTE (34) = 'PUISSANCE HOULE KW/M            '
       TEXTE (35) = 'BETA                            '
-C
-C TEXTPR SERT A LA LECTURE DES FICHIERS DE CALCULS PRECEDENTS
-C A PRIORI TEXTPR=TEXTE MAIS ON PEUT ESSAYER DE FAIRE UNE SUITE
-C DE CALCUL A PARTIR D'UN AUTRE CODE.
-C
+!
+! TEXTPR SERT A LA LECTURE DES FICHIERS DE CALCULS PRECEDENTS
+! A PRIORI TEXTPR=TEXTE MAIS ON PEUT ESSAYER DE FAIRE UNE SUITE
+! DE CALCUL A PARTIR D'UN AUTRE CODE.
+!
       TEXTPR (1 ) = 'VARIANCE M0     M2              '
       TEXTPR (2 ) = 'HAUTEUR HM0     M               '
       TEXTPR (3 ) = 'DIRECTION MOY   DEG             '
@@ -206,22 +218,22 @@ C
       TEXTPR (33) = 'PERIODE PIC TPR8S               '
       TEXTPR (34) = 'PUISSANCE HOULE KW/M            '
       TEXTPR (35) = 'BETA                            '
-C
+!
       ENDIF
-C                                                                       
-C-----------------------------------------------------------------------
-C                                                                       
-C   ALIAS DES NOMS DE VARIABLES POUR LE FICHIER DES PARAMETRES          
-C                                                                       
+!
+!-----------------------------------------------------------------------
+!
+!   ALIASES FOR THE VARIABLES IN THE STEERING FILE
+!
       MNEMO(1)    = 'M0      '
       MNEMO(2)    = 'HM0     '
-      MNEMO(3)    = 'DMOY    '                                          
-      MNEMO(4)    = 'SPD     '                                          
+      MNEMO(3)    = 'DMOY    '
+      MNEMO(4)    = 'SPD     '
       MNEMO(5)    = 'ZF      '
-      MNEMO(6)    = 'WD      '                                          
-      MNEMO(7)    = 'UX      '                                          
-      MNEMO(8)    = 'UY      '                                          
-      MNEMO(9)    = 'VX      '                                          
+      MNEMO(6)    = 'WD      '
+      MNEMO(7)    = 'UX      '
+      MNEMO(8)    = 'UY      '
+      MNEMO(9)    = 'VX      '
       MNEMO(10)   = 'VY      '
       MNEMO(11)   = 'FX      '
       MNEMO(12)   = 'FY      '
@@ -231,25 +243,25 @@ C
       MNEMO(16)   = 'UWB     '
       MNEMO(17)   = 'PRI     '
       MNEMO(18)   = 'FMOY    '
-      MNEMO(19)   = 'FM01    '                             
-      MNEMO(20)   = 'FM02    '                                          
-      MNEMO(21)   = 'FPD     '                                       
-      MNEMO(22)   = 'FPR5    '                                          
+      MNEMO(19)   = 'FM01    '
+      MNEMO(20)   = 'FM02    '
+      MNEMO(21)   = 'FPD     '
+      MNEMO(22)   = 'FPR5    '
       MNEMO(23)   = 'FPR8    '
       MNEMO(24)   = 'US      '
       MNEMO(25)   = 'CD      '
       MNEMO(26)   = 'Z0      '
       MNEMO(27)   = 'WS      '
       MNEMO(28)   = 'TMOY    '
-      MNEMO(29)   = 'TM01    '                             
-      MNEMO(30)   = 'TM02    '                                          
-      MNEMO(31)   = 'TPD     '                                       
-      MNEMO(32)   = 'TPR5    '                                          
+      MNEMO(29)   = 'TM01    '
+      MNEMO(30)   = 'TM02    '
+      MNEMO(31)   = 'TPD     '
+      MNEMO(32)   = 'TPR5    '
       MNEMO(33)   = 'TPR8    '
       MNEMO(34)   = 'POW     '
       MNEMO(35)   = 'BETA    '
-C                                                                       
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

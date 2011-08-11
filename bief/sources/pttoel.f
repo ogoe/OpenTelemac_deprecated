@@ -1,57 +1,63 @@
-C                       *****************
-                        SUBROUTINE PTTOEL
-C                       *****************
-C
-     *(XEL,X,MESH)
-C
-C***********************************************************************
-C BIEF VERSION 5.6           10/01/95    J-M HERVOUET (LNH) 30 87 80 18
-C
-C***********************************************************************
-C
-C FONCTION : PASSAGE D'UN VECTEUR PAR POINTS A UN VECTEUR PAR
-C            ELEMENTS.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |      XEL       |<-- |  VECTEUR SUR LES ELEMENTS
-C |      X         | -->|  VECTEUR PAR POINTS
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES : PTEL11
-C
-C**********************************************************************
-C
+!                    *****************
+                     SUBROUTINE PTTOEL
+!                    *****************
+!
+     &(XEL,X,MESH)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    GOES FROM A VECTOR BY POINTS TO A VECTOR BY ELEMENTS.
+!
+!history  J-M HERVOUET (LNH)
+!+        10/01/95
+!+        V5P6
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| MESH           |-->| MESH STRUCTURE
+!| X              |-->| VECTOR DEFINED PER POINT
+!| XEL            |<--| SAME VECTOR DEFINED PER ELEMENT
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_PTTOEL => PTTOEL
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-C  STRUCTURES DE VECTEURS
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+!  VECTORS STRUCTURES
+!
       TYPE(BIEF_OBJ), INTENT(IN)    :: X
       TYPE(BIEF_OBJ), INTENT(INOUT) :: XEL
-C
-C-----------------------------------------------------------------------
-C
-C  STRUCTURE DE MAILLAGE
-C
+!
+!-----------------------------------------------------------------------
+!
+!  MESH STRUCTURE
+!
       TYPE(BIEF_MESH), INTENT(IN) :: MESH
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       IF(X%ELM.EQ.11) THEN
-C
+!
         CALL PTEL11(XEL%R,X%R,MESH%IKLE%I,MESH%NELMAX,MESH%NELEM)
-C
+!
       ELSE
        IF (LNG.EQ.1) WRITE(LU,100) X%ELM
        IF (LNG.EQ.2) WRITE(LU,101) X%ELM
@@ -60,9 +66,8 @@ C
        CALL PLANTE(1)
        STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-      END 
- 
+      END

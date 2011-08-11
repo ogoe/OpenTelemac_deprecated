@@ -1,59 +1,64 @@
-C                       *****************
-                        SUBROUTINE IMPVEC
-C                       *****************
-C
-     *(VEC,NOM,NPOIN)
-C
-C-----------------------------------------------------------------------
-C BIEF VERSION 5.1          17/08/94    J-M HERVOUET 30 71 80 18
-C-----------------------------------------------------------------------
-C
-C      FONCTION : IMPRESSION D'UN VECTEUR SUR LISTING
-C
-C                 L'IMPRESSION POUR UN MAILLAGE REGULIER
-C                 N'EST PAS PROGRAMMEE.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |   VEC          | -->|  VECTEUR A IMPRIMER.
-C |   NOM          | -->|  NOM DU VECTEUR OU COMMENTAIRE
-C |   NPOIN        | -->|  NOMBRE DE POINTS DU MAILLAGE
-C |________________|____|_______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMME APPELANT : DESIMP
-C
-C**********************************************************************
-C
+!                    *****************
+                     SUBROUTINE IMPVEC
+!                    *****************
+!
+     &(VEC,NOM,NPOIN)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    PRINTS OUT A VECTOR ON THE LISTING.
+!
+!warning  PRINTS OUT FOR REGULAR GRIDS ARE NOT IMPLEMENTED
+!
+!history  J-M HERVOUET
+!+        17/08/94
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| NOM            |-->| NAME OF VECTOR (OR SIMPLY A COMMENT).
+!| NPOIN          |-->| NUMBER OF POINTS.
+!| VEC            |-->| VECTOR TO BE PRINTED.
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN)           :: NPOIN
       DOUBLE PRECISION, INTENT(IN)  :: VEC(NPOIN)
       CHARACTER(LEN=32), INTENT(IN) :: NOM
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER IPOIN
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(LNG.EQ.1.OR.LNG.EQ.2) WRITE(LU,'(//,1X,A32,//)') NOM
-C
+!
       IF(LNG.EQ.1.OR.LNG.EQ.2) THEN
         WRITE(LU,40) (IPOIN,VEC(IPOIN),IPOIN=1,NPOIN)
 40      FORMAT(7(1X,1I5,':',G13.5))
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END
- 

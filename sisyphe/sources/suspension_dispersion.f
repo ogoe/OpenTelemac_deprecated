@@ -1,58 +1,70 @@
-      ! ******************************** !
-        SUBROUTINE SUSPENSION_DISPERSION ! (_IMP_)
-      ! ******************************** !
-
+!                    ******************************************
+                     SUBROUTINE SUSPENSION_DISPERSION ! (_IMP_)
+!                    ******************************************
+!
      &  (TOB, XMVE,HN,  OPTDIF, NPOIN, XKX, XKY,
      &   T1, T2, T3, KX, KY, KZ, DISP,U2D,V2D,VISC_TEL,CODE)
-
-C**********************************************************************C
-C SUBIEF  VERSION 5.1  13/12/00  C. MOULIN (LNH)  01 30 87 83 81       C
-C**********************************************************************C
-C                                                                       
-
-             ! ======================================== !
-             ! Computation of the dispersion parameters !
-             ! ======================================== !
-
-
-C COPYRIGHT EDF-DTMPL-SOGREAH-LHF-GRADIENT
-C**********************************************************************C
-C                                                                      C
-C                 SSSS I   SSSS Y   Y PPPP  H   H EEEEE                C
-C                S     I  S      Y Y  P   P H   H E                    C
-C                 SSS  I   SSS    Y   PPPP  HHHHH EEEE                 C
-C                    S I      S   Y   P     H   H E                    C
-C                SSSS  I  SSSS    Y   P     H   H EEEEE                C
-C                                                                      C
-C----------------------------------------------------------------------C
-C                             ARGUMENTS                                C
-C .________________.____.______________________________________________C
-C |      NOM       |MODE|                   ROLE                       C
-C |________________|____|______________________________________________C
-C |________________|____|______________________________________________C
-C                    <=  Can't be change by the user                   C
-C                    =>  Can be changed by the user                    C 
-C ---------------------------------------------------------------------C
-!                                                                      !
-! CALLED BY SISYPHE                                                    !
-!                                                                      !
-! CALL      
-!                                                                      !
-!======================================================================!
-!======================================================================!
-!                    DECLARATION DES TYPES ET DIMENSIONS               !
-!======================================================================!
-!======================================================================!
-
-      ! 1/ MODULES
-      ! ----------
+!
+!***********************************************************************
+! SISYPHE   V6P1                                   21/07/2011
+!***********************************************************************
+!
+!brief    COMPUTES THE DISPERSION PARAMETERS.
+!
+!history  C. MOULIN (LNH)
+!+        13/12/2000
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  C.VILLARET (EDF-LNHE), P.TASSI (EDF-LNHE)
+!+        19/07/2011
+!+        V6P1
+!+   Name of variables   
+!+   
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CODE           |-->| HYDRODYNAMIC CODE IN CASE OF COUPLING
+!| DISP           |-->| VISCOSITY COEFFICIENTS ALONG X,Y AND Z 
+!|                |   | IF P0 : PER ELEMENT
+!|                |   | IF P1 : PER POINT
+!| HN             |-->| WATER DEPTH
+!| KX             |<->| COEFFICIENTS OF THE DISPERSION TENSOR (DIM. NPOIN)
+!| KY             |<->| COEFFICIENTS OF THE DISPERSION TENSOR (DIM. NPOIN)
+!| KZ             |<->| COEFFICIENTS OF THE DISPERSION TENSOR (DIM. NPOIN)
+!| NPOIN          |-->| NUMBER OF POINTS
+!| OPTDIF         |-->| OPTION FOR THE DISPERSION 
+!| T1             |<->| WORK BIEF_OBJ STRUCTURE
+!| T2             |<->| WORK BIEF_OBJ STRUCTURE
+!| T3             |<->| WORK BIEF_OBJ STRUCTURE
+!| TOB            |-->| BED SHEAR STRESS (TOTAL FRICTION)
+!| U2D            |-->| MEAN FLOW VELOCITY X-DIRECTION
+!| V2D            |-->| MEAN FLOW VELOCITY Y-DIRECTION
+!| VISC_TEL       |-->| VELOCITY DIFFUSIVITY (TELEMAC)
+!| XKX            |-->| COEFFICIENT USED FOR COMPUTING THE DISPERSION
+!|                |   | DEPENDS OF OPTIONS
+!| XKY            |-->| COEFFICIENT USED FOR COMPUTING THE DISPERSION
+!|                |   | DEPENDS OF OPTIONS
+!| XMVE           |-->| FLUID DENSITY 
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE INTERFACE_SISYPHE,
      &    EX_SUSPENSION_DISPERSION => SUSPENSION_DISPERSION
       USE BIEF
       IMPLICIT NONE
       INTEGER LNG,LU
-      COMMON/INFO/LNG,LU      
-
+      COMMON/INFO/LNG,LU
       ! 2/ GLOBAL VARIABLES
       ! -------------------
       TYPE (BIEF_OBJ),  INTENT(IN)    :: TOB,HN,VISC_TEL
@@ -62,25 +74,23 @@ C ---------------------------------------------------------------------C
       TYPE (BIEF_OBJ),  INTENT(INOUT) :: KX, KY, KZ, DISP
       TYPE (BIEF_OBJ),  INTENT(IN)    :: U2D,V2D
       CHARACTER(LEN=24), INTENT(IN)   :: CODE
-
       ! 3/ LOCAL VARIABLES
       ! ------------------
       INTEGER                     :: K,DIMVISC
       DOUBLE PRECISION            :: UETH, COST, SINT
-
 !
 !======================================================================!
 !======================================================================!
-!                               PROGRAMME                              !
+!                               PROGRAM                                !
 !======================================================================!
 !======================================================================!
 !
-      ! ****************************************************** !      
-      ! Ia - CONSTANT DISPERSION OR DISPERSION(i) = alpha(i)*h !
+      ! ****************************************************** !
+      ! IA - CONSTANT DISPERSION OR DISPERSION(I) = ALPHA(I)*H !
       ! ****************************************************** !
       IF (OPTDIF == 2.OR.OPTDIF == 1) THEN
 !
-!        AJOUTE LE 19/10/2007 (JMH)
+!        ADDED ON 19/10/2007 (JMH)
          CALL CPSTVC(U2D,T1)
          CALL CPSTVC(U2D,T2)
 !
@@ -115,7 +125,7 @@ C ---------------------------------------------------------------------C
 !
 !
       ! *********************************** !
-      ! Ib - DISPERSION GIVEN BY TELEMAC-2D ! (_IMP_)
+      ! IB - DISPERSION GIVEN BY TELEMAC-2D ! (_IMP_)
       ! *********************************** !
       ELSEIF(OPTDIF == 3) THEN
 !
@@ -134,15 +144,15 @@ C ---------------------------------------------------------------------C
            ELSE
              IF(LNG.EQ.1) THEN
                WRITE(LU,*) 'SUSPENSION_DISPERSION:'
-               WRITE(LU,*) ' '         
+               WRITE(LU,*) ' '
                WRITE(LU,*) 'MAUVAISE DIMENSION DE VISC_TEL:',
-     *                      VISC_TEL%DIM2
+     &                      VISC_TEL%DIM2
              ENDIF
              IF(LNG.EQ.2) THEN
                WRITE(LU,*) 'SUSPENSION_DISPERSION:'
-               WRITE(LU,*) ' '         
+               WRITE(LU,*) ' '
                WRITE(LU,*) 'UNEXPECTED DIMENSION OF VISC_TEL:',
-     *                      VISC_TEL%DIM2
+     &                      VISC_TEL%DIM2
              ENDIF
              CALL PLANTE(1)
              STOP
@@ -151,13 +161,13 @@ C ---------------------------------------------------------------------C
            WRITE(LU,*) ' '
            IF(LNG.EQ.1) THEN
              WRITE(LU,*) 'SUSPENSION_DISPERSION:'
-             WRITE(LU,*) ' '         
+             WRITE(LU,*) ' '
              WRITE(LU,*) 'OPTION 3 : DIFFUSION DONNEE PAR TELEMAC'
              WRITE(LU,*) 'NON PROGRAMMEE OU IMPOSSIBLE AVEC ',CODE
            ENDIF
            IF(LNG.EQ.2) THEN
              WRITE(LU,*) 'SUSPENSION_DISPERSION:'
-             WRITE(LU,*) ' '         
+             WRITE(LU,*) ' '
              WRITE(LU,*) 'OPTION 3: DIFFUSIVITY GIVEN BY TELEMAC'
              WRITE(LU,*) 'NOT IMPLEMENTED OR IMPOSSIBLE WITH ',CODE
            ENDIF
@@ -166,7 +176,7 @@ C ---------------------------------------------------------------------C
          ENDIF
 !
       ! ***************************************** !
-      ! Ic - OPTION FOR DISPERSION NOT PROGRAMMED ! (_IMP_)
+      ! IC - OPTION FOR DISPERSION NOT CODED UP   ! (_IMP_)
       ! ***************************************** !
       ELSE
          IF (LNG == 1) WRITE(LU,30) OPTDIF
@@ -181,15 +191,12 @@ C ---------------------------------------------------------------------C
      &          DISP%MAXDIM1, DISP%DIM1)
       CALL OV_2('X=Y     ', DISP%R, 3, KZ%R, 1, KZ%R, 1, 0.D0,
      &          DISP%MAXDIM1, DISP%DIM1)
-
       !----------------------------------------------------------------!
 30    FORMAT('DISPERSION : OPTION POUR LA DISPERSION NON PREVUE: ',1I6)
       !----------------------------------------------------------------!
-31    FORMAT('DISPERSION: OPTION FOR THE DISPERSION NOT AVAILABLE:',1I6)      
+31    FORMAT('DISPERSION: OPTION FOR THE DISPERSION NOT AVAILABLE:',1I6)
       !----------------------------------------------------------------!
-
 !======================================================================!
 !======================================================================!
-
       RETURN
       END SUBROUTINE SUSPENSION_DISPERSION

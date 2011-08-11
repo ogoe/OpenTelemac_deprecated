@@ -1,61 +1,90 @@
-C                       *****************
-                        SUBROUTINE INIPIE
-C                       *****************
-C
-     *( U , V , W , X , Y , SHP1 ,SHP2 , SHP3 , SHZ , ELT , ETA ,
-     * XCONV , YCONV , ZCONV, TETA , IKLE2 , NPOIN2 , NELEM2 , NPLAN  ,
-     * ELI , KNOGL , KNI , NELE2L , NPOI2L ,IFABOR,GOODELT)
-C
-C***********************************************************************
-C  TOMAWAC  VERSION 1.0       1/02/93         F MARCOS (LNH) 30 87 72 66
-C***********************************************************************
-C
-C      FONCTION:
-C
-C   - FIXE, POUR LES "PRISMES" DE COWADIS ET,
-C     AVANT LA REMONTEE DES COURBES CARACTERISTIQUES,
-C     LES COORDONNEES BARYCENTRIQUES DE TOUS LES NOEUDS DU
-C     MAILLAGE DANS L'ELEMENT VERS OU POINTE CETTE COURBE.
-C     (ROUTINE INSPIREE DE GSHP41 DE BIEF)
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C !      NOM       !MODE!                   ROLE                       !
-C !________________!____!______________________________________________!
-C !    U,V,W       ! -->! COMPOSANTES DU CHAMP CONVECTEUR              !
-C !    X,Y         ! -->! COORDONNEES DES POINTS DU MAILLAGE.          !
-C !    SHP1-2-3    !<-- ! COORDONNEES BARYCENTRIQUES DES NOEUDS DANS   !
-C !                !    ! LEURS ELEMENTS 2D "ELT" ASSOCIES.            !
-C !    SHZ         !<-- ! COORDONNEES BARYCENTRIQUES SUIVANT Z DES     !
-C !                !    ! NOEUDS DANS LEURS ETAGES "ETA" ASSOCIES.     !
-C !    ELT         !<-- ! NUMEROS DES ELEMENTS 2D CHOISIS POUR CHAQUE  !
-C !                !    ! NOEUD.                                       !
-C !    ETA         !<-- ! NUMEROS DES ETAGES CHOISIS POUR CHAQUE NOEUD.!
-C !    XCONV       !<-- ! POSITION INITIALE DES DERIVANT EN X          !
-C !    YCONV       !<-- ! POSITION INITIALE DES DERIVANT EN Y          !
-C !    ZCONV       !<-- ! POSITION INITIALE DES DERIVANT EN Z          !
-C !    TETA        ! -->! DIRECTIONS DE PROPAGATION                    !
-C !    IKLE2       ! -->! TRANSITION ENTRE LES NUMEROTATIONS LOCALE    !
-C !                ! -->! ET GLOBALE                                   !
-C !    NPOIN2      ! -->! NOMBRE DE POINTS DU MAILLAGE 2D.             !
-C !    NELEM2      ! -->! NOMBRE D'ELEMENTS DU MAILLAGE 2D.            !
-C !    NPLAN       ! -->! NOMBRE DE DIRECTIONS                         !
-C !________________!____!______________________________________________!
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : WAC,COW
-C
-C SOUS-PROGRAMME APPELE : NEANT
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE INIPIE
+!                    *****************
+!
+     &( U , V , W , X , Y , SHP1 ,SHP2 , SHP3 , SHZ , ELT , ETA ,
+     & XCONV , YCONV , ZCONV, TETA , IKLE2 , NPOIN2 , NELEM2 , NPLAN  ,
+     & ELI , KNOGL , KNI , NELE2L , NPOI2L ,IFABOR,GOODELT)
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   20/06/2011
+!***********************************************************************
+!
+!brief    FOR COWADIS "PRISMS", AND BEFORE TRACING BACK IN TIME
+!+                THE CHARACTERISTICS CURVES, SETS THE BARYCENTRIC
+!+                COORDINATES FOR ALL THE NODES IN THE MESH IN THE ELEMENT
+!+                TOWARDS WHICH THE CURVE POINTS.
+!+
+!+           (SUBROUTINE INSPIRED FROM GSHP41 OF BIEF)
+!
+!history  F MARCOS (LNH)
+!+        01/02/93
+!+        V1P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        20/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| ELI            |-->| WORK TABLE
+!| ELT            |<--| NUMBERS OF THE ELEMENTS 2D OF THE
+!|                |   | POINTS TO BE ADVECTED
+!| ETA            |<--| NUMBERS OF THE LAYERS OF THE
+!|                |   | POINTS TO BE ADVECTED
+!| GOODELT        |<->| CHARACTERISTIC IDENTIFIER
+!|                |   | = 1 CORRECT ELEMENT FOR TRACING BACK THE CHARACT.
+!|                |   | = 2001 CORRECT ELEMENT AT 2 PROCS BOUNDARY
+!|                |   | = 2000 WRONG ELEMENT AT 2 PROCS BOUNDARY
+!|                |   | = 1101 CORRECT ELEMENT AT 2 PROCS BOUNDARY + 
+!|                |   |   SOLID BOUNDARY
+!|                |   | = 1100 WRONG ELEMENT AT 2 PROCS BOUNDARY + 
+!|                |   |   SOLID BOUNDARY
+!|                |   | = 1011 CORRECT ELEMENT AT 2 PROCS BOUNDARY + 
+!|                |   |   LIQUID BOUNDARY
+!|                |   | = 1010 WRONG ELEMENT AT 2 PROCS BOUNDARY + 
+!|                |   |   LIQUID BOUNDARY
+!| IFABOR1        |-->| ELEMENTS BEHIND THE EDGES OF A TRIANGLE
+!|                |   | IF NEGATIVE OR ZERO, THE EDGE IS A LIQUID,
+!|                |   | SOLID OR PERIODIC BOUNDARY
+!| IKLE2          |-->| TRANSITION BETWEEN LOCAL AND GLOBAL NUMBERING
+!|                |   | OF THE 2D MESH
+!| KNI            |-->| WORK TABLE
+!| KNOGL          |-->| ARRAY LINKING GLOBAL TO LOCAL INDEXES IN PARALL
+!| NELE2L         |-->| NUMBER OF ELEMENTS IN 2D MESH
+!| NELEM2         |-->| NUMBER OF ELEMENTS IN 2D MESH
+!| NPLAN          |-->| NUMBER OF DIRECTIONS
+!| NPOI2L         |-->| NUMBER OF POINTS IN 2D MESH
+!| NPOIN2         |-->| NUMBER OF POINTS IN 2D MESH
+!| SHP1,SHP2,SHP3 |<--| BARYCENTRIC COORDINATES OF THE NODES IN
+!|                |   | THEIR ASSOCIATED 2D ELEMENT "ELT"
+!| SHZ            |<--| BARYCENTRIC COORDINATES ALONG TETA OF THE 
+!|                |   | NODES IN THEIR ASSOCIATED LAYER "ETA"
+!| TETA           |-->| DISCRETIZED DIRECTIONS
+!| U,V,W          |-->| ADVECTION FIELD COMPONENTS
+!| X              |-->| ABSCISSAE OF POINTS IN THE MESH
+!| Y              |-->| ORDINATES OF POINTS IN THE MESH
+!| XCONV,YCONV,   |<--| COORDINATES OF THE INITIAL POINT OF THE
+!|       ZCONV    |   | CHARACETRISTIC
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
+!
       INTEGER NPOIN2,NELEM2,NELE2L,NPLAN,NPOI2L
-C
+!
       DOUBLE PRECISION U(NPOIN2,NPLAN),V(NPOIN2,NPLAN)
       DOUBLE PRECISION W(NPOIN2,NPLAN),TETA(*)
       DOUBLE PRECISION X(NPOIN2),Y(NPOIN2)
@@ -64,19 +93,19 @@ C
       DOUBLE PRECISION SHP1(NPOI2L,NPLAN),SHP2(NPOI2L,NPLAN)
       DOUBLE PRECISION SHP3(NPOI2L,NPLAN),SHZ(NPOI2L,NPLAN)
       DOUBLE PRECISION DET1,DET2,EPS
-C
+!
       INTEGER ELI(NELE2L),KNOGL(NPOIN2),KNI(NPOI2L)
       INTEGER IKLE2(NELEM2,3),ELT(NPOI2L,NPLAN),ETA(NPOI2L,NPLAN)
       INTEGER N1L,N2L,N3L,N1G,N2G,N3G,IPOIL,IPOIG,IELEM,IEL2,IPLAN,IP
       INTEGER IFABOR(NELEM2,5),GOODELT(NPOI2L,NPLAN)
       DOUBLE PRECISION EPS2
-C
+!
 !      DATA EPS / 1.D-6 /
-      DATA EPS / 0.d0 /
-C-----------------------------------------------------------------------
-C
-C  INITIALISATION DES POINTS A CONVECTER
-C
+      DATA EPS / 0.D0 /
+!-----------------------------------------------------------------------
+!
+!  INITIALISES THE POINTS TO ADVECT
+!
       GOODELT = 0
       IF (NPOI2L.NE.NPOIN2) THEN
         DO 60 IP=1,NPLAN
@@ -95,64 +124,64 @@ C
             ZCONV(IPOIG,IP)=TETA(IP)
 190       CONTINUE
 160     CONTINUE
-      ENDIF        
-C
-C-----------------------------------------------------------------------
-C
+      ENDIF
+!
+!-----------------------------------------------------------------------
+!
       DO 10 IPLAN=1,NPLAN
-C
+!
       IF (NELE2L.NE.NELEM2) THEN
-C***********************************************************************
-C     CAS D UN CALCUL EN PARALLELE MEMOIRE DISTRIBUEE
-C***********************************************************************
-C-----------------------------------------------------------------------
-C  REMPLISSAGE INITIAL DES SHP ET DES ELT (POUR LES POINTS DE BORD
-C  LATERAUX ON N'EST PAS SUR DE TROUVER UN ELEMENT VERS LEQUEL POINTE
-C  -(U,V)).
-C
+!***********************************************************************
+!     IN PARALLEL MODE
+!***********************************************************************
+!-----------------------------------------------------------------------
+!  INITIALLY FILLS IN THE SHP AND ELT
+!  (NOTE: FOR LATERAL BOUNDARY POINTS, THERE MAY NOT BE AN ELEMENT
+!  TOWARDS WHICH -(U, V) POINTS).
+!
          DO 20 IEL2 = 1,NELE2L
             IELEM=ELI(IEL2)
-C
+!
             N1G=IKLE2(IELEM,1)
             N1L=KNOGL(N1G)
-C            WRITE(LU,*)'IEL2' ,IELEM,N1G,N1L
+!            WRITE(LU,*)'IEL2' ,IELEM,N1G,N1L
                ELT(N1L,IPLAN) = IELEM
                SHP1(N1L,IPLAN) = 1.D0
                SHP2(N1L,IPLAN) = 0.D0
                SHP3(N1L,IPLAN) = 0.D0
             N1G=IKLE2(IELEM,2)
             N1L=KNOGL(N1G)
-C            WRITE(LU,*)'IEL2' ,IELEM,N1G,N1L
+!            WRITE(LU,*)'IEL2' ,IELEM,N1G,N1L
                ELT(N1L,IPLAN) = IELEM
                SHP1(N1L,IPLAN) = 0.D0
                SHP2(N1L,IPLAN) = 1.D0
                SHP3(N1L,IPLAN) = 0.D0
             N1G=IKLE2(IELEM,3)
             N1L=KNOGL(N1G)
-C            WRITE(LU,*)'IEL2' ,IELEM,N1G,N1L
+!            WRITE(LU,*)'IEL2' ,IELEM,N1G,N1L
                ELT(N1L,IPLAN) = IELEM
                SHP1(N1L,IPLAN) = 0.D0
                SHP2(N1L,IPLAN) = 0.D0
                SHP3(N1L,IPLAN) = 1.D0
 20       CONTINUE
-C
-C-----------------------------------------------------------------------
-C  REMPLISSAGE ELEMENT PAR ELEMENT DES SHP ET DES ELT DES POINTS DE
-C  L'ELEMENT POUR LESQUELS -(U,V) POINTE VERS CET ELEMENT.
-C
+!
+!-----------------------------------------------------------------------
+!  FILLS IN THE SHP AND ELT, ELEMENT BY ELEMENT, FOR THE POINTS IN
+!  THE ELEMENT FOR WHICH -(U, V) POINTS TOWARDS THIS ELEMENT.
+!
         DO 50 IEL2=1,NELE2L
           IELEM=ELI(IEL2)
-C
+!
           N1G=IKLE2(IELEM,1)
           N1L=KNOGL(N1G)
           N2G=IKLE2(IELEM,2)
           N2L=KNOGL(N2G)
           N3G=IKLE2(IELEM,3)
           N3L=KNOGL(N3G)
-C
-C DET1 = (NINI+1,UNILAG)  DET2 = (UNILAG,NINI-1)
-C ----------------------------------------------
-C
+!
+! DET1 = (NINI+1,UNILAG)  DET2 = (UNILAG,NINI-1)
+! ----------------------------------------------
+!
       DET1=(X(N2G)-X(N1G))*V(N1G,IPLAN)-(Y(N2G)-Y(N1G))*U(N1G,IPLAN)
       DET2=(Y(N3G)-Y(N1G))*U(N1G,IPLAN)-(X(N3G)-X(N1G))*V(N1G,IPLAN)
           IF (DET1.LE.EPS.AND.DET2.LE.EPS) THEN
@@ -161,7 +190,7 @@ C
              SHP2(N1L,IPLAN) = 0.D0
              SHP3(N1L,IPLAN) = 0.D0
           ENDIF
-C
+!
       DET1=(X(N3G)-X(N2G))*V(N2G,IPLAN)-(Y(N3G)-Y(N2G))*U(N2G,IPLAN)
       DET2=(Y(N1G)-Y(N2G))*U(N2G,IPLAN)-(X(N1G)-X(N2G))*V(N2G,IPLAN)
           IF (DET1.LE.EPS.AND.DET2.LE.EPS) THEN
@@ -170,7 +199,7 @@ C
              SHP2(N2L,IPLAN) = 1.D0
              SHP3(N2L,IPLAN) = 0.D0
           ENDIF
-C
+!
       DET1=(X(N1G)-X(N3G))*V(N3G,IPLAN)-(Y(N1G)-Y(N3G))*U(N3G,IPLAN)
       DET2=(Y(N2G)-Y(N3G))*U(N3G,IPLAN)-(X(N2G)-X(N3G))*V(N3G,IPLAN)
           IF (DET1.LE.EPS.AND.DET2.LE.EPS) THEN
@@ -178,16 +207,16 @@ C
              SHP1(N3L,IPLAN) = 0.D0
              SHP2(N3L,IPLAN) = 0.D0
              SHP3(N3L,IPLAN) = 1.D0
-          ENDIF 
-C
+          ENDIF
+!
 50       CONTINUE
-C
-C-----------------------------------------------------------------------
-C  REMPLISSAGE POINT PAR POINT DES SHZ ET DES ETA.
-C
+!
+!-----------------------------------------------------------------------
+!  FILLS IN THE SHZ AND ETA, POINT BY POINT.
+!
          DO 70 IPOIL=1,NPOI2L
             IPOIG=KNI(IPOIL)
-C
+!
            IF (W(IPOIG,IPLAN).GT.0.D0) THEN
               IF (IPLAN.EQ.1) THEN
                 ETA(IPOIL,1) = NPLAN
@@ -196,20 +225,20 @@ C
               ELSE
                 ETA(IPOIL,IPLAN) = IPLAN-1
                 SHZ(IPOIL,IPLAN) = 1.D0
-              ENDIF 
+              ENDIF
            ELSE
               ETA(IPOIL,IPLAN) = IPLAN
               SHZ(IPOIL,IPLAN) = 0.D0
-           ENDIF 
-C
+           ENDIF
+!
 70       CONTINUE
-C
-C***********************************************************************
-C     FIN DU CAS D UN CALCUL EN PARALLELE MEMOIRE DISTRIBUEE
-C***********************************************************************
-C
+!
+!***********************************************************************
+!     END OF COMPUTATION IN PARALLEL MODE
+!***********************************************************************
+!
       ELSE
-C
+!
          DO 120 IELEM = 1,NELEM2
             N1G=IKLE2(IELEM,1)
                ELT(N1G,IPLAN) = IELEM
@@ -227,39 +256,39 @@ C
                SHP2(N1G,IPLAN) = 0.D0
                SHP3(N1G,IPLAN) = 1.D0
 120      CONTINUE
-C
-! 
+!
+!
         DO 450 IELEM=1,NELEM2
-C
+!
           N1G=IKLE2(IELEM,1)
           N2G=IKLE2(IELEM,2)
           N3G=IKLE2(IELEM,3)
-C
-C LOCALIZED ON THE BORDER OF EACH PROC
-C ----------------------------------------------
-C
+!
+! ON THE EDGE OF EACH PROC
+! ----------------------------------------------
+!
           IF ((IFABOR(IELEM,1)==-2)) THEN
              ELT(N1G,IPLAN) = IELEM
              SHP1(N1G,IPLAN) = 1.D0
              SHP2(N1G,IPLAN) = 0.D0
-             SHP3(N1G,IPLAN) = 0.D0 
+             SHP3(N1G,IPLAN) = 0.D0
              ELT(N2G,IPLAN) = IELEM
              SHP1(N2G,IPLAN) = 0.D0
              SHP2(N2G,IPLAN) = 1.D0
-             SHP3(N2G,IPLAN) = 0.D0 
+             SHP3(N2G,IPLAN) = 0.D0
           ENDIF
-C
+!
           IF ((IFABOR(IELEM,2)==-2)) THEN
              ELT(N2G,IPLAN) = IELEM
              SHP1(N2G,IPLAN) = 0.D0
              SHP2(N2G,IPLAN) = 1.D0
-             SHP3(N2G,IPLAN) = 0.D0 
+             SHP3(N2G,IPLAN) = 0.D0
              ELT(N3G,IPLAN) = IELEM
              SHP1(N3G,IPLAN) = 0.D0
              SHP2(N3G,IPLAN) = 0.D0
              SHP3(N3G,IPLAN) = 1.D0
           ENDIF
-C
+!
           IF ((IFABOR(IELEM,3)==-2)) THEN
              ELT(N3G,IPLAN) = IELEM
              SHP1(N3G,IPLAN) = 0.D0
@@ -268,20 +297,19 @@ C
              ELT(N1G,IPLAN) = IELEM
              SHP1(N1G,IPLAN) = 1.D0
              SHP2(N1G,IPLAN) = 0.D0
-             SHP3(N1G,IPLAN) = 0.D0 
-          ENDIF 
-C
+             SHP3(N1G,IPLAN) = 0.D0
+          ENDIF
+!
 450       CONTINUE
-
         DO 150 IELEM=1,NELEM2
-C
+!
           N1G=IKLE2(IELEM,1)
           N2G=IKLE2(IELEM,2)
           N3G=IKLE2(IELEM,3)
-C
-C DET1 = (NINI+1,UNILAG)  DET2 = (UNILAG,NINI-1)
-C ----------------------------------------------
-C
+!
+! DET1 = (NINI+1,UNILAG)  DET2 = (UNILAG,NINI-1)
+! ----------------------------------------------
+!
       DET1=(X(N2G)-X(N1G))*V(N1G,IPLAN)-(Y(N2G)-Y(N1G))*U(N1G,IPLAN)
       DET2=(Y(N3G)-Y(N1G))*U(N1G,IPLAN)-(X(N3G)-X(N1G))*V(N1G,IPLAN)
       IF (DET1.LE.EPS.AND.DET2.LE.EPS) THEN
@@ -291,7 +319,7 @@ C
              SHP3(N1G,IPLAN) = 0.D0
              GOODELT(N1G,IPLAN) = 1
       ENDIF
-C
+!
       DET1=(X(N3G)-X(N2G))*V(N2G,IPLAN)-(Y(N3G)-Y(N2G))*U(N2G,IPLAN)
       DET2=(Y(N1G)-Y(N2G))*U(N2G,IPLAN)-(X(N1G)-X(N2G))*V(N2G,IPLAN)
       IF (DET1.LE.EPS.AND.DET2.LE.EPS) THEN
@@ -301,7 +329,7 @@ C
              SHP3(N2G,IPLAN) = 0.D0
              GOODELT(N2G,IPLAN) = 1
       ENDIF
-C
+!
       DET1=(X(N1G)-X(N3G))*V(N3G,IPLAN)-(Y(N1G)-Y(N3G))*U(N3G,IPLAN)
       DET2=(Y(N2G)-Y(N3G))*U(N3G,IPLAN)-(X(N2G)-X(N3G))*V(N3G,IPLAN)
       IF (DET1.LE.EPS.AND.DET2.LE.EPS) THEN
@@ -310,61 +338,57 @@ C
              SHP2(N3G,IPLAN) = 0.D0
              SHP3(N3G,IPLAN) = 1.D0
              GOODELT(N3G,IPLAN) = 1
-      ENDIF 
-
-C
+      ENDIF
+!
 150       CONTINUE
-
-
-
+!
          DO 230 IELEM = 1,NELEM2
             N1G=IKLE2(IELEM,1)
             N2G=IKLE2(IELEM,2)
             N3G=IKLE2(IELEM,3)
           IF (IFABOR(IELEM,1)==0) GOODELT(N1G,IPLAN)=
-     *                                        GOODELT(N1G,IPLAN)+10
+     &                                        GOODELT(N1G,IPLAN)+10
           IF (IFABOR(IELEM,1)==0) GOODELT(N2G,IPLAN)=
-     *                                        GOODELT(N2G,IPLAN)+10
+     &                                        GOODELT(N2G,IPLAN)+10
           IF (IFABOR(IELEM,2)==0) GOODELT(N2G,IPLAN)=
-     *                                        GOODELT(N2G,IPLAN)+10
+     &                                        GOODELT(N2G,IPLAN)+10
           IF (IFABOR(IELEM,2)==0) GOODELT(N3G,IPLAN)=
-     *                                        GOODELT(N3G,IPLAN)+10
+     &                                        GOODELT(N3G,IPLAN)+10
           IF (IFABOR(IELEM,3)==0) GOODELT(N3G,IPLAN)=
-     *                                        GOODELT(N3G,IPLAN)+10
+     &                                        GOODELT(N3G,IPLAN)+10
           IF (IFABOR(IELEM,3)==0) GOODELT(N1G,IPLAN)=
-     *                                        GOODELT(N1G,IPLAN)+10
+     &                                        GOODELT(N1G,IPLAN)+10
           IF (IFABOR(IELEM,1)==-1) GOODELT(N1G,IPLAN)=
-     *                                        GOODELT(N1G,IPLAN)+100
+     &                                        GOODELT(N1G,IPLAN)+100
           IF (IFABOR(IELEM,1)==-1) GOODELT(N2G,IPLAN)=
-     *                                        GOODELT(N2G,IPLAN)+100
+     &                                        GOODELT(N2G,IPLAN)+100
           IF (IFABOR(IELEM,2)==-1) GOODELT(N2G,IPLAN)=
-     *                                        GOODELT(N2G,IPLAN)+100
+     &                                        GOODELT(N2G,IPLAN)+100
           IF (IFABOR(IELEM,2)==-1) GOODELT(N3G,IPLAN)=
-     *                                        GOODELT(N3G,IPLAN)+100
+     &                                        GOODELT(N3G,IPLAN)+100
           IF (IFABOR(IELEM,3)==-1) GOODELT(N3G,IPLAN)=
-     *                                        GOODELT(N3G,IPLAN)+100
+     &                                        GOODELT(N3G,IPLAN)+100
           IF (IFABOR(IELEM,3)==-1) GOODELT(N1G,IPLAN)=
-     *                                        GOODELT(N1G,IPLAN)+100
+     &                                        GOODELT(N1G,IPLAN)+100
           IF (IFABOR(IELEM,1)==-2) GOODELT(N1G,IPLAN)=
-     *                                       GOODELT(N1G,IPLAN)+1000
+     &                                       GOODELT(N1G,IPLAN)+1000
           IF (IFABOR(IELEM,1)==-2) GOODELT(N2G,IPLAN)=
-     *                                       GOODELT(N2G,IPLAN)+1000
+     &                                       GOODELT(N2G,IPLAN)+1000
           IF (IFABOR(IELEM,2)==-2) GOODELT(N2G,IPLAN)=
-     *                                       GOODELT(N2G,IPLAN)+1000
+     &                                       GOODELT(N2G,IPLAN)+1000
           IF (IFABOR(IELEM,2)==-2) GOODELT(N3G,IPLAN)=
-     *                                       GOODELT(N3G,IPLAN)+1000
+     &                                       GOODELT(N3G,IPLAN)+1000
           IF (IFABOR(IELEM,3)==-2) GOODELT(N1G,IPLAN)=
-     *                                       GOODELT(N1G,IPLAN)+1000
+     &                                       GOODELT(N1G,IPLAN)+1000
           IF (IFABOR(IELEM,3)==-2) GOODELT(N3G,IPLAN)=
-     *                                       GOODELT(N3G,IPLAN)+1000
+     &                                       GOODELT(N3G,IPLAN)+1000
 230      CONTINUE
-
-C
-C-----------------------------------------------------------------------
-C  REMPLISSAGE POINT PAR POINT DES SHZ ET DES ETA.
-C
+!
+!-----------------------------------------------------------------------
+!  FILLS IN THE SHZ AND ETA, POINT BY POINT.
+!
          DO 170 IPOIG=1,NPOIN2
-C
+!
            IF (W(IPOIG,IPLAN).GT.0.D0) THEN
               IF (IPLAN.EQ.1) THEN
                 ETA(IPOIG,1) = NPLAN
@@ -373,20 +397,20 @@ C
               ELSE
                 ETA(IPOIG,IPLAN) = IPLAN-1
                 SHZ(IPOIG,IPLAN) = 1.D0
-              ENDIF 
+              ENDIF
            ELSE
               ETA(IPOIG,IPLAN) = IPLAN
               SHZ(IPOIG,IPLAN) = 0.D0
-           ENDIF 
-C
+           ENDIF
+!
 170       CONTINUE
-C
-C-----------------------------------------------------------------------
-C       FIN CALCUL SCALAIRE
-C-----------------------------------------------------------------------
+!
+!-----------------------------------------------------------------------
+!       END OF SCALAR COMPUTATION
+!-----------------------------------------------------------------------
        ENDIF
-C
+!
 10    CONTINUE
-C
+!
       RETURN
       END

@@ -1,97 +1,106 @@
-C                       *****************
-                        SUBROUTINE MT01BB
-C                       *****************
-C
-     *( A11 , A12 , A13 , A14 ,
-     *        A22 , A23 , A24 ,
-     *              A33 , A34 ,
-     *                    A44 ,
-     *  XMUL,SURFAC,NELEM,NELMAX)
-C
-C***********************************************************************
-C BIEF VERSION 5.1           10/01/95     J-M HERVOUET (LNH) 30 87 80 18
-C                                           C   MOULIN (LNH) 30 87 83 81
-C***********************************************************************
-C
-C FONCTION : CONSTRUCTION DE LA MATRICE DE MASSE POUR LES
-C            TRIANGLES QUASI-BULLE
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |     A11,A12... |<-- |  ELEMENTS DE LA MATRICE
-C |     XMUL       | -->|  FACTEUR MULTIPLICATIF
-C |     SURFAC     | -->|  SURFACE DES TRIANGLES.
-C |     NELEM      | -->|  NOMBRE D'ELEMENTS DU MAILLAGE
-C |     NELMAX     | -->|  NOMBRE MAXIMUM D'ELEMENTS DU MAILLAGE
-C |                |    |  (CAS D'UN MAILLAGE ADAPTATIF)
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES : AUCUN
-C
-C**********************************************************************
-C     -------------
-C     | ATTENTION | : LE JACOBIEN DOIT ETRE POSITIF .
-C     -------------
-C**********************************************************************
-C
+!                    *****************
+                     SUBROUTINE MT01BB
+!                    *****************
+!
+     &( A11 , A12 , A13 , A14 ,
+     &        A22 , A23 , A24 ,
+     &              A33 , A34 ,
+     &                    A44 ,
+     &  XMUL,SURFAC,NELEM,NELMAX)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    BUILDS THE MASS MATRIX FOR QUASI-BUBBLE TRIANGLES.
+!
+!warning  THE JACOBIAN MUST BE POSITIVE
+!
+!history  J-M HERVOUET (LNH)    ; C MOULIN (LNH)
+!+        10/01/95
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| A11            |<--| ELEMENTS OF MATRIX
+!| A12            |<--| ELEMENTS OF MATRIX
+!| A13            |<--| ELEMENTS OF MATRIX
+!| A14            |<--| ELEMENTS OF MATRIX
+!| A22            |<--| ELEMENTS OF MATRIX
+!| A23            |<--| ELEMENTS OF MATRIX
+!| A24            |<--| ELEMENTS OF MATRIX
+!| A33            |<--| ELEMENTS OF MATRIX
+!| A34            |<--| ELEMENTS OF MATRIX
+!| A44            |<--| ELEMENTS OF MATRIX
+!| NELEM          |-->| NUMBER OF ELEMENTS
+!| NELMAX         |-->| MAXIMUM NUMBER OF ELEMENTS
+!| SURFAC         |-->| AREA OF TRIANGLES
+!| XMUL           |-->| MULTIPLICATION FACTOR
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_MT01BB => MT01BB
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN) :: NELEM,NELMAX
-C
+!
       DOUBLE PRECISION, INTENT(INOUT) :: A11(*),A12(*),A13(*),A14(*)
       DOUBLE PRECISION, INTENT(INOUT) ::        A22(*),A23(*),A24(*)
       DOUBLE PRECISION, INTENT(INOUT) ::               A33(*),A34(*)
       DOUBLE PRECISION, INTENT(INOUT) ::                      A44(*)
-C
+!
       DOUBLE PRECISION, INTENT(IN) :: XMUL
-C
+!
       DOUBLE PRECISION, INTENT(IN) :: SURFAC(NELMAX)
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-C     DECLARATIONS SPECIFIQUES A CE SOUS-PROGRAMME
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+!     DECLARATIONS SPECIFIC TO THIS SUBROUTINE
+!
       INTEGER IELEM
       DOUBLE PRECISION XSUR36
-C
-C=======================================================================
-C
+!
+!=======================================================================
+!
       XSUR36 = XMUL / 36.D0
-C
+!
       DO 5 IELEM = 1 , NELEM
-C
-C  TERMES EXTRADIAGONAUX
-C
+!
+!  EXTRADIAGONAL TERMS
+!
          A12(IELEM) =     SURFAC(IELEM)*XSUR36
          A13(IELEM) =     A12(IELEM)
          A23(IELEM) =     A12(IELEM)
          A14(IELEM) = 2 * A12(IELEM)
          A24(IELEM) =     A14(IELEM)
          A34(IELEM) =     A14(IELEM)
-C
-C  TERMES DIAGONAUX
-C
+!
+!  DIAGONAL TERMS
+!
          A11(IELEM) = 2 * A14(IELEM)
          A22(IELEM) =     A11(IELEM)
          A33(IELEM) =     A11(IELEM)
          A44(IELEM) = 3 * A14(IELEM)
-C
+!
 5     CONTINUE
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-      END  
- 
- 
+      END

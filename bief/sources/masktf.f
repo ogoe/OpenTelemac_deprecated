@@ -1,61 +1,65 @@
-C                       *****************
-                        SUBROUTINE MASKTF
-C                       *****************
-C
-     *(MASKEL,HN,HMIN,IKLE,NELEM,NPOIN)
-C
-C***********************************************************************
-C  BIEF VERSION 5.9     20/10/08      J-M HERVOUET (LNHE) 01 30 87 80 18
-C
-C***********************************************************************
-C
-C     FUNCTION :
-C
-C     MASKING DRY ELEMENTS (MASKing Tidal Flats)
-C
-C     ALGORITHM :
-C
-C     HERE SIMPLE ALGORITHM: AN ELEMENT IS DRY IF ONE OF ITS HEIGHTS IS
-C                            LESS THAN HMIN
-C
-C     USED BY SISYPHE (IN THIS CASE THE DEPTH IS GIVEN BY TELEMAC, SO
-C     A SOPHISTICATED ALGORITHM TO PRESERVE THE DYNAMICS OF FLOODING
-C     IS NOT NEEDED.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |   MASKEL       |<-- | TABLEAU DE MASQUAGE DES ELEMENTS             |
-C |                |    |  =1. : NORMAL   =0. : ELEMENT MASQUE.        |
-C |   IKLE         | -->| TABLE DE CONNECTIVITE.                       |
-C |   NELEM        | -->| NOMBRE D'ELEMENTS.                           |
-C |   NPOIN        | -->| NOMBRE DE NOEUDS.                            |
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C***********************************************************************
-C                                                                      *
-C APPELE PAR: SISYPHE
-C                                                                      *
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE MASKTF
+!                    *****************
+!
+     &(MASKEL,HN,HMIN,IKLE,NELEM,NPOIN)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    MASKS DRY ELEMENTS (MASKS TIDAL FLATS).
+!code
+!+    SIMPLE ALGORITHM: AN ELEMENT IS DRY IF ONE OF ITS DEPTHS IS
+!+                      LESS THAN HMIN
+!+
+!+    USED BY SISYPHE (IN THIS CASE THE DEPTH IS GIVEN BY TELEMAC, SO
+!+    A SOPHISTICATED ALGORITHM TO PRESERVE THE DYNAMICS OF FLOODING
+!+    IS NOT NEEDED)
+!
+!history  J-M HERVOUET (LNHE)
+!+        20/10/08
+!+        V5P9
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| HMIN           |-->| MINIMUM VALUE OF DEPTH
+!| HN             |-->| WATER DEPTH AT TIME N
+!| IKLE           |-->| CONNECTIVITY TABLE.
+!| MASKEL         |<--| MASKING OF ELEMENTS
+!|                |   | =1. : NORMAL   =0. : MASKED ELEMENT
+!| NELEM          |-->| NUMBER OF ELEMENTS
+!| NPOIN          |-->| NUMBER OF POINTS
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN)             :: NELEM,NPOIN
       INTEGER, INTENT(IN)             :: IKLE(NELEM,3)
       DOUBLE PRECISION, INTENT(IN)    :: HN(NPOIN)
       DOUBLE PRECISION, INTENT(IN)    :: HMIN
       DOUBLE PRECISION, INTENT(INOUT) :: MASKEL(NELEM)
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-      INTEGER IELEM,I1,I2,I3      
-C
-C-----------------------------------------------------------------------
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+      INTEGER IELEM,I1,I2,I3
+!
+!-----------------------------------------------------------------------
+!
       DO IELEM = 1,NELEM
         I1 = IKLE(IELEM,1)
         I2 = IKLE(IELEM,2)
@@ -64,8 +68,8 @@ C
           MASKEL(IELEM) = 0.D0
         ENDIF
       ENDDO
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

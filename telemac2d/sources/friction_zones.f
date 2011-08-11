@@ -1,69 +1,87 @@
-C                       *************************
-                        SUBROUTINE FRICTION_ZONES
-C                       *************************
-C
-     & (MESH, H, U, V, S, CHESTR, CHBORD, NKFROT, NDEFMA, LINDDP,
-     &  LINDSP, KFRO_B, NDEF_B, ITURB, LISRUG, LINDNER, VK,
-     &  KARMAN, GRAV, T1, T2, CF, CFBOR)
-C
-C***********************************************************************
-C  TELEMAC-2D VERSION 5.5                 J-M HERVOUET (LNH) 30 87 80 18
-C***********************************************************************
-C
-C 20/04/04 : subroutine written by F. Huvelin
-C
-C
-          ! ----------------------------------------------- !
-          !   Friction calculation for each node and zone   !
-          ! ----------------------------------------------- !
-C
-C
-C               TTTTT EEEEE L     EEEEE M   M   AA  CCCCC
-C                 T   E     L     E     MM MM  A  A C
-C                 T   EEE   L     EEE   M M M  AAAA C
-C                 T   E     L     E     M   M  A  A C
-C                 T   EEEEE LLLLL EEEEE M   M  A  A CCCCC
-C
-C
-C----------------------------------------------------------------------C
-C                             ARGUMENTS                                C
-C .________________.____.______________________________________________C
-C |      NOM       |MODE|                   ROLE                       C
-C |________________|____|______________________________________________C
-C |                | => |                                              C
-C |________________|____|______________________________________________C
-C                    <=  input value                                   C
-C                    =>  output value                                  C 
-C ---------------------------------------------------------------------C
+!                    *************************
+                     SUBROUTINE FRICTION_ZONES
+!                    *************************
 !
-!=======================================================================!
-!=======================================================================!
-!                    DECLARATION DES TYPES ET DIMENSIONS                !
-!=======================================================================!
-!=======================================================================!
+     &(MESH, H, U, V, S, CHESTR, CHBORD, NKFROT, NDEFMA, LINDDP,
+     & LINDSP, KFRO_B, NDEF_B, ITURB, LISRUG, LINDNER, VK,
+     & KARMAN, GRAV, T1, T2, CF, CFBOR)
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    COMPUTES FRICTION FOR EACH NODE AND ZONE.
+!
+!history  F. HUVELIN
+!+        20/04/2004
+!+
+!+
+!
+!history  J-M HERVOUET (LNHE)
+!+
+!+        V5P5
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CF             |<--| ADIMENSIONAL FRICTION COEFFICIENT
+!| CFBOR          |<--| ADIMENSIONAL FRICTION COEFFICIENT ON BOUNDARIES
+!| CHBORD         |-->| FRICTION COEFFICIENTS ON BOUNDARIES
+!| CHESTR         |-->| FRICTION COEFFICIENTS
+!| GRAV           |-->| GRAVITY
+!| H              |-->| WATER DEPTH
+!| ITURB          |-->| TURBULENCE MODEL
+!| KARMAN         |-->| VON KARMAN CONSTANT
+!| KFRO_B         |-->| LAW OF BOTTOM FRICTION FOR BOUNDARIES
+!| LINDDP         |-->| DIAMETER OF ROUGHNESS ELEMENT IN LINDNER CASE
+!| LINDNER        |-->| IF YES, THERE IS NON-SUBMERGED VEGETATION FRICTION
+!| LINDSP         |-->| SPACING OF ROUGHNESS ELEMENT IN LINDNER CASE
+!| LISRUG         |-->| TURBULENCE REGIME (1: SMOOTH 2: ROUGH)
+!| MESH           |-->| MESH STRUCTURE
+!| NDEFMA         |-->| DEFAULT MANNING COEFFICIENT
+!| NDEF_B         |-->| DEFAULT MANNING COEFFICIENT OF BOUNDARIES
+!| NKFROT         |-->| LAW OF BOTTOM FRICTION FOR EVERY POINT
+!| S              |-->| VOID STRUCTURE
+!| T1             |<->| WORK BIEF_OBJ STRUCTURE
+!| T2             |<->| WORK BIEF_OBJ STRUCTURE
+!| U              |-->| X-COMPONENT OF VELOCITY
+!| V              |-->| Y-COMPONENT OF VELOCITY
+!| VK             |-->| KINEMATIC VISCOSITY
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       USE BIEF
       USE INTERFACE_TELEMAC2D, EX_FRICTION_ZONES => FRICTION_ZONES
-C
-      IMPLICIT NONE      
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+      IMPLICIT NONE
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       TYPE(BIEF_MESH),    INTENT(IN)    :: MESH
       TYPE(BIEF_OBJ),     INTENT(IN)    :: H, U, V, S
       TYPE(BIEF_OBJ),     INTENT(IN)    :: CHESTR
       TYPE(BIEF_OBJ),     INTENT(IN)    :: CHBORD
       TYPE(BIEF_OBJ),     INTENT(IN)    :: NKFROT
       TYPE(BIEF_OBJ),     INTENT(IN)    :: NDEFMA, LINDDP, LINDSP
-      TYPE(BIEF_OBJ),     INTENT(IN)    :: KFRO_B, NDEF_B 
+      TYPE(BIEF_OBJ),     INTENT(IN)    :: KFRO_B, NDEF_B
       INTEGER,            INTENT(IN)    :: ITURB, LISRUG
-      LOGICAL,            INTENT(IN)    :: LINDNER 
+      LOGICAL,            INTENT(IN)    :: LINDNER
       DOUBLE PRECISION,   INTENT(IN)    :: VK, KARMAN, GRAV
       TYPE(BIEF_OBJ),     INTENT(INOUT) :: CF, CFBOR
       TYPE(BIEF_OBJ),     INTENT(INOUT) :: T1, T2
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER          :: I, J
       INTEGER          :: IELMC, IELMH
       DOUBLE PRECISION :: CP
@@ -78,19 +96,19 @@ C
       ! INITIALIZATION AND DISCRETIZATION CHECK !
       ! ======================================= !
 !
-      ! Element type
+      ! ELEMENT TYPE
       ! ------------
       IELMC = CF%ELM
       IELMH = H%ELM
 !
-      ! Maximum between Water depth and 1.D-4
+      ! MAXIMUM BETWEEN WATER DEPTH AND 1.D-4
       ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       CALL CPSTVC(H,T1)
       CALL OS('X=Y     ', X=T1, Y=H)
       IF(IELMC.NE.IELMH) CALL CHGDIS(T1, IELMH, IELMC, MESH)
       CALL OS('X=+(Y,C)', X=T1, Y=T1, C=1.D-4)
 !
-      ! Resultant velocity in T2
+      ! RESULTANT VELOCITY IN T2
       ! ------------------------
       CALL CPSTVC(CF,T2)
       CALL OS('X=N(Y,Z)', X=T2, Y=U, Z=V)
@@ -101,27 +119,27 @@ C
       ! BOTTOM FRICTION !
       ! =============== !
 !
-      ! Bottom friction calculation
+      ! BOTTOM FRICTION CALCULATION
       ! ---------------------------
       DO I = 1, CF%DIM1
 !
-         ! Friction coefficient for the bottom
+         ! FRICTION COEFFICIENT FOR THE BOTTOM
          ! -----------------------------------
          CALL FRICTION_CALC
      &        (I, I, NKFROT%I(I), NDEFMA%R(I), VK, GRAV,
      &         KARMAN, CHESTR, T1, T1, T2, CF)
 !
-         ! Friction coefficient for non-submerged vegetation
+         ! FRICTION COEFFICIENT FOR NON-SUBMERGED VEGETATION
          ! -------------------------------------------------
          IF (LINDNER) THEN
             CALL FRICTION_LINDNER
-     &           (T2%R(I), T1%R(I), CF%R(I), VK, GRAV, 
+     &           (T2%R(I), T1%R(I), CF%R(I), VK, GRAV,
      &            LINDDP%R(I),LINDSP%R(I), CP)
 !
             IF (CP < -0.9D0) THEN
                CP = 0.75D0*T1%R(I)*LINDDP%R(I) / (LINDSP%R(I))**2
             ENDIF
-!         
+!
             CF%R(I) = (CF%R(I)+2.D0*CP)
          ENDIF
 !
@@ -131,17 +149,17 @@ C
       ! ============= !
       ! WALL FRICTION !
       ! ============= !
-      IF (ITURB.EQ.3.AND.LISRUG.EQ.2) THEN
+!
+      IF(LISRUG.EQ.2) THEN
 !
          DO J = 1, MESH%NPTFR
             I = MESH%NBOR%I(J)
-!
-            ! Bottom friction calculation
+            ! BOTTOM FRICTION CALCULATION
             ! ---------------------------
             CALL FRICTION_CALC
-     &           (J, J, KFRO_B%I(J), NDEF_B%R(J), VK, GRAV,KARMAN,
-     &            CHBORD, MESH%DISBOR , T1, T2, CFBOR)
-         END DO
+     &           (J,J,KFRO_B%I(J),NDEF_B%R(J),VK,GRAV,KARMAN,
+     &            CHBORD,MESH%DISBOR,T1,T2,CFBOR)
+         ENDDO
 !
       ENDIF
 !

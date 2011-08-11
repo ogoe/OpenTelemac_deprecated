@@ -1,114 +1,113 @@
-C                       *****************
-                        SUBROUTINE MT01AA
-C                       *****************
-C
-     *( A11 , A12 , A13 ,
-     *        A22 , A23 ,
-     *              A33 ,
-     *  XMUL,SURFAC,NELEM,NELMAX)
-C
-C***********************************************************************
-C BIEF VERSION 5.1           28/11/94    J-M HERVOUET (LNH) 30 87 80 18
-C                                        F  LEPEINTRE (LNH) 30 87 78 54
-C***********************************************************************
-C
-C FONCTION : CONSTRUCTION DE LA MATRICE DE MASSE POUR DES TRIANGLES P1
-C
-C-----------------------------------------------------------------------
-C
-C      FONCTION:
-C      ========:
-C
-C    CE SOUS-PROGRAMME CALCULE LES COEFFICIENTS DE LA MATRICE SUIVANTE:
-C
-C                                 /
-C                    A    = XMUL /  (P *P )*J(X,Y) DXDY
-C                     I J       /S    I  J
-C
-C    PAR MAILLE ELEMENTAIRE.
-C
-C     J(X,Y) : JACOBIEN DE LA TRANSFORMATION ISOPARAMETRIQUE
-C
-C     L'ELEMENT EST LE TRIANGLE P1
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |     A11,A12... |<-- |  ELEMENTS DE LA MATRICE
-C |     XMUL       | -->|  FACTEUR MULTIPLICATIF
-C |     SURFAC     | -->|  SURFACE DES TRIANGLES.
-C |     NELEM      | -->|  NOMBRE D'ELEMENTS DU MAILLAGE
-C |     NELMAX     | -->|  NOMBRE MAXIMUM D'ELEMENTS DU MAILLAGE
-C |                |    |  (CAS D'UN MAILLAGE ADAPTATIF)
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES : AUCUN
-C
-C**********************************************************************
-C     -------------
-C     | ATTENTION | : LE JACOBIEN DOIT ETRE POSITIF .
-C     -------------
-C**********************************************************************
-C
+!                    *****************
+                     SUBROUTINE MT01AA
+!                    *****************
+!
+     &( A11 , A12 , A13 ,
+     &        A22 , A23 ,
+     &              A33 ,
+     &  XMUL,SURFAC,NELEM,NELMAX)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    BUILDS THE MASS MATRIX FOR P1 TRIANGLES.
+!code
+!+    COMPUTES THE COEFFICIENTS OF THE FOLLOWING MATRIX:
+!+
+!+                                 /
+!+                    A    = XMUL /  (P *P )*J(X,Y) DXDY
+!+                     I J       /S    I  J
+!+
+!+    BY ELEMENTARY CELL
+!+
+!+    J(X,Y): JACOBIAN OF THE ISOPARAMETRIC TRANSFORMATION
+!
+!warning  THE JACOBIAN MUST BE POSITIVE
+!
+!history  J-M HERVOUET (LNH)    ; F  LEPEINTRE (LNH)
+!+        28/11/94
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| A11            |<--| ELEMENTS OF MATRIX
+!| A12            |<--| ELEMENTS OF MATRIX
+!| A13            |<--| ELEMENTS OF MATRIX
+!| A22            |<--| ELEMENTS OF MATRIX
+!| A23            |<--| ELEMENTS OF MATRIX
+!| A33            |<--| ELEMENTS OF MATRIX
+!| NELEM          |-->| NUMBER OF ELEMENTS
+!| NELMAX         |-->| MAXIMUM NUMBER OF ELEMENTS
+!| SURFAC         |-->| AREA OF TRIANGLES
+!| XMUL           |-->| MULTIPLICATION FACTOR
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_MT01AA => MT01AA
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN) :: NELEM,NELMAX
-C
+!
       DOUBLE PRECISION, INTENT(INOUT) :: A11(*),A12(*),A13(*)
       DOUBLE PRECISION, INTENT(INOUT) ::        A22(*),A23(*)
       DOUBLE PRECISION, INTENT(INOUT) ::               A33(*)
-C
+!
       DOUBLE PRECISION, INTENT(IN) :: XMUL
       DOUBLE PRECISION, INTENT(IN) :: SURFAC(NELMAX)
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-C     DECLARATIONS SPECIFIQUES A CE SOUS-PROGRAMME
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+!     DECLARATIONS SPECIFIC TO THIS SUBROUTINE
+!
       INTEGER IELEM
       DOUBLE PRECISION SUR12,DET
-C
-C=======================================================================
-C
+!
+!=======================================================================
+!
       SUR12 = XMUL/12.D0
-C
-C-----------------------------------------------------------------------
-C
-C   BOUCLE SUR LES ELEMENTS
-C
+!
+!-----------------------------------------------------------------------
+!
+!   LOOP ON THE ELEMENTS
+!
       DO 1 IELEM = 1 , NELEM
-C
+!
       DET = SURFAC(IELEM) * SUR12
-C
-C  ELEMENTS EXTERIEURS A LA DIAGONALE
-C
+!
+!  ELEMENTS OFF THE DIAGONAL
+!
       A12(IELEM) = DET
       A13(IELEM) = DET
       A23(IELEM) = DET
-C
-C  TERMES DIAGONAUX
-C
+!
+!  DIAGONAL TERMS
+!
       A11(IELEM) = DET + DET
       A22(IELEM) = DET + DET
       A33(IELEM) = DET + DET
-C
-C   FIN DE LA BOUCLE SUR LES ELEMENTS
-C
+!
+!   END OF THE LOOP ON THE ELEMENTS
+!
 1     CONTINUE
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-      END  
- 
- 
+      END

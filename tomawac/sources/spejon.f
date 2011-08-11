@@ -1,67 +1,74 @@
-C
-C                       *****************
-                        SUBROUTINE SPEJON
-C                       *****************
-C
+!                    *****************
+                     SUBROUTINE SPEJON
+!                    *****************
+!
      &( SPEC  , FREQ  , NF    , AL    , FP     , GAMMA , SIGMAA, SIGMAB,
      &  DEUPI , GRAVIT, E2FMIN, FPMIN )
-C
-C**********************************************************************
-C  TOMAWAC - V1.0    M. BENOIT               (EDF/DER/LNH)  -  15/11/95
-C**********************************************************************
-C
-C  FONCTION : CALCUL DU SPECTRE EN FREQUENCE DE TYPE JONSWAP POUR UNE
-C  ********** SERIE DE FREQUENCES DONNEES.
-C
-C  ARGUMENTS :
-C  ***********
-C  +-------------+----+--------------------------------------------+
-C  ! NOM         !MODE! SIGNIFICATION - OBSERVATIONS               !
-C  +-------------+----+--------------------------------------------+
-C  ! SPEC(-)     !<-- ! VALEURS DU SPECTRE JONSWAP                 !
-C  ! FREQ(-)     ! -->! FREQUENCES DE DISCRETISATION               !
-C  ! NF          ! -->! NOMBRE DE FREQUENCES DE DISCRETISATION     !
-C  ! AL          ! -->! CONSTANTE DE PHILLIPS (ALPHA)              !
-C  ! FP          ! -->! FREQUENCE DE PIC DU SPECTRE JONSWAP        !
-C  ! GAMMA       ! -->! FACTEUR DE FORME DE PIC JONSWAP            !
-C  ! SIGMAA      ! -->! VALEUR DE SIGMA JONSWAP POUR F < FP        !
-C  ! SIGMAB      ! -->! VALEUR DE SIGMA JONSWAP POUR F > FP        !
-C  ! DEUPI       ! -->! 2.PI                                       !
-C  ! GRAVIT      ! -->! ACCELERATION DE LA PESANTEUR               !
-C  ! E2FMIN      ! -->! SEUIL MINIMUM DE SPECTRE CONSIDERE         !
-C  ! FPMIN       ! -->! VALEUR MINIMUM DE LA FREQUENCE DE PIC      !
-C  +-------------+----+--------------------------------------------+
-C  ! MODE   (-> : NON-MODIFIE)  (<-> : MODIFIE)  (<- : INITIALISE) !
-C  +---------------------------------------------------------------+
-C
-C  APPELS :    - PROGRAMME(S) APPELANT  :  SPEINI
-C  ********    - PROGRAMME(S) APPELE(S) :  -      
-C
-C  REMARQUES :
-C  ***********
-C
-C**********************************************************************
-C
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   28/06/2011
+!***********************************************************************
+!
+!brief    COMPUTES A JONSWAP FREQUENCY SPECTRUM BASED
+!+                ON A SERIES OF FREQUENCIES.
+!
+!history  M. BENOIT (EDF/DER/LNH)
+!+        15/11/95
+!+        V1P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        28/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| AL             |-->| PHILLIPS CONSTANT (ALPHA)
+!| DEUPI          |-->| 2.PI
+!| E2FMIN         |-->| SPECTRUM ENERGY THRESHOLD
+!| FP             |-->| JONSWAP SPECTRUM PEAK FREQUENCY 
+!| FPMIN          |-->| MINIMUM PEAK FREQUENCY VALUE
+!| FREQ           |-->| DISCRETIZED FREQUENCIES
+!| GAMMA          |-->| JONSWAP SPECTRUM PEAK FACTOR
+!| GRAVIT         |-->| GRAVITY ACCELERATION
+!| NF             |-->| NUMBER OF FREQUENCIES
+!| SIGMAA         |-->| VALUE OF SIGMA FOR JONSWAP SPECTRUM (F<FP)
+!| SIGMAB         |-->| VALUE OF SIGMA FOR JONSWAP SPECTRUM (F>FP)
+!| SPEC           |<--| JONSWAP VARIANCE DENSITY FREQUENCY SPECTRUM
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
-C.....VARIABLES TRANSMISES
-C     """"""""""""""""""""
+!
+!.....VARIABLES IN ARGUMENT
+!     """"""""""""""""""""
       INTEGER  NF
       DOUBLE PRECISION GRAVIT, SIGMAA, SIGMAB, GAMMA , DEUPI , FPMIN
       DOUBLE PRECISION FP    , E2FMIN, AL
       DOUBLE PRECISION SPEC(NF)      , FREQ(NF)
-C
-C.....VARIABLES LOCALES 
-C     """""""""""""""""
+!
+!.....LOCAL VARIABLES
+!     """""""""""""""""
       INTEGER  JF
       DOUBLE PRECISION COEF  , ARG1   , ARG2  , ARG3  , SIG   , FF
-C
-C
+!
+!
       IF (FP.GT.FPMIN) THEN
         COEF=AL*GRAVIT**2/DEUPI**4
         DO 100 JF=1,NF
           FF=FREQ(JF)
-          IF (FF.LT.FP) THEN 
+          IF (FF.LT.FP) THEN
             SIG=SIGMAA
           ELSE
             SIG=SIGMAB
@@ -87,6 +94,6 @@ C
           SPEC(JF)=0.D0
   150   CONTINUE
       ENDIF
-C
+!
       RETURN
       END

@@ -1,60 +1,78 @@
-C                       *****************
-                        SUBROUTINE CHARAC
-C                       *****************
-C
-     *( FN  , FTILD  , NOMB   , UCONV  , VCONV , WCONV  , ZSTAR ,
-     *  DT  , IFAMAS , IELM   , NPOIN2 , NPLAN , NPLINT ,
-     *  MSK , MASKEL , SHP,SHZ , TB    , IT1,IT2,IT3,IT4,MESH ,
-     *  NELEM2,NELMAX2,IKLE2,SURDET2   , INILOC)
-C
-C***********************************************************************
-C BIEF VERSION 6.0      12/02/2010    J-M HERVOUET (LNHE) 01 30 87 80 18
-C
-C***********************************************************************
-C
-C  FONCTION : APPEL DE LA METHODE DES CARACTERISTIQUES
-C             (SOUS-PROGRAMME CARACT)
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |   FN           | -->| VARIABLES A L'ETAPE N .
-C |   FTILD        |<-- | VARIABLES APRES LA CONVECTION .
-C |   NOMB         | -->| NOMBRE DE VARIABLES A CONVECTER.
-C |   UCONV,VCONV..| -->| COMPOSANTES DES VITESSES DU CONVECTEUR.
-C |   ZSTAR        | -->| COORDONNEES VERTICALES EN 3D.
-C |   DT           | -->| PAS DE TEMPS
-C |   IFAMAS       | -->| IFABOR MODIFIE QUAND DES ELEMENTS SONT MASQUES
-C |   IELM         | -->| TYPE D'ELEMENT : 11 : TRIANGLE P1
-C |                |    |                  41 : PRISME DE TEL3D
-C |   NPOIN2       | -->| NOMBRE DE POINTS DU MAILLAGE 2D (POUR TEL3D).
-C |   NPLAN        | -->| NOMBRE DE PLAN SUIVANT Z (POUR TEL3D).
-C |   NPLINT       | -->| PLAN DE REFERENCE INTERMEDIAIRE (POUR TEL3D).
-C |   MSK          | -->| SI OUI, PRESENCE D'ELEMENTS MASQUES.
-C |   MASKEL       | -->| TABLEAU DE MASQUAGE DES ELEMENTS
-C |                |    |  =1. : NORMAL   =0. : ELEMENT MASQUE.
-C |   MAT          | -->| MATRICE DE TRAVAIL
-C |   TB           | -->| BLOC DE TABLEAUX DE TRAVAIL (AU MOINS 8)
-C |   MESH         | -->| BLOC DES ENTIERS DU MAILLAGE
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES : CARACT
-C
-C**********************************************************************
-C
+!                    *****************
+                     SUBROUTINE CHARAC
+!                    *****************
+!
+     &( FN  , FTILD  , NOMB   , UCONV  , VCONV , WCONV  , ZSTAR ,
+     &  DT  , IFAMAS , IELM   , NPOIN2 , NPLAN , NPLINT ,
+     &  MSK , MASKEL , SHP,SHZ , TB    , IT1,IT2,IT3,IT4,MESH ,
+     &  NELEM2,NELMAX2,IKLE2,SURDET2   , INILOC)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    CALLS THE METHOD OF CHARACTERISTICS
+!+               (SUBROUTINE CARACT).
+!
+!history  J-M HERVOUET (LNHE)
+!+        12/02/2010
+!+        V6P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| DT             |-->| TIME STEP
+!| FN             |-->| VARIABLES AT TIME N .
+!| FTILD          |<--| VARIABLES AFTER ADVECTION .
+!| IELM           |-->| TYPE OF ELEMENT : 11 : TRIANGLE P1
+!|                |   |                   41 : PRISM IN TELEMAC3D
+!| IFAMAS         |-->| A MODIFIED IFABOR WHEN ELEMENTS ARE MASKED
+!| IKLE2          |-->| CONNECTIVITY TABLE FOR TRIANGLES
+!| INILOC         |-->| IF YES, INITIAL POSITIONS OF POINTS (SHP) TO BE DONE
+!| IT1            |<->| INTEGER WORK ARRAY
+!| IT2            |<->| INTEGER WORK ARRAY
+!| IT3            |<->| INTEGER WORK ARRAY
+!| IT4            |<->| INTEGER WORK ARRAY
+!| MASKEL         |-->| MASKING OF ELEMENTS
+!|                |   | =1. : NORMAL   =0. : MASKED ELEMENT
+!| MESH           |-->| MESH STRUCTURE
+!| MSK            |-->| IF YES, THERE IS MASKED ELEMENTS.
+!| NELEM2         |-->| NUMBER OF ELEMENTS IN 2D
+!| NELMAX2        |-->| MAXIMUM NUMBER OF ELEMENTS IN 2D
+!| NOMB           |-->| NUMBER OF VARIABLES TO BE ADVECTED
+!| NPLAN          |-->| NUMBER OF PLANES IN THE 3D MESH OF PRISMS
+!| NPLINT         |---| NOT USED
+!| NPOIN2         |-->| NUMBER OF POINTS IN THE 2D MESH
+!| SHP            |<->| BARYCENTRIC COORDINATES OF POINTS IN TRIANGLES
+!| SHZ            |<->| BARYCENTRIC COORDINATES ON VERTICAL
+!| SURDET2        |-->| GEOMETRIC COEFFICIENT USED IN PARAMETRIC TRANSFORMATION
+!| TB             |<->| BLOCK CONTAINING THE BIEF_OBJ WORK ARRAYS
+!| UCONV          |-->| X-COMPONENT OF ADVECTION FIELD
+!| VCONV          |-->| Y-COMPONENT OF ADVECTION FIELD
+!| WCONV          |-->| Z-COMPONENT OF ADVECTION FIELD IN THE TRANSFORMED MESH
+!| ZSTAR          |-->| TRANSFORMED VERTICAL COORDINATES IN 3D 
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_CHARAC => CHARAC
       USE STREAMLINE, ONLY : SCARACT
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER         , INTENT(IN)         :: NOMB
       INTEGER         , INTENT(IN)         :: NPLAN,NPLINT,NELEM2
       INTEGER         , INTENT(IN)         :: NPOIN2,IELM,NELMAX2
@@ -68,22 +86,23 @@ C
       TYPE(BIEF_MESH) , INTENT(INOUT)      :: MESH
       TYPE(BIEF_OBJ)  , INTENT(IN), TARGET :: IFAMAS
       LOGICAL, OPTIONAL, INTENT(IN)        :: INILOC
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER NPOIN,IELMU
       LOGICAL INITLOC
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       TYPE(BIEF_OBJ), POINTER :: T1,T2,T3,T4,T5,T6,T7
       INTEGER, DIMENSION(:), POINTER :: IFA
-      INTEGER I,J,K
-C
-C-----------------------------------------------------------------------
-C  TABLEAUX DE TRAVAIL PRIS DANS LE BLOC TB
-C-----------------------------------------------------------------------
-C
+      INTEGER I,J,K,NPLOT
+      LOGICAL QUAD
+!    
+!-----------------------------------------------------------------------
+!  TABLEAUX DE TRAVAIL PRIS DANS LE BLOC TB
+!-----------------------------------------------------------------------
+!
       T1 =>TB%ADR( 1)%P
       T2 =>TB%ADR( 2)%P
       T3 =>TB%ADR( 3)%P
@@ -91,28 +110,28 @@ C
       T5 =>TB%ADR( 5)%P
       T6 =>TB%ADR( 6)%P
       T7 =>TB%ADR( 7)%P
-C
-C-----------------------------------------------------------------------
-C  INITIALISING THE LOCATION OF POINTS OR NOT
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!  INITIALISING THE LOCATION OF POINTS OR NOT
+!-----------------------------------------------------------------------
+!
       IF(PRESENT(INILOC)) THEN
         INITLOC=INILOC
       ELSE
         INITLOC=.TRUE.
       ENDIF
-C
-C-----------------------------------------------------------------------
-C  DEPLOIEMENT DE LA STRUCTURE DE MAILLAGE
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!  DEPLOIEMENT DE LA STRUCTURE DE MAILLAGE
+!-----------------------------------------------------------------------
+!
       NPOIN = MESH%NPOIN
       IELMU = UCONV%ELM
-C
-C-----------------------------------------------------------------------
-C     CHECKING SHP SIZE (ONCE A BUG...)
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!     CHECKING SHP SIZE (ONCE A BUG...)
+!-----------------------------------------------------------------------
+!
       IF(3*NPOIN.GT.SHP%MAXDIM1*SHP%MAXDIM2) THEN
         IF(LNG.EQ.1) THEN
           WRITE(LU,*) 'TAILLE DE SHP:',SHP%MAXDIM1*SHP%MAXDIM2
@@ -127,16 +146,16 @@ C
         CALL PLANTE(1)
         STOP
       ENDIF   
-C
-C-----------------------------------------------------------------------
-C  APPEL DE CARACT
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!  APPEL DE CARACT
+!-----------------------------------------------------------------------
+!
       IF(MSK) THEN
-C       APPEL AVEC IFAMAS
+!       APPEL AVEC IFAMAS
         IFA=>IFAMAS%I
       ELSE
-C       APPEL AVEC IFABOR
+!       APPEL AVEC IFABOR
         IFA=>MESH%IFABOR%I
       ENDIF
 !
@@ -148,28 +167,35 @@ C       APPEL AVEC IFABOR
         CALL CARACT( FN , FTILD , UCONV%R , VCONV%R , WCONV%R ,
      *               MESH%X%R,MESH%Y%R,ZSTAR%R,
      *               T1,T2,T3%R,T4%R,T5%R,T6%R,
-     *               MESH%Z%R,SHP%R,SHZ%R,
-     *               SURDET2%R,DT,IKLE2%I,IFA,
+     *               MESH%Z%R,SHP%R,SHZ%R,SURDET2%R,DT,IKLE2%I,IFA,
      *               IT1,IT2,IT3,IT4,
      *               IELM,IELMU,NELEM2,NELMAX2,NOMB,NPOIN,NPOIN2,
      *               3,NPLAN,MESH%LV,
      *               MSK,MASKEL%R,MESH,MESH%FAC%R,T7%R,T7,INITLOC)
 !
       ELSEIF(NCSIZE.GE.1) THEN
-!
+!     
+        CALL PRE_SCARACT_MAILLAGE(FN,FTILD,WCONV%R,
+     &                            MESH%X%R,MESH%Y%R,ZSTAR%R,
+     &                            T1,T2,T3%R,MESH%Z%R,SHP%R,SHZ%R,
+     &                            IKLE2%I,IT1,IT2,IELM,IELMU,NELEM2,
+     &                            NELMAX2,NPOIN,NPOIN2,
+     &                            3,NPLAN,MSK,MASKEL%R,
+     &                            MESH,T7,INITLOC,QUAD)
+!        
         CALL SCARACT( FN , FTILD , UCONV%R , VCONV%R , WCONV%R ,
      &                MESH%X%R,MESH%Y%R,ZSTAR%R,
-     &                T1,T2,T3%R,T4%R,T5%R,T6%R,
+     &                T1%R,T2%R,T3%R,T4%R,T5%R,T6%R,
      &                MESH%Z%R,SHP%R,SHZ%R,
-     &                SURDET2%R,DT,IKLE2%I,IFA,
-     &                IT1,IT2,IT3,IT4,
+     &                SURDET2%R,DT,IKLE2%I,IFA,IT1,IT2,IT3,IT4,
      &                IELM,IELMU,NELEM2,NELMAX2,NOMB,NPOIN,NPOIN2,
      &                3,NPLAN,MESH%LV,MSK,MASKEL%R,
-     &                MESH,MESH%FAC%R,T7%R,T7,INITLOC)
+     &                MESH,MESH%FAC%R,T7%R,T7,INITLOC,QUAD,NPOIN2,
+     &                .TRUE.,.TRUE.)
 !
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

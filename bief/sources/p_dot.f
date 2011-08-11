@@ -1,55 +1,70 @@
-C                       *******************************
-                        DOUBLE PRECISION FUNCTION P_DOT
-C                       *******************************
-C
-     *(NPOIN,X,Y,FAC)
-C
-C***********************************************************************
-C BIEF VERSION 5.5           24/04/97    J-M HERVOUET (LNH) 30 87 80 18
-C COPYRIGHT 1997              AFTER REINHARD HINKELMANN (HANNOVER UNI.)
-C***********************************************************************
-C
-C FONCTION : PRODUIT SCALAIRE DES VECTEURS X ET Y DE TAILLE NPOIN
-C            AVEC PRISE EN COMPTE DU PARALLELISME.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |    NPOIN       | -->| TAILLE DE X ET Y
-C |    X , Y       | -->| TABLEAUX CONTENANT LES VECTEURS
-C |    FAC         | -->| FAC=1/(nombre de domaines voisins du point)
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C***********************************************************************
-C
+!                    *******************************
+                     DOUBLE PRECISION FUNCTION P_DOT
+!                    *******************************
+!
+     &(NPOIN,X,Y,FAC)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    SCALAR PRODUCT OF VECTORS X AND Y (SIZE NPOIN)
+!+                TAKING PARALLELISM INTO ACCOUNT.
+!
+!history  REINHARD HINKELMANN (HANNOVER UNI.)
+!+
+!+
+!+
+!
+!history  J-M HERVOUET (LNH)
+!+        24/04/97
+!+        V5P5
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| FAC            |-->| FAC=1/(NUMBER OF NEIGHBOURING SUB-DOMAINS)
+!| NPOIN          |-->| SIZE OF X AND Y
+!| X              |-->| VECTOR
+!| Y              |-->| VECTOR
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_P_DOT => P_DOT
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-C
+!
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+!
       INTEGER, INTENT(IN) :: NPOIN
-C
+!
       DOUBLE PRECISION, INTENT(IN) :: X(NPOIN),Y(NPOIN),FAC(NPOIN)
-C
-C+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-C
+!
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+!
       INTEGER I
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       P_DOT = 0.D0
-C
+!
       DO 10 I = 1 , NPOIN
        P_DOT = P_DOT + X(I) * Y(I) * FAC(I)
 10    CONTINUE
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-      END 
- 
+      END

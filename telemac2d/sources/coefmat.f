@@ -1,64 +1,72 @@
-C                        ******************
-                         SUBROUTINE COEFMAT
-C                        ******************
-C
-     *(PERIAF,DT,M,AM,NPERIAF)
-C     
-C***********************************************************************
-C  TELEMAC 2D VERSION 5.7    28/07/2006                        Chun WANG 
-C    
-C***********************************************************************
-C
-C      FONCTION:    Establish the coefficient matrice used for spectrum 
-C                   analysis. The theory employed here is the Least Mean 
-C                   Error Square method (refer to J. M. Janin et. al. 
-C                   Simulation Des Courants de Maree en Manche et Proche 
-C                   Atlantique,Page 27-28).
-C
-C      This subroutine was called by SPECTRE
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C !      NOM       !MODE!                   ROLE                       !
-C !________________!____!______________________________________________!
-C !   PERIAF       !--> !  period of waves.
-C !   AM           !<-->!  (2NPERIAF*2NPERIAF) coefficient matrix,  
-C !   NPERIAF      !--> !  number of waves
-C !   DT           !--> !  time interval.
-C !   M            !--> !  number of sampling points
-C !   W            !<-- !  Circular frequence.
-C !________________!____!_______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------     
-C
+!                    ******************
+                     SUBROUTINE COEFMAT
+!                    ******************
+!
+     &(PERIAF,DT,M,AM,NPERIAF)
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    ESTABLISHES THE COEFFICIENT MATRICE USED FOR SPECTRUM
+!+                ANALYSIS. THE THEORY EMPLOYED HERE IS THE LEAST MEAN
+!+                SQUARE ERROR METHOD.
+!
+!reference  "SIMULATION DES COURANTS DE MAREE EN MANCHE ET PROCHE ATLANTIQUE",
+!+                       EDF REPORT, J. M. JANIN ET. AL., PP 27-28.
+!
+!history  CHUN WANG
+!+        28/07/2006
+!+        V5P7
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| AM             |<->| (2NPERIAF*2NPERIAF) COEFFICIENT MATRIX,
+!| DT             |-->| TIME INTERVAL.
+!| M              |-->| NUMBER OF SAMPLING POINTS
+!| NPERIAF        |-->| NUMBER OF WAVES
+!| PERIAF         |-->| PERIOD OF WAVES.
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-      INTEGER LNG,LU             
+      INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER,          INTENT(IN   ) :: NPERIAF,M
       DOUBLE PRECISION, INTENT(IN   ) :: DT,PERIAF(NPERIAF)
       DOUBLE PRECISION, INTENT(INOUT) :: AM(2*NPERIAF,2*NPERIAF)
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-C                        500>NPERIAF
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+!                        500>NPERIAF
       DOUBLE PRECISION W(500),PI
       DOUBLE PRECISION A,B,C,D,AA,BB
       INTEGER I,J
-C
+!
       INTRINSIC COS,SIN,ACOS
-C
-C-----------------------------------------------------------------------     
-C
+!
+!-----------------------------------------------------------------------
+!
       PI = ACOS(-1.D0)
-C
+!
       DO I = 1, NPERIAF
         W(I)=2.D0*PI/PERIAF(I)
       ENDDO
-C      
+!
       DO I = 1, NPERIAF
          DO J = 1, NPERIAF
             AA = (W(I)+W(J))*DT
@@ -68,18 +76,18 @@ C
             IF(I.EQ.J) THEN
               B = M*1.D0
               D = 0.D0
-            ELSE   
-              B = (-1+COS(BB)+COS(M*BB)-COS((M+1)*BB))/(2-2*COS(BB))            
+            ELSE
+              B = (-1+COS(BB)+COS(M*BB)-COS((M+1)*BB))/(2-2*COS(BB))
               D = (SIN(BB)+SIN(M*BB)-SIN((M+1)*BB))/(2-2*COS(BB))
-            ENDIF   
+            ENDIF
             AM(I,J) = (A+B)/(2*M)
             AM(I,NPERIAF+J) = (C-D)/(2*M)
             AM(I+NPERIAF,J) = (C+D)/(2*M)
             AM(I+NPERIAF,NPERIAF+J) = (B-A)/(2*M)
          ENDDO
-      ENDDO         
-C
-C-----------------------------------------------------------------------     
-C
+      ENDDO
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

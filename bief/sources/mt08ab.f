@@ -1,125 +1,137 @@
-C                       *****************
-                        SUBROUTINE MT08AB
-C                       *****************
-C
-     *(  A11 , A12 , A13 , A14 ,
-     *   A21 , A22 , A23 , A24 ,
-     *   A31 , A32 , A33 , A34 ,
-     *   XMUL,SF,F,XEL,YEL,IKLE1,IKLE2,IKLE3,IKLE4,
-     *   NELEM,NELMAX,ICOORD)
-C
-C***********************************************************************
-C BIEF VERSION 5.1           09/12/94    J-M HERVOUET (LNH) 30 87 80 18
-C                                          C MOULIN   (LNH) 30 87 83 81
-C***********************************************************************
-C
-C  FONCTION : CALCUL DES COEFFICIENTS DE LA MATRICE SUIVANTE
-C
-C  EXEMPLE AVEC ICOORD = 1
-C
-C                  /                     D
-C A(I,J)= -XMUL   /  PSI2(J) *    F    * --( PSI1(I) ) D(OMEGA)
-C                /OMEGA                  DX
-C
-C  ATTENTION AU SIGNE MOINS !!
-C
-C  AVEC ICOORD=2 ON AURAIT UNE DERIVEE SUIVANT Y
-C
-C  PSI1 : BASES DE TYPE TRIANGLE P1
-C  PSI2 : BASES DE TYPE TRIANGLE QUASI-BULLE
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |     A11,A12... |<-- |  ELEMENTS DE LA MATRICE
-C |     XMUL       | -->|  FACTEUR MULTIPLICATIF
-C |     SF,SG,SH   | -->|  STRUCTURES DE F,G ET H.
-C |     SU,SV,SW   | -->|  STRUCTURES DE U,V ET W.
-C |     F,G,H      | -->|  FONCTIONS INTERVENANT DANS LE CALCUL DE LA
-C |                |    |  MATRICE.
-C |     U,V,W      | -->|  COMPOSANTES D'UN VECTEUR INTERVENANT DANS LE
-C |                |    |  CALCUL DE LA MATRICE.
-C |     XEL,YEL,ZEL| -->|  COORDONNEES DES POINTS DANS L'ELEMENT
-C |     SURFAC     | -->|  SURFACE DES TRIANGLES.
-C |     IKLE1..3   | -->|  PASSAGE DE LA NUMEROTATION LOCALE A GLOBALE
-C |     NELEM      | -->|  NOMBRE D'ELEMENTS DU MAILLAGE
-C |     NELMAX     | -->|  NOMBRE MAXIMUM D'ELEMENTS DU MAILLAGE
-C |                |    |  (CAS D'UN MAILLAGE ADAPTATIF)
-C |     ICOORD     | -->|  1: DERIVEE SUIVANT X, 2:SUIVANT Y
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES : ASSVEC , OV
-C
-C-----------------------------------------------------------------------
-C     -------------
-C     | ATTENTION | : LE JACOBIEN DOIT ETRE POSITIF .
-C     -------------
-C**********************************************************************
-C
+!                    *****************
+                     SUBROUTINE MT08AB
+!                    *****************
+!
+     &(  A11 , A12 , A13 , A14 ,
+     &   A21 , A22 , A23 , A24 ,
+     &   A31 , A32 , A33 , A34 ,
+     &   XMUL,SF,F,XEL,YEL,IKLE1,IKLE2,IKLE3,IKLE4,
+     &   NELEM,NELMAX,ICOORD)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    COMPUTES THE COEFFICIENTS OF THE FOLLOWING MATRIX:
+!code
+!+  EXAMPLE WITH ICOORD = 1
+!+
+!+                   /                     D
+!+  A(I,J)= -XMUL   /  PSI2(J) *    F    * --( PSI1(I) ) D(OMEGA)
+!+                 /OMEGA                  DX
+!+
+!+  BEWARE THE MINUS SIGN !!
+!+
+!+  PSI1: BASES OF TYPE P1 TRIANGLE
+!+  PSI2: BASES OF TYPE QUASI-BUBBLE TRIANGLE
+!+
+!+  IT WOULD BE A DERIVATIVE WRT Y WITH ICOORD=2
+!
+!warning  THE JACOBIAN MUST BE POSITIVE
+!
+!history  J-M HERVOUET (LNH)    ; C MOULIN (LNH)
+!+        09/12/94
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| A11            |<--| ELEMENTS OF MATRIX
+!| A12            |<--| ELEMENTS OF MATRIX
+!| A13            |<--| ELEMENTS OF MATRIX
+!| A14            |<--| ELEMENTS OF MATRIX
+!| A21            |<--| ELEMENTS OF MATRIX
+!| A22            |<--| ELEMENTS OF MATRIX
+!| A23            |<--| ELEMENTS OF MATRIX
+!| A24            |<--| ELEMENTS OF MATRIX
+!| A31            |<--| ELEMENTS OF MATRIX
+!| A32            |<--| ELEMENTS OF MATRIX
+!| A33            |<--| ELEMENTS OF MATRIX
+!| A34            |<--| ELEMENTS OF MATRIX
+!| F              |-->| FUNCTION USED IN THE FORMULA
+!| ICOORD         |-->| 1: DERIVATIVE ALONG X, 2: ALONG Y
+!| IKLE1          |-->| FIRST POINTS OF TRIANGLES
+!| IKLE2          |-->| SECOND POINTS OF TRIANGLES
+!| IKLE3          |-->| THIRD POINTS OF TRIANGLES
+!| NELEM          |-->| NUMBER OF ELEMENTS
+!| NELMAX         |-->| MAXIMUM NUMBER OF ELEMENTS
+!| SF             |-->| STRUCTURE OF FUNCTIONS F
+!| XEL            |-->| ABSCISSAE OF POINTS IN THE MESH, PER ELEMENT
+!| YEL            |-->| ORDINATES OF POINTS IN THE MESH, PER ELEMENT
+!| XMUL           |-->| MULTIPLICATION FACTOR
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_MT08AB => MT08AB
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN) :: NELEM,NELMAX,ICOORD
       INTEGER, INTENT(IN) :: IKLE1(NELMAX),IKLE2(NELMAX)
       INTEGER, INTENT(IN) :: IKLE3(NELMAX),IKLE4(NELMAX)
-C
+!
       DOUBLE PRECISION, INTENT(INOUT) :: A11(*),A12(*),A13(*),A14(*)
       DOUBLE PRECISION, INTENT(INOUT) :: A21(*),A22(*),A23(*),A24(*)
       DOUBLE PRECISION, INTENT(INOUT) :: A31(*),A32(*),A33(*),A34(*)
-C
+!
       DOUBLE PRECISION, INTENT(IN) :: XMUL
       DOUBLE PRECISION, INTENT(IN) :: F(*)
-C
-C     STRUCTURE DE F
+!
+!     STRUCTURE OF F
       TYPE(BIEF_OBJ), INTENT(IN) :: SF
-C
-      DOUBLE PRECISION, INTENT(IN) :: XEL(NELMAX,3),YEL(NELMAX,3)     
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+      DOUBLE PRECISION, INTENT(IN) :: XEL(NELMAX,3),YEL(NELMAX,3)
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER IELEM,IELMF
       DOUBLE PRECISION X2,X3,Y2,Y3,F1,F2,F3,F4
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IELMF=SF%ELM
-C
-C-----------------------------------------------------------------------
-C  CAS OU F EST DE DISCRETISATION P1
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!  CASE WHERE F IS OF P1 DISCRETISATION
+!-----------------------------------------------------------------------
+!
       IF(IELMF.EQ.11) THEN
-C
-C================================
-C  CAS DE LA DERIVEE SUIVANT X  =
-C================================
-C
+!
+!================================
+!  CASE OF DERIVATIVE WRT X =
+!================================
+!
         IF(ICOORD.EQ.1) THEN
-C
-C   BOUCLE SUR LES ELEMENTS
-C
+!
+!   LOOP ON THE ELEMENTS
+!
         DO 1 IELEM = 1 , NELEM
-C
-C   INITIALISATION DES VARIABLES GEOMETRIQUES
-C
+!
+!   INITIALISES THE GEOMETRICAL VARIABLES
+!
         Y2 = YEL(IELEM,2)
         Y3 = YEL(IELEM,3)
-C
+!
         F1  =  F(IKLE1(IELEM))
         F2  =  F(IKLE2(IELEM))
         F3  =  F(IKLE3(IELEM))
-C
-C   TERMES EXTRADIAGONAUX
-C
+!
+!   EXTRADIAGONAL TERMS
+!
         A12(IELEM) = (Y3-Y2)*(5*F3+14*F2+5*F1)*XMUL/216
         A13(IELEM) = (Y3-Y2)*(14*F3+5*F2+5*F1)*XMUL/216
         A14(IELEM) = (Y3-Y2)*(F3+F2+F1)*XMUL/18
@@ -129,35 +141,35 @@ C
         A31(IELEM) =  Y2*(5*F3+5*F2+14*F1)*XMUL/216
         A32(IELEM) =  Y2*(5*F3+14*F2+5*F1)*XMUL/216
         A34(IELEM) =  Y2*(F3+F2+F1)*XMUL/18
-C
-C   TERMES DIAGONAUX
-C   LA SOMME DES LIGNES DE LA MATRICE EST LE VECTEUR NUL
-C
+!
+!   DIAGONAL TERMS
+!   (SUM OF EACH LINE IN THE MATRIX IS 0)
+!
         A11(IELEM) = - A21(IELEM) - A31(IELEM)
         A22(IELEM) = - A12(IELEM) - A32(IELEM)
         A33(IELEM) = - A13(IELEM) - A23(IELEM)
-C
+!
 1     CONTINUE
-C
+!
         ELSEIF(ICOORD.EQ.2) THEN
-C
-C================================
-C  CAS DE LA DERIVEE SUIVANT Y  =
-C================================
-C
+!
+!================================
+!  CASE OF DERIVATIVE WRT Y =
+!================================
+!
         DO 2 IELEM = 1 , NELEM
-C
-C   INITIALISATION DES VARIABLES GEOMETRIQUES
-C
+!
+!   INITIALISES THE GEOMETRICAL VARIABLES
+!
         X2  =  XEL(IELEM,2)
         X3  =  XEL(IELEM,3)
-C
+!
         F1  =  F(IKLE1(IELEM))
         F2  =  F(IKLE2(IELEM))
         F3  =  F(IKLE3(IELEM))
-C
-C   TERMES EXTRADIAGONAUX
-C
+!
+!   EXTRADIAGONAL TERMS
+!
         A12(IELEM) = (X2-X3)*(5*F3+14*F2+5*F1)*XMUL/216
         A13(IELEM) = (X2-X3)*(14*F3+5*F2+5*F1)*XMUL/216
         A14(IELEM) = (X2-X3)*(F3+F2+F1)*XMUL/18
@@ -167,53 +179,53 @@ C
         A31(IELEM) = -X2*(5*F3+5*F2+14*F1)*XMUL/216
         A32(IELEM) = -X2*(5*F3+14*F2+5*F1)*XMUL/216
         A34(IELEM) = -X2*(F3+F2+F1)*XMUL/18
-C
-C   TERMES DIAGONAUX
-C   LA SOMME DES LIGNES DE LA MATRICE EST LE VECTEUR NUL
-C
+!
+!   DIAGONAL TERMS
+!   (SUM OF EACH LINE IN THE MATRIX IS 0)
+!
         A11(IELEM) = - A21(IELEM) - A31(IELEM)
         A22(IELEM) = - A12(IELEM) - A32(IELEM)
         A33(IELEM) = - A13(IELEM) - A23(IELEM)
-C
+!
 2       CONTINUE
-C
+!
         ELSE
-C
+!
           IF (LNG.EQ.1) WRITE(LU,200) ICOORD
           IF (LNG.EQ.2) WRITE(LU,201) ICOORD
           CALL PLANTE(0)
           STOP
         ENDIF
-C
-C
-C-----------------------------------------------------------------------
-C  CAS OU F EST DE DISCRETISATION QUASI-BULLE
-C-----------------------------------------------------------------------
-C
+!
+!
+!-----------------------------------------------------------------------
+!  CASE WHERE F IS OF QUASI-BUBBLE DISCRETISATION
+!-----------------------------------------------------------------------
+!
       ELSEIF(IELMF.EQ.12) THEN
-C
-C================================
-C  CAS DE LA DERIVEE SUIVANT X  =
-C================================
-C
+!
+!================================
+!  CASE OF DERIVATIVE WRT X =
+!================================
+!
         IF(ICOORD.EQ.1) THEN
-C
-C   BOUCLE SUR LES ELEMENTS
-C
+!
+!   LOOP ON THE ELEMENTS
+!
         DO 3 IELEM = 1 , NELEM
-C
-C   INITIALISATION DES VARIABLES GEOMETRIQUES
-C
+!
+!   INITIALISES THE GEOMETRICAL VARIABLES
+!
         Y2 = YEL(IELEM,2)
         Y3 = YEL(IELEM,3)
-C
+!
         F1  =  F(IKLE1(IELEM))
         F2  =  F(IKLE2(IELEM))
         F3  =  F(IKLE3(IELEM))
         F4  =  F(IKLE4(IELEM))
-C
-C   TERMES EXTRADIAGONAUX
-C
+!
+!   EXTRADIAGONAL TERMS
+!
         A12(IELEM) = (F3+2*F4+4*F2+F1)*(Y3-Y2)*XMUL/72
         A13(IELEM) = (4*F3+2*F4+F2+F1)*(Y3-Y2)*XMUL/72
         A14(IELEM) = (F3+3*F4+F2+F1)*(Y3-Y2)*XMUL/36
@@ -223,36 +235,36 @@ C
         A31(IELEM) =  Y2*(F3+2*F4+F2+4*F1)*XMUL/72
         A32(IELEM) =  Y2*(F3+2*F4+4*F2+F1)*XMUL/72
         A34(IELEM) =  Y2*(F3+3*F4+F2+F1)*XMUL/36
-C
-C   TERMES DIAGONAUX
-C   LA SOMME DES LIGNES DE LA MATRICE EST LE VECTEUR NUL
-C
+!
+!   DIAGONAL TERMS
+!   (SUM OF EACH LINE IN THE MATRIX IS 0)
+!
         A11(IELEM) = - A21(IELEM) - A31(IELEM)
         A22(IELEM) = - A12(IELEM) - A32(IELEM)
         A33(IELEM) = - A13(IELEM) - A23(IELEM)
-C
+!
 3       CONTINUE
-C
+!
         ELSEIF(ICOORD.EQ.2) THEN
-C
-C================================
-C  CAS DE LA DERIVEE SUIVANT Y  =
-C================================
-C
+!
+!================================
+!  CASE OF DERIVATIVE WRT Y =
+!================================
+!
         DO 4 IELEM = 1 , NELEM
-C
-C   INITIALISATION DES VARIABLES GEOMETRIQUES
-C
+!
+!   INITIALISES THE GEOMETRICAL VARIABLES
+!
         X2  =  XEL(IELEM,2)
         X3  =  XEL(IELEM,3)
-C
+!
         F1  =  F(IKLE1(IELEM))
         F2  =  F(IKLE2(IELEM))
         F3  =  F(IKLE3(IELEM))
         F4  =  F(IKLE4(IELEM))
-C
-C   TERMES EXTRADIAGONAUX
-C
+!
+!   EXTRADIAGONAL TERMS
+!
         A12(IELEM) = (X2-X3)*(F3+2*F4+4*F2+F1)*XMUL/72
         A13(IELEM) = (X2-X3)*(4*F3+2*F4+F2+F1)*XMUL/72
         A14(IELEM) = (X2-X3)*(F3+3*F4+F2+F1)*XMUL/36
@@ -262,45 +274,43 @@ C
         A31(IELEM) = -X2*(F3+2*F4+F2+4*F1)*XMUL/72
         A32(IELEM) = -X2*(F3+2*F4+4*F2+F1)*XMUL/72
         A34(IELEM) = -X2*(F3+3*F4+F2+F1)*XMUL/36
-C
-C   TERMES DIAGONAUX
-C   LA SOMME DES LIGNES DE LA MATRICE EST LE VECTEUR NUL
-C
+!
+!   DIAGONAL TERMS
+!   (SUM OF EACH LINE IN THE MATRIX IS 0)
+!
         A11(IELEM) = - A21(IELEM) - A31(IELEM)
         A22(IELEM) = - A12(IELEM) - A32(IELEM)
         A33(IELEM) = - A13(IELEM) - A23(IELEM)
-C
+!
 4       CONTINUE
-C
+!
         ELSE
-C
+!
           IF (LNG.EQ.1) WRITE(LU,200) ICOORD
           IF (LNG.EQ.2) WRITE(LU,201) ICOORD
           CALL PLANTE(1)
           STOP
         ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       ELSE
        IF (LNG.EQ.1) WRITE(LU,100) IELMF
        IF (LNG.EQ.2) WRITE(LU,101) IELMF
 100    FORMAT(1X,'MT08AB (BIEF) :',/,
-     *        1X,'DISCRETISATION DE F : ',1I6,' NON PREVUE')
+     &        1X,'DISCRETISATION DE F : ',1I6,' NON PREVUE')
 101    FORMAT(1X,'MT08AB (BIEF) :',/,
-     *        1X,'DISCRETIZATION OF F : ',1I6,' NOT AVAILABLE')
+     &        1X,'DISCRETIZATION OF F : ',1I6,' NOT AVAILABLE')
        CALL PLANTE(1)
        STOP
       ENDIF
-C
+!
 200       FORMAT(1X,'MT08AB (BIEF) : COMPOSANTE IMPOSSIBLE ',
-     *              1I6,' VERIFIER ICOORD')
+     &              1I6,' VERIFIER ICOORD')
 201       FORMAT(1X,'MT08AB (BIEF) : IMPOSSIBLE COMPONENT ',
-     *              1I6,' CHECK ICOORD')
-C
-C-----------------------------------------------------------------------
-C
+     &              1I6,' CHECK ICOORD')
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-      END  
- 
- 
+      END

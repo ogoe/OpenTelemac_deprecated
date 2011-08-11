@@ -1,59 +1,64 @@
-C                       *****************
-                        SUBROUTINE CHPCON
-C                       *****************
-C
-     *(UCONV,VCONV,U,V,UN,VN,TETAU)
-C
-C***********************************************************************
-C  TELEMAC 2D VERSION 5.2    17/08/94    J-M HERVOUET (LNH) 30 87 80 18
-C
-C***********************************************************************
-C
-C     FONCTION  :  CALCUL DU CHAMP CONVECTEUR UCONV,VCONV
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |   UCONV,VCONV  | -->| COMPOSANTES DU CHAMP CONVECTEUR.             |
-C |   U,V          | -->| COMPOSANTES DE LA VITESSE.                   |
-C |   UN,VN        | -->| COMPOSANTES DE LA VITESSE A L'ETAPE N.       |
-C |   TETAU        | -->| IMPLICITATION SUR U.                         |
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : TELMAC
-C
-C SOUS-PROGRAMME APPELE : OV
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE CHPCON
+!                    *****************
+!
+     &(UCONV,VCONV,U,V,UN,VN,TETAU)
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    COMPUTES THE ADVECTION VECTOR FIELD UCONV,VCONV.
+!
+!history  J-M HERVOUET (LNH)
+!+        17/08/1994
+!+        V5P2
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| TETAU          |-->| IMPLICITATION COEFFICIENT ON VELOCITY
+!| U              |-->| X-COMPONENT OF VELOCITY AT TIME N+1
+!| V              |-->| Y-COMPONENT OF VELOCITY AT TIME N+1
+!| UCONV          |-->| X-COMPONENT OF ADVECTION FIELD
+!| VCONV          |-->| Y-COMPONENT OF ADVECTION FIELD
+!| UN             |-->| X-COMPONENT OF VELOCITY AT TIME N
+!| VN             |-->| Y-COMPONENT OF VELOCITY AT TIME N
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C    
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       DOUBLE PRECISION, INTENT(IN)  :: TETAU
       TYPE(BIEF_OBJ), INTENT(IN)    :: U,UN,V,VN
       TYPE(BIEF_OBJ), INTENT(INOUT) :: UCONV,VCONV
-C    
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-C  FABRICATION DES CONVECTEURS UCONV ET VCONV
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+!     CREATES CONVECTION ARRAYS UCONV AND VCONV
+!
       CALL OS( 'X=CY    ' , UCONV , UN , U , 1.D0-TETAU )
       CALL OS( 'X=X+CY  ' , UCONV , U  , U ,      TETAU )
       CALL OS( 'X=CY    ' , VCONV , VN , U , 1.D0-TETAU )
       CALL OS( 'X=X+CY  ' , VCONV , V  , U ,      TETAU )
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END
- 

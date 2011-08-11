@@ -1,94 +1,101 @@
-C                       *****************
-                        SUBROUTINE DIRALE
-C                       *****************
-C
-     *(DALE,EXPOS,TETAH,TETMIN,TETMAX,NDALE,TRA01,NPOIN,PRIVE,NPRIV)
-C
-C***********************************************************************
-C
-C  ARTEMIS VERSION 5.1   02/06/99    D. AELBRECHT (LNH) 01 30 87 74 12
-C
-C  LINKED TO BIEF VERS. 5.0          J-M HERVOUET (LNH) 01 30 87 80 18
-C
-C***********************************************************************
-C
-C      FONCTION:    DISCRETISE UN SPECTRE D'ENERGIE DIRECTIONNEL EN
-C                   EN NDALE BANDES D'EGALE ENERGIE. LE RESULTAT
-C                   EST LA DONNEE DES DIRECTIONS CHACUNE DES BANDES.
-C
-C      ON UTILISE LA FORMULE DONNEE PAR GODA DANS 'RANDOM SEAS AND
-C      DESIGN OF MARITIME STRUCTURES' - UNIVERSITY OF TOKYO PRESS
-C
-C      G = ( COS( (TETA-TETAH))/2 ) )**EXPOS
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |   DALE         |<-- |  DIRECTIONS DE DISCRETISATION DU SPECTRE     |
-C |   EXPOS        | -->|  COEFFICIENT DANS LA FORMULE DU SPECTRE      |
-C |   TETAH        | -->|  DIRECTION PRINCIPALE DE PROPAGATION         |
-C |   TETMIN       | -->|  VALEUR MINIMUM DE L'ANGLE DE PROPAGATION    |
-C |   TETMAX       | -->|  VALEUR MAXIMUM DE L'ANGLE DE PROPAGATION    |
-C |   NDALE        | -->|  NOMBRE DE BANDES DE DISCRETISATION          |
-C |   TRA01        |<-->|  TABLEAU DE TRAVAIL                          |
-C |   NPOIN        | -->|  NOMBRE DE POINTS DU MAILLAGE                |
-C |   PRIVE        |<-->|  TABLEAU PRIVE DE L'UTILISATEUR              |
-C |   NPRIV        |<-->|  NOMBRE DE TABLEAUX PRIVES                   |
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : ARTEMI
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE DIRALE
+!                    *****************
+!
+     &(DALE,EXPOS,TETAH,TETMIN,TETMAX,NDALE,TRA01,NPOIN,PRIVE,NPRIV)
+!
+!***********************************************************************
+! ARTEMIS   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    DISCRETISES A DIRECTIONAL ENERGY SPECTRUM IN
+!+                NDALE BANDS OF EQUAL ENERGY. THE RESULT IS A
+!+                LIST OF DIRECTIONS CORRESPONDING TO EACH BAND.
+!+
+!+      USES THE FORMULATION GIVEN BY GODA IN ' RANDOM SEAS AND
+!+      DESIGN OF MARITIME STRUCTURES' - UNIVERSITY OF TOKYO PRESS
+!+
+!+      G = ( COS( (TETA-TETAH))/2 ) )**EXPOS
+!
+!history  J-M HERVOUET (LNH)
+!+
+!+
+!+   LINKED TO BIEF 5.0
+!
+!history  D. AELBRECHT (LNH)
+!+        02/06/1999
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| DALE           |<--| DIRECTIONS FOR SPECTRUM DISCRETISATION
+!| EXPOS          |-->| COEFFICIENT FOR THE SPECTRUM FORMULA
+!| NDALE          |-->| NUMBER OF DISCRETISATION BAND
+!| NPOIN          |-->| NUMBER OF POINTS
+!| NPRIV          |<->| NUMBER OF PRIVATE TABLES
+!| PRIVE          |<->| PRIVATE TABLE
+!| TETAH          |-->| MAIN DIRECTION OF THE PROPAGATION
+!| TETMAX         |-->| MAXIMUM VALUE FOR THE PROPAGATION ANGLE
+!| TETMIN         |-->| MAXIMUM VALUE FOR THE PROPAGATION ANGLE
+!| TRA01          |<->| WORK STRUCTURE
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
-      USE INTERFACE_ARTEMIS, EX_DIRALE => DIRALE 
-C
+      USE INTERFACE_ARTEMIS, EX_DIRALE => DIRALE
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
+!
       INTEGER NDALE,NPOIN,NPAS,I,K,NPRIV
-C
+!
       DOUBLE PRECISION DALE(NDALE),TRA01(NPOIN)
       DOUBLE PRECISION EXPOS,TETMIN,TETMAX,TETAH,DTETA,SUMB,VAR,SUMICI
-C
+!
       TYPE(BIEF_OBJ) :: PRIVE
-C
+!
       DOUBLE PRECISION EXPO
       COMMON /COEFHD/ EXPO
-C
-c      DOUBLE PRECISION SPD
-c      EXTERNAL SPD
-C
-C-----------------------------------------------------------------------
-C
-C ON PASSE EXPOS PAR COMMON DANS LA FONCTION SPD (ON NE PEUT PAS
-C L'APPELER EXPOS CAR C'EST ICI UN ARGUMENT DU SOUS-PROGRAMME)
+!
+!      DOUBLE PRECISION SPD
+!      EXTERNAL SPD
+!
+!-----------------------------------------------------------------------
+!
+! EXPOS IS IN THE COMMON STATEMENT OF FUNCTION SPD (CANNOT BE
+! CALLED EXPOS BECAUSE IT IS AN ARGUMENT OF THIS SUBROUTINE)
       EXPO = EXPOS
-C
-C-----------------------------------------------------------------------
-C
-C     NOMBRE D'INTERVALLES D'INTEGRATION POUR LA METHODE DES TRAPEZES
+!
+!-----------------------------------------------------------------------
+!
+!     NUMBER OF INTEGRATION INTERVALS FOR THE TRAPEZOIDS METHOD
       NPAS = 2000*NDALE
-C
-C     LONGUEUR D'UN INTERVALLE D'INTEGRATION
+!
+!     WIDTH OF AN INTEGRATION INTERVAL
       DTETA = (TETMAX-TETMIN)/FLOAT(NPAS)
-C
-C     SURFACE DU SPECTRE
+!
+!     SURFACE OF THE SPECTRUM
       SUMB = (SPD(TETMIN-TETAH) + SPD(TETMAX-TETAH))/2.D0
       DO 20 I = 2,NPAS-1
          SUMB = SUMB + SPD(TETMIN-TETAH+FLOAT(I)*DTETA)
 20    CONTINUE
-C
-C     ON DIVISE EN 2*NDALE BANDES D'EGALES ENERGIES
+!
+!     DIVIDES THE SPECTRUM INTO 2*NDALE BANDS OF EQUAL ENERGY
       SUMB = SUMB/FLOAT(2*NDALE)
-C
-C     ON RECHERCHE LES ANGLES TOUS LES (2*I-1)*SUMB (I=1,NDALE)
+!
+!     IDENTIFIES THE ANGLES EVERY (2*I-1)*SUMB (I=1,NDALE)
       SUMICI = SPD(TETMIN-TETAH)/2.D0
       I   = 1
       DO 30 K=1,NPAS
@@ -101,8 +108,8 @@ C     ON RECHERCHE LES ANGLES TOUS LES (2*I-1)*SUMB (I=1,NDALE)
          ENDIF
          SUMICI = SUMICI + VAR/2.D0
 30    CONTINUE
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

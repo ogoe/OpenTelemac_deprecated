@@ -1,119 +1,98 @@
-                        LOGICAL FUNCTION LOGLU
-C                       **********************
-C
-     *( ICOL , LIGNE )
-C
-C***********************************************************************
-C DAMOCLES VERSION 5.1     16/08/94   J.M. HERVOUET (LNH)   30 87 80 18
-C                                      A. YESSAYAN
-C                          15/12/93    O. QUIQUEMPOIX (LNH)  30 87 78 70
-C
-C Copyright EDF 1994
-C
-C
-C***********************************************************************
-C
-C FONCTION  : LIT UNE VALEUR LOGIQUE QUE L'ON A REPERE DANS LA LIGNE
-C             ET QUI COMMENCE A LA COLONNE ICOL+1.
-C             SI LA CHAINE N'EST PAS TERMINEE, RECHERCHE SUR LA LIGNE
-C             SUIVANTE.
-C             AVANCE LE POINTEUR ICOL SUR LE DERNIER CARACTERE DECODE.
-C             OU A ICOL=0 SI ON A LU LA LIGNE SUIVANTE
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C !      NOM       !MODE!                   ROLE                       !
-C !________________!____!______________________________________________!
-C !                !    !                                              !
-C !  ICOL          !<-->! POSITION COURANTE DU POINTEUR DANS LA LIGNE  !
-C !  LIGNE         !<-->! LIGNE EN COURS DE DECODAGE                   !
-C !________________!____!______________________________________________!
-C !                !    !                                              !
-C !   /COMMON/     !    !                                              !
-C !                !    !                                              !
-C !    DCINFO      !    !                                              !
-C !  . LNG         ! -->! NUMERO DE LA LANGUE DE DECODAGE              !
-C !  . LU          ! -->! NUMERO DE L'UNITE LOGIQUE DES SORTIES        !
-C !                !    !                                              !
-C !    DCMLIG      !    !                                              !
-C !  . NLIGN       !<-->! NUMERO DE LA LIGNE TRAITEE DANS LE FICHIER LU!
-C !  . LONGLI      ! -->! LONGUEUR DES LIGNES                          !
-C !                !    !                                              !
-C !    DCRARE      !    !                                              !
-C !  . ERREUR      !<-->! SORT AVEC LA VALEUR .TRUE. EN CAS D'ERREUR   !
-C !  . RETOUR      !<-->! SORT AVEC LA VALEUR .TRUE. EN CAS DE FIN DE  !
-C !                !    ! FIN DE FICHIER OU D'ERREUR DE LECTURE.       !
-C !                !    !                                              !
-C !    DCCHIE      !    !                                              !
-C !  . NFIC        ! -->! NUMERO DE CANAL DU FICHIER EN COURS DE LECT. !
-C !________________!____!______________________________________________!
-C
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C     - PRECAUTIONS D'EMPLOI :    LES NOTATIONS ACCEPTEES SONT
-C                                 VRAI OUI TRUE  YES .TRUE.  1
-C                                 FAUX NON FALSE NO  .FALSE. 0
-C                                 (EN MAJUSCULES OU MINUSCULES)
-C
-C     - PORTABILITE :             IBM,CRAY,HP,SUN
-C
-C     - APPELE PAR :              DAMOC
-C
-C     - SOUS PROGRAMMES APPELES : MAJUS
-C
-C     - FONCTIONS APPELEES :      NEXT,PRECAR
-C
-C***********************************************************************
-C
+!                    **********************
+                     LOGICAL FUNCTION LOGLU
+!                    **********************
+!
+     &( ICOL , LIGNE )
+!
+!***********************************************************************
+! DAMOCLES   V6P0                                   21/08/2010
+!***********************************************************************
+!
+!brief    DECODES A LOGICAL VALUE, FROM COLUMN ICOL+1 OF THE LINE.
+!+             IF THE STRING IS NOT COMPLETE, GOES TO THE NEXT LINE
+!+             IF NEED BE.
+!+             MOVES THE POINTER ICOL TO THE LAST DECODED CHARACTER.
+!+             OR TO ICOL=0 IF THE NEXT LINE WAS READ.
+!
+!note     PORTABILITY : IBM,CRAY,HP,SUN
+!
+!warning  ACCEPTED VALUES ARE (UPPER OR LOWER CASE):
+!+            VRAI OUI TRUE  YES .TRUE.  1
+!+            FAUX NON FALSE NO  .FALSE. 0
+!
+!history  O. QUIQUEMPOIX (LNH)
+!+        15/12/1993
+!+
+!+
+!
+!history  J.M. HERVOUET (LNH); A. YESSAYAN
+!+        16/08/1994
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| ICOL           |<->| POSITION COURANTE DU POINTEUR DANS LA LIGNE
+!| LIGNE          |<->| LIGNE EN COURS DE DECODAGE
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
+!
       INTEGER       ICOL
       CHARACTER*(*) LIGNE
-C
+!
       INTEGER  NEXT,PRECAR
       EXTERNAL NEXT,PRECAR
-C
+!
       INTEGER       LNG,LU
       INTEGER       NLIGN,LONGLI
       INTEGER       NFIC
       LOGICAL       ERREUR,RETOUR
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       INTEGER       I1,I2
       CHARACTER*1   TABUL
       CHARACTER*7   L
       CHARACTER*72  LIGNE2
       LOGICAL       LUFIC,LISUIV
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       COMMON / DCINFO / LNG,LU
       COMMON / DCRARE / ERREUR , RETOUR
       COMMON / DCMLIG / NLIGN , LONGLI
       COMMON / DCCHIE / NFIC
-C
+!
       INTRINSIC CHAR
-C
-C***********************************************************************
-C                                    MARQUAGE RCS ET SCCS
-C
-C***********************************************************************
-C
+!
+!***********************************************************************
+!                                    RCS AND SCCS MARKING
+!
+!***********************************************************************
+!
       LUFIC  = .FALSE.
       LISUIV = .FALSE.
       LIGNE2 = ' '
       TABUL  = CHAR(9)
-C
+!
       I1     = NEXT( ICOL+1 , LIGNE )
       L(1:7) = LIGNE(I1:I1+6)
       I2 = PRECAR(I1,LIGNE,' ',';',TABUL)
-C
-C CAS OU ON POURRAIT AVOIR A LIRE LA LIGNE SUIVANTE
-C
+!
+! CASE WHERE MIGHT HAVE TO READ THE FOLLOWING LINE
+!
       IF (I2.GT.LONGLI.AND.(I1+6).GT.LONGLI) THEN
          LUFIC=.TRUE.
          READ(NFIC,END=900,ERR=998,FMT='(A)') LIGNE2
@@ -127,14 +106,14 @@ C
       ENDIF
       CALL MAJUS(L)
       GO TO 910
-C
+!
  900  CONTINUE
       RETOUR = .TRUE.
-C
+!
  910  CONTINUE
-C
-C ORDONNER DANS L'ORDRE LE PLUS PROBABLE : SOUVENT NON OUI NO YES 0 1 ..
-C
+!
+! ORDERED IN THE MOST PROBABLE ORDER: NON OUI NO YES 0 1 ...
+!
       IF (L(1:3).EQ.'NON') THEN
             LOGLU = .FALSE.
             ICOL = I1 + 2
@@ -172,28 +151,28 @@ C
             LOGLU = .TRUE.
             ICOL = I1 + 3
       ELSE
-C
-C     ERREUR : CA N'EST PAS UNE VALEUR LOGIQUE
-C
+!
+!     ERROR: NOT A LOGICAL VALUE
+!
             ERREUR = .TRUE.
             WRITE(LU,'(1X,A)') LIGNE(1:LONGLI)
             IF (LUFIC) WRITE(LU,'(1X,A)') LIGNE2(1:LONGLI)
             WRITE(LU,*) ' '
             IF(LNG.EQ.1) THEN
               WRITE(LU,'(1X,A6,I4,A)') 'LOGLU (UTILE) : LIGNE: ',NLIGN,
-     *                                 ' ERREUR, LOGIQUE MAL CODE'
+     &                                 ' ERREUR, LOGIQUE MAL CODE'
             ENDIF
             IF(LNG.EQ.2) THEN
               WRITE(LU,'(1X,A6,I4,A)') 'LOGLU (UTILE) : LINE: ',NLIGN,
-     *                                 ' WRONG LOGICAL VALUE'
+     &                                 ' WRONG LOGICAL VALUE'
             ENDIF
             LOGLU = .FALSE.
             GO TO 1000
-C
+!
       ENDIF
-C
-C        //// MISE A JOUR DU POINTEUR ////
-C
+!
+!     //// UPDATES THE POINTER ////
+!
       IF (LUFIC) THEN
         NLIGN = NLIGN + 1
         LIGNE = LIGNE2
@@ -206,13 +185,13 @@ C
       ELSE
         ICOL = I2 - 1
       ENDIF
-C
+!
 1000  CONTINUE
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-C
+!
 998   CONTINUE
       IF(LNG.EQ.1) WRITE(6,999) NFIC,NLIGN+1
       IF(LNG.EQ.2) WRITE(6,1999) NFIC,NLIGN+1
@@ -221,4 +200,3 @@ C
       RETOUR = .TRUE.
       RETURN
       END
- 

@@ -1,69 +1,74 @@
-C                       *****************
-                        SUBROUTINE OSDBIF
-C                       *****************
-C
-     * ( OP , X , Y , INDIC , CRITER , MESH )
-C
-C***********************************************************************
-C BIEF VERSION 5.6        22/08/05    J-M HERVOUET (LNHE) 01 30 87 80 18
-C***********************************************************************
-C
-C  FONCTION : OPERATIONS CONDITIONNELLES SUR LES VECTEURS
-C
-C             X,Y ET Z DOIVENT ETRE DES STRUCTURES
-C
-C             ICI X EST UN VECTEUR DEFINI SUR LE DOMAINE
-C                 Y EST UN VECTEUR DE BORD
-C
-C             INDIC EST UN TABLEAU : PAS UNE STRUCTURE ||||||||
-C
-C  |||||||| : ICI L'OPERATION N'EST EFFECTUEE QUE SI LA CONDITION
-C             INDIC(K)=CRITERE POUR UN NUMERO K DE BORD.
-C
-C   OP EST UNE CHAINE DE 8 CARACTERES QUI INDIQUE L'OPERATION QUI SERA
-C   EFFECTUEE SUR LES VECTEURS X,Y ET Z ET LA CONSTANTE C. LE RESULTAT
-C   EST LE VECTEUR X.
-C
-C   OP = 'X=Y     '     :  Y COPIE DANS X
-C   OP = 'X=+Y    '     :  IDEM
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |      OP        | -->| CHAINE DE CARACTERES INDIQUANT L'OPERATION
-C |                |   >| A EFFECTUER.
-C |      X         |<-- | VECTEUR RESULTAT
-C |      Y         | -->| VECTEUR OPERANDE
-C |      INDIC     | -->| TABLEAU D'INDICATEURS.
-C |      CRITER    | -->| CRITERE POUR FAIRE L'OPERATION.
-C |      MESH      | -->| STRUCTURE DU MAILLAGE
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELANTS :
-C PROGRAMMES APPELES   : NEANT
-C
-C**********************************************************************
-C
+!                    *****************
+                     SUBROUTINE OSDBIF
+!                    *****************
+!
+     & ( OP , X , Y , INDIC , CRITER , MESH )
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    CONDITIONAL OPERATIONS ON VECTORS.
+!code
+!+   OP IS A STRING OF 8 CHARACTERS, WHICH INDICATES THE OPERATION TO BE
+!+   PERFORMED ON VECTORS X,Y AND Z AND CONSTANT C.
+!+
+!+   HERE X IS A VECTOR DEFINED IN THE DOMAIN.
+!+   Y IS A VECTOR DEFINED ON THE BOUNDARY.
+!+   X, Y AND Z MUST BE STRUCTURES.
+!+
+!+   INDIC IS AN ARRAY: NOT A STRUCTURE ||||||||
+!+
+!+   |||||||| : THE OPERATION IS ONLY PERFORMED IF THE CONDITION
+!+              INDIC(K)=CRITER IS MET FOR A BOUNDARY NODE K.
+!+
+!+   THE RESULT IS VECTOR X.
+!+
+!+   OP = 'X=Y     '     :  COPIES Y IN X
+!+   OP = 'X=+Y    '     :  IDEM
+!
+!history  J-M HERVOUET (LNHE)
+!+        22/08/05
+!+        V5P6
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CRITER         |-->| OPERATION DONE FOR I IF INDIC(I)=CRITER
+!| INDIC          |-->| INTEGER ARRAY WHERE TO LOOK FOR CRITER
+!| MESH           |-->| MESH STRUCTURE
+!| OP             |-->| OPERATION TO BE DONE (SEE ABOVE)
+!| X              |<--| RESULTING VECTOR
+!| Y              |-->| VECTOR USED IN OPERATION OP
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
+!
       TYPE(BIEF_OBJ) :: X,Y
       TYPE(BIEF_MESH) :: MESH
-C
+!
       INTEGER K,NPTFR,IELMX,IELMY
       INTEGER INDIC(*),CRITER
-C
+!
       CHARACTER*8 OP
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(X%TYPE.NE.2.OR.Y%TYPE.NE.2) THEN
         IF (LNG.EQ.1) WRITE(LU,100)
         IF (LNG.EQ.2) WRITE(LU,101)
@@ -72,16 +77,16 @@ C
         CALL PLANTE(1)
         STOP
       ENDIF
-C
+!
       IELMX = X%ELM
       IELMY = Y%ELM
 !
-! JP Renaud 18/08/2005
-! Modification for 3D meshes: the domain vector dimension is 3 
-! and the boundary vector dimension is 2. So the possible
-! combinations are: 
-!     -2D: dimesn(ielmx)==2 _and_ dimesn(ielmy)==1
-!     -3D: dimesn(ielmx)==3 _and_ dimesn(ielmy)==2
+! JP RENAUD 18/08/2005
+! MODIFICATION FOR 3D MESHES: THE DOMAIN VECTOR DIMENSION IS 3
+! AND THE BOUNDARY VECTOR DIMENSION IS 2. SO THE POSSIBLE
+! COMBINATIONS ARE:
+!     -2D: DIMESN(IELMX)==2 _AND_ DIMESN(IELMY)==1
+!     -3D: DIMESN(IELMX)==3 _AND_ DIMESN(IELMY)==2
 !
       IF( .NOT. (DIMENS(IELMX).EQ.3 .AND.DIMENS(IELMY).EQ.2 )
      &    .AND.
@@ -94,34 +99,34 @@ C
         CALL PLANTE(1)
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       NPTFR = Y%DIM1
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(OP(1:8).EQ.'X=Y     '.OR.
-     *   OP(1:8).EQ.'X=+Y    ') THEN
-C
+     &   OP(1:8).EQ.'X=+Y    ') THEN
+!
         DO K=1,NPTFR
           IF(INDIC(K).EQ.CRITER) X%R(MESH%NBOR%I(K)) = Y%R(K)
         ENDDO
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       ELSE
-C
+!
          IF (LNG.EQ.1) WRITE(LU,1000) OP
          IF (LNG.EQ.2) WRITE(LU,1001) OP
 1000     FORMAT(1X,'OSDBIF (BIEF) : OPERATION INCONNUE: ',A8)
 1001     FORMAT(1X,'OSDBIF (BIEF) : UNKNOWN OPERATION: ',A8)
          CALL PLANTE(1)
          STOP
-C
+!
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-      END 
+      END

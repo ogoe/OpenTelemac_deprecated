@@ -1,71 +1,80 @@
-C                       *****************
-                        SUBROUTINE INIPHY
-C                       *****************
-C
-     *( XK    , CG    , B     , DEPTH , FREQ  , COSPHI, NPOIN2, NF    ,
-     *  PROINF, SPHE  )
-C
-C**********************************************************************
-C  TOMAWAC - V1.0    M. BENOIT               (EDF/DER/LNH)  -  07/02/95
-C**********************************************************************
-C
-C  FONCTION : CALCUL DES GRANDEURS DE HOULE INDEPENDANTES DU TEMPS
-C  ********** (NOMBRE D'ONDE, VITESSE DE GROUPE,...)
-C
-C  ARGUMENTS :
-C  ***********
-C  +-------------+----+--------------------------------------------+
-C  ! NOM         !MODE! SIGNIFICATION - OBSERVATIONS               !
-C  +-------------+----+--------------------------------------------+
-C  ! XK(-,-)     !<-- ! MATRICE DES NOMBRES D'ONDE EN FR           !
-C  ! CG(-,-)     !<-- ! MATRICE DE VITESSES DE GROUPE EN FR        !
-C  ! B(-,-)      !<-- ! MATRICE DE PASSAGE DE (KX,KY) A (FR,TETA)  !
-C  ! DEPTH(-)    ! -->! VECTEUR DES PROFONDEURS                    !
-C  ! FREQ(-)     ! -->! VECTEUR DES FREQUENCES DE DISCRETISATION   !
-C  ! COSPHI(-)   ! -->! VECTEUR DES COSINUS DES LATITUDES          !
-C  ! NPOIN2      ! -->! NOMBRE DE POINTS DU MAILLAGE SPATIAL 2D    !
-C  ! NF          ! -->! NOMBRE DE FREQUENCES                       !
-C  ! PROINF      ! -->! INDICATEUR CALCUL EN PROFONDEUR INFINIE    !
-C  ! SPHE        ! -->! INDICATEUR CALCUL EN SPHERIQUE             !
-C  +-------------+----+--------------------------------------------+
-C  ! MODE   (-> : NON-MODIFIE)  (<-> : MODIFIE)  (<- : INITIALISE) !
-C  +---------------------------------------------------------------+
-C
-C  APPELS :    - PROGRAMME(S) APPELANT  : WAC
-C  ********    - PROGRAMME(S) APPELE(S) : WNSCOU
-C
-C  REMARQUES :
-C  ***********
-C   - TOUTES LES DIRECTIONS SONT EN RADIAN ET COMPRISES ENTRE 0 - 2PI
-C
-C**********************************************************************
-C
+!                    *****************
+                     SUBROUTINE INIPHY
+!                    *****************
+!
+     &( XK    , CG    , B     , DEPTH , FREQ  , COSPHI, NPOIN2, NF    ,
+     &  PROINF, SPHE  )
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   20/06/2011
+!***********************************************************************
+!
+!brief    COMPUTES THE WAVE PARAMETERS THAT ARE TIME-INDEPENDENT
+!+               (WAVE NUMBER, GROUP VELOCITY,...).
+!
+!note     ALL THE DIRECTIONS ARE IN RADIAN AND IN THE RANGE [0 ; 2PI].
+!
+!history  M. BENOIT (EDF/DER/LNH)
+!+        07/02/95
+!+        V1P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        20/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| B              |<--| JACOBIAN TO TRANSFORM N(KX,KY) INTO F(FR,TETA)
+!| CG             |<--| DISCRETIZED GROUP VELOCITY
+!| COSPHI         |-->| COSINE OF THE LATITUDES OF THE POINTS 2D
+!| DEPTH          |-->| WATER DEPTH
+!| FREQ           |-->| DISCRETIZED FREQUENCIES
+!| NF             |-->| NUMBER OF FREQUENCIES
+!| NPOIN2         |-->| NUMBER OF POINTS IN 2D MESH
+!| PROINF         |-->| LOGICAL INDICATING INFINITE DEPTH ASSUMPTION
+!| SPHE           |-->| LOGICAL INDICATING SPHERICAL COORD ASSUMPTION
+!| XK             |<--| DISCRETIZED WAVE NUMBER
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
-C.....VARIABLES TRANSMISES
-C     """"""""""""""""""""
+!
+!.....VARIABLES IN ARGUMENT
+!     """"""""""""""""""""
       INTEGER          NF    , NPOIN2
       DOUBLE PRECISION DEPTH(NPOIN2)    , COSPHI(NPOIN2), FREQ(NF)
       DOUBLE PRECISION B(NPOIN2,NF)  , XK(NPOIN2,NF) , CG(NPOIN2,NF)
       LOGICAL          PROINF, SPHE
-C
-C.....VARIABLES LOCALES
-C     """""""""""""""""
+!
+!.....LOCAL VARIABLES
+!     """""""""""""""""
       INTEGER          IP    , JF
       DOUBLE PRECISION DEUPI2, DEUPI , XG    , DPDSUG, AUX2
       DOUBLE PRECISION AUX1  , AUX3  , DEUKD , R2
-C
-C
+!
+!
       XG=9.81D0
       DEUPI=2.D0*3.14159265D0
       DEUPI2=DEUPI*DEUPI
       DPDSUG=DEUPI2/XG
       R2=(6400.D3)**2
-C
+!
       IF (PROINF) THEN
-C                               +---------------+
-C.....................CALCUL EN ! PROF. INFINIE !
-C                               +---------------+
+!                               +----------------------+
+!.............................. ! INFINITE WATER DEPTH !
+!                               +----------------------+
         DO 310 JF=1,NF
           AUX1=DPDSUG*(FREQ(JF))**2
           AUX3=0.5D0*XG/(DEUPI*FREQ(JF))
@@ -75,9 +84,9 @@ C                               +---------------+
   320     CONTINUE
   310   CONTINUE
       ELSE
-C                               +---------------+
-C.....................CALCUL EN ! PROF.   FINIE !
-C                               +---------------+
+!                               +--------------------+
+!.............................. ! FINITE WATER DEPTH !
+!                               +--------------------+
         DO 410 JF=1,NF
           AUX2=DEUPI*FREQ(JF)
           DO 430 IP=1,NPOIN2
@@ -93,25 +102,25 @@ C                               +---------------+
   430     CONTINUE
   410   CONTINUE
       ENDIF
-C
-C
-C.....CALCUL DE  B POUR LE PASSAGE DE (KX,KY) A (FR,TETA)
-C     ===================================================
+!
+!
+!.....COMPUTES B TO GO FROM (KX, KY) TO (FR, TETA)
+!     ===================================================
       IF (.NOT.SPHE) THEN
-C                               +-----------+
-C.....................CALCUL EN ! CARTESIEN !
-C                               +-----------+
+!                               +-----------------------------+
+!.............................. ! CARTESIAN COORDINATE SYSTEM !
+!                               +-----------------------------+
         DO 710 JF=1,NF
           AUX1=DEUPI2*FREQ(JF)
           DO 720 IP=1,NPOIN2
             B(IP,JF)= CG(IP,JF)/(AUX1*XK(IP,JF))
   720     CONTINUE
   710   CONTINUE
-C
+!
       ELSE
-C                               +-----------+
-C.....................CALCUL EN ! SPHERIQUE !
-C                               +-----------+
+!                               +-----------------------------+
+!.............................. ! SPHERICAL COORDINATE SYSTEM !
+!                               +-----------------------------+
         DO 810 JF=1,NF
           AUX1=DEUPI2*FREQ(JF)*R2
           DO 820 IP=1,NPOIN2
@@ -119,6 +128,6 @@ C                               +-----------+
   820     CONTINUE
   810   CONTINUE
       ENDIF
-C
+!
       RETURN
       END

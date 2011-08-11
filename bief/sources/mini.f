@@ -1,63 +1,70 @@
-C                       ***************
-                        SUBROUTINE MINI
-C                       ***************
-C
-     *( XMIN , IMIN , X , NPOIN )
-C
-C***********************************************************************
-C BIEF VERSION 5.1       17/08/94    E. PELTIER   (LNH)
-C***********************************************************************
-C
-C  FONCTION : RECHERCHE DE LA PLUS PETITE VALEUR DANS UN TABLEAU X
-C             DE DIMENSION NPOIN
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |      XMIN      |<-- | MINIMUM TROUVE
-C |      IMIN      |<-- | INDICE DU MINIMUM
-C |      X         | -->| TABLEAU DES VALEURS
-C |      NPOIN     | -->| DIMENSION DU TABLEAU
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C PROGRAMME APPELANT :
-C PROGRAMMES APPELES : AUCUN
-C**********************************************************************
-C
+!                    ***************
+                     SUBROUTINE MINI
+!                    ***************
+!
+     &( XMIN , IMIN , X , NPOIN )
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    LOOKS FOR THE LOWEST VALUE IN ARRAY X
+!+                OF DIMENSION NPOIN.
+!
+!history  E. PELTIER   (LNH)
+!+        17/08/94
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| IMIN           |<--| INDEX OF MINIMUM
+!| NPOIN          |-->| DIMENSION OF X
+!| X              |-->| ARRAY WITH VALUES TO LOOK AT
+!| XMIN           |<--| THE MINIMUM
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN)             :: NPOIN
       INTEGER, INTENT(INOUT)          :: IMIN
       DOUBLE PRECISION, INTENT(INOUT) :: XMIN
       DOUBLE PRECISION, INTENT(IN)    :: X(NPOIN)
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER I
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       XMIN = X(1)
       IMIN = 1
-C
+!
       DO 10 I = 2, NPOIN
-C
+!
         IF(X(I).LT.XMIN) THEN
           IMIN = I
           XMIN = X(I)
         ENDIF
-C
+!
 10    CONTINUE
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END
- 

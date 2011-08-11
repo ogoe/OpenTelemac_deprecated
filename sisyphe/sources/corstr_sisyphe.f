@@ -1,53 +1,46 @@
-C                       *************************                       
-                        SUBROUTINE CORSTR_SISYPHE
-C                       *************************                       
-C                                                                       
-C                                                                       
-C***********************************************************************
-C  SISYPHE VERSION 5.1    12/11/97    C. LE NORMANT (LNH) 30 87 78 54 
-C                                                
-C COPYRIGHT EDF-DTMPL-SOGREAH-LHF-GRADIENT                                                                          
-C***********************************************************************
-C                                                                       
-C      FONCTION: CORRECTION DU COEFFICIENT DE FROTTEMENT SUR LE FOND    
-C                QUAND IL EST VARIABLE EN TEMPS.                        
-C                                                                         
-C      FUNCTION: CORRECTION OF BOTTOM FRICTION COEFFICIENT    
-C                (IF TIME VARIATION).                        
-C                                                                       
-C-----------------------------------------------------------------------
-C                             ARGUMENTS                                 
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |    CHESTR      |<-- |  BOTTOM FRICTION COEFFICIENT                 |
-C |    X,Y         | -->|  2D COORDINATES                              |
-C |    NPOIN       | -->|  NUMBER OF GRID POINTS                       |
-C |    PRIVE       | -->|  ARRAY FOR USER                               
-C |    ZF          | -->|  BOTTOM ELEVATION                            |
-C |   QU , QV      |<-- |  FLOW RATE ALONG X AND Y                     |
-C |    H           | -->|  WATER DEPTH                                 | 
-C |    TIME        | -->|  TIME                                        | 
-C |________________|____|______________________________________________|
-C MODE : -->(INPUT), <--(RESULT), <-->(MODIFIED DATA) 
-C                                                                       
-C-----------------------------------------------------------------------
-C                                                                       
-C  CALLED BY : SISYPHE                                               
-C                                                                                                                                              
-C********************************************************************** 
-C
+!                    *************************
+                     SUBROUTINE CORSTR_SISYPHE
+!                    *************************
+!
+!
+!***********************************************************************
+! SISYPHE   V6P1                                   21/07/2011
+!***********************************************************************
+!
+!brief    CORRECTS THE BOTTOM FRICTION COEFFICIENT
+!+               (IF VARIABLE IN TIME).
+!
+!history  C. LE NORMANT (LNH)
+!+        12/11/97
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
       USE DECLARATIONS_SISYPHE
-C                                                                       
-      IMPLICIT NONE                                                     
-      INTEGER LNG,LU                                                    
-      COMMON/INFO/LNG,LU                                                
-C                                                                       
-C-----------------------------------------------------------------------
-C                                                                       
-C                                                                       
-C-----------------------------------------------------------------------
-C                                                                       
-      RETURN                                                            
-      END SUBROUTINE CORSTR_SISYPHE 
+!
+      IMPLICIT NONE
+      INTEGER LNG,LU
+      COMMON/INFO/LNG,LU
+!
+!-----------------------------------------------------------------------
+!
+!
+!-----------------------------------------------------------------------
+!
+      RETURN
+      END SUBROUTINE CORSTR_SISYPHE

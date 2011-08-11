@@ -1,79 +1,99 @@
-C                       *******************
-                        SUBROUTINE READGEO3
-C                       *******************
-C
-     *(KNOLG,X,Y,NPOIN,NFIC,IB,Z)
-C
-C***********************************************************************
-C BIEF VERSION 5.6          19/10/03  J-M HERVOUET (LNHE) 01 30 71 80 18
-C                                     REGINA NEBAUER
-C                                     LAM MINH PHUONG
-C                           19/10/05  EMILE RAZAFINDRAKOTO
-C***********************************************************************
-C
-C   USER SUBROUTINE READGEO3
-C
-C   FUNCTION: 
-C     
-C   READS OR COMPUTES THE VALUES OF NPOIN, NELEM, NPTFR, MXPTVS, MXELVS
-C   IN THE GEOMETRY FILE IN THE CHANNEL NGEO.
-C
-C   MAY BE REWRITTEN FOR ANOTHER FILE FORMAT
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |   NPOIN        |<-- | NOMBRE DE POINTS DU MAILLAGE.
-C |   NELEM        |<-- | NOMBRE D'ELEMENTS DU MAILLAGE.
-C |   NPTFR        |<-- | NOMBRE DE POINTS FRONTIERE DU DOMAINE.
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES : LIT 
-C
-C***********************************************************************
-C
+!                    *******************
+                     SUBROUTINE READGEO3
+!                    *******************
+!
+     &(KNOLG,X,Y,NPOIN,NFIC,IB,FFORMAT,Z)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    READS OR COMPUTES THE VALUES OF NPOIN, NELEM, NPTFR,
+!+                MXPTVS, MXELVS IN THE GEOMETRY FILE (CHANNEL NGEO).
+!
+!warning  USER SUBROUTINE (MAY BE REWRITTEN FOR ANOTHER FILE FORMAT)
+!
+!history  J-M HERVOUET (LNH)     ; REGINA NEBAUER; LAM MINH PHUONG
+!+        19/10/03
+!+
+!+
+!
+!history  EMILE RAZAFINDRAKOTO
+!+        19/10/05
+!+        V5P6
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| FFORMAT        |-->| FILE FORMAT
+!| IB             |-->| SERIES OF 10 INTEGERS IN THE SELAFIN FORMAT
+!| KNOLG          |-->| GLOBAL NUMBER OF A LOCAL POINT IN PARALLEL
+!| NFIC           |-->| LOGICAL UNIT OF SELAFIN FILE
+!| NPOIN          |<--| NUMBER OF POINTS IN THE MESH
+!| X              |<--| ABSCISSAE OF POINTS IN THE MESH
+!| Y              |<--| ORDINATES OF POINTS IN THE MESH
+!| Z              |<--| ELEVATIONS OF POINTS IN THE MESH
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_READGEO3 => READGEO3
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C     
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN)           :: NPOIN,NFIC
       INTEGER, INTENT(INOUT)        :: IB(10)
       INTEGER, INTENT(OUT)          :: KNOLG(NPOIN)
       DOUBLE PRECISION, INTENT(OUT) :: X(NPOIN),Y(NPOIN)
       DOUBLE PRECISION, INTENT(OUT), OPTIONAL :: Z(NPOIN)
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+      CHARACTER(LEN=8), INTENT(IN)  :: FFORMAT
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       DOUBLE PRECISION XB(2)
       REAL, ALLOCATABLE :: RB(:)
       REAL RBID(1)
       INTEGER ISTAT,ERR
       CHARACTER(LEN=1)  :: CB
-C
-C-----------------------------------------------------------------------
-C
-C     LE DEBUT DU FICHIER EST DEJA LU PAR READGEO1
-C
-C     REWIND NFIC
-C
-C     7 : IPOBO REMPLACE PAR KNOLG (CAS DES FICHIERS AVEC PARALLELISME)
-C
+      CHARACTER(LEN=2)  :: RF
+!
+!-----------------------------------------------------------------------
+!
+      IF(FFORMAT.EQ.'SERAFIND') THEN
+        RF = 'R8'
+      ELSE
+        RF = 'R4'
+      ENDIF
+!
+!-----------------------------------------------------------------------
+!
+!     HAS ALREADY READ THE 1ST PART OF THE FILE IN READGEO1
+!
+!     REWIND NFIC
+!
+!     7 : KNOLG REPLACES IPOBO (PARALLEL MODE)
+!
       IF(IB(8).NE.0.OR.IB(9).NE.0) THEN
-C       PARALLELISME
-C       CAS OU IPOBO EST REMPLACE PAR KNOLG 
+!       PARALLEL MODE,
+!       CASE WHERE KNOLG REPLACES IPOBO
         CALL LIT(XB,RBID,KNOLG,CB,NPOIN,'I ',NFIC,'STD',ISTAT)
       ENDIF
-C
-C     8 ET 9 : COORDONNEES X ET Y
-C
+!
+!     8 AND 9: X AND Y COORDINATES
+!
       ALLOCATE(RB(NPOIN),STAT=ERR)
       IF(ERR.NE.0) THEN
         IF(LNG.EQ.1) THEN
@@ -84,30 +104,30 @@ C
         ENDIF
         STOP
       ENDIF
-C     
-      CALL LIT(X   ,RB,IB,CB,NPOIN,'R4',NFIC,'STD',ISTAT)
-      CALL LIT(Y   ,RB,IB,CB,NPOIN,'R4',NFIC,'STD',ISTAT)
-C
-C     SPECIAL FORMAT FOR TETRAHEDRONS : Z AFTER X AND Y
-C     A RECORD FOR TIME IS PRESENT WITH THE SELAFIN FORMAT
-C     WHEN Z IS GIVEN AS VARIABLE IN TIME, BUT THIS IS NEVER USED.
-C
+!
+      CALL LIT(X   ,RB,IB,CB,NPOIN,RF,NFIC,'STD',ISTAT)
+      CALL LIT(Y   ,RB,IB,CB,NPOIN,RF,NFIC,'STD',ISTAT)
+!
+!     SPECIAL FORMAT FOR 3D : Z AFTER X AND Y
+!     A RECORD FOR TIME IS PRESENT WITH THE SELAFIN FORMAT
+!     WHEN Z IS GIVEN AS VARIABLE IN TIME, BUT THIS IS NEVER USED.
+!
       IF(PRESENT(Z)) THEN
-C       RECORD FOR TIME
-C       CALL LIT(Z,RB,IB,CB,1,'R4',NFIC,'STD',ISTAT)
-C       RECORD FOR Z (FIRST VARIABLE IN SELAFIN FORMAT)
-        CALL LIT(Z,RB,IB,CB,NPOIN,'R4',NFIC,'STD',ISTAT)
+!       RECORD FOR TIME
+!       CALL LIT(Z,RB,IB,CB,1,RF,NFIC,'STD',ISTAT)
+!       RECORD FOR Z (FIRST VARIABLE IN SELAFIN FORMAT)
+        CALL LIT(Z,RB,IB,CB,NPOIN,RF,NFIC,'STD',ISTAT)
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-CMODIF ER 19/10/2005
+!
+!-----------------------------------------------------------------------
+!
+!MODIFICATION ER 19/10/2005
       CALL CORRXY(X,Y,NPOIN)
-CFIN MODIF ER 19/10/2005
-C
+!END OF MODIFICATION ER 19/10/2005
+!
       DEALLOCATE(RB)
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

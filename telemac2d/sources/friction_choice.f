@@ -1,37 +1,41 @@
-C                       **************************
-                        SUBROUTINE FRICTION_CHOICE
-C                       **************************
-C
-     &(FRICTION_PASS,KARMAN)
-C
-C***********************************************************************
-C  TELEMAC-2D VERSION 6.0             J-M HERVOUET (LNHE) 01 30 87 80 18
-C***********************************************************************
-C
-C 20/04/04 : subroutine written by F. Huvelin
-C
-C
-C         ! ----------------------------------------------- !
-C         !   Main subroutine for the friction computation  !
-C         ! ----------------------------------------------- !
-C
-C
-C----------------------------------------------------------------------C
-C                             ARGUMENTS                                C
-C .________________.____.______________________________________________C
-C |      NOM       |MODE|                   ROLE                       C
-C |________________|____|______________________________________________C
-C |                | => |                                              C
-C |________________|____|______________________________________________C
-C                    <=  input value                                   C
-C                    =>  output value                                  C 
-C----------------------------------------------------------------------C
+!                    **************************
+                     SUBROUTINE FRICTION_CHOICE
+!                    **************************
 !
-!======================================================================!
-!======================================================================!
-!                    DECLARATION DES TYPES ET DIMENSIONS               !
-!======================================================================!
-!======================================================================!
+     &(FRICTION_PASS,KARMAN)
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    MAIN SUBROUTINE FOR FRICTION COMPUTATION.
+!
+!history  F. HUVELIN
+!+        20/04/2004
+!+
+!+
+!
+!history  J-M HERVOUET (LNHE)
+!+
+!+        V6P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| FRICTION_PASS  |-->| IF 0, INITIALISATION
+!| KARMAN         |-->| VON KARMAN CONSTANT
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       USE BIEF
       USE FRICTION_DEF
@@ -42,14 +46,14 @@ C----------------------------------------------------------------------C
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER,          INTENT(IN) :: FRICTION_PASS
       DOUBLE PRECISION, INTENT(IN) :: KARMAN
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER                     :: I
       DOUBLE PRECISION, PARAMETER :: VK = 1.D-6
 !
@@ -59,12 +63,12 @@ C
 !======================================================================!
 !======================================================================!
 !
-! Initialization
+! INITIALIZATION
 ! --------------
 !
       IF(FRICTION_PASS == 0) THEN
 !
-! Zones initialization
+! ZONES INITIALIZATION
 ! --------------------
 !
          IF (FRICTB) THEN
@@ -72,7 +76,7 @@ C
             CALL STRCHE
 ! FH : FOR QUASI-BUBBLE
 ! FH : 2004/03/01
-!jaj for quadratic elements 
+!JAJ FOR QUADRATIC ELEMENTS
 ! =>
             IF (CF%ELM /= H%ELM) THEN
               IF(CF%ELM==12 .AND. H%ELM==11) THEN
@@ -83,7 +87,7 @@ C
                 CALL FRICTION_QUAD
      &              (IKLE%I, NPOIN, NELEM, NELMAX, LINDNER, NKFROT,
      &               CHESTR, NDEFMA, LINDDP, LINDSP)
-!                WRITE (LU,*) 
+!                WRITE (LU,*)
 !     &           'FRICTION_CHOICE::QUADRATIC ELEMENTS NOT IMPLEMENTED.'
 !                CALL PLANTE(1)
               ELSE
@@ -95,27 +99,31 @@ C
               ENDIF
             ENDIF
 ! <=
-!jaj for quadratic elements
+!JAJ FOR QUADRATIC ELEMENTS
 ! FH : 2004/03/01
 ! FH : FOR QUASI-BUBBLE
-
 !
-!        Uniform case
+!        UNIFORM CASE
 !        ------------
 !
          ELSE
-
-            ! Chestr for boundary conditions initialization
+            ! CHESTR FOR BOUNDARY CONDITIONS INITIALIZATION
             ! -----------------------------------------------
-            IF(KFROT.EQ.1.AND.ITURB.EQ.3.AND.LISRUG.EQ.2) THEN
-              DO I = 1, NPTFR
+            IF(LISRUG.EQ.2) THEN
+              IF(KFROTL.EQ.1) THEN
+                DO I = 1, NPTFR
                   CHBORD%R(I) = CHESTR%R(MESH%NBOR%I(I))
-              ENDDO
-            ELSEIF(ITURB.EQ.3.AND.LISRUG.EQ.2) THEN
-              CALL OS('X=C     ', X=CHBORD, C=SB)
+                ENDDO
+              ELSE
+!               JMH 21/12/2010
+!               BOUNDARY CONDITIONS FILE DATA IF ANY SUPERSEDE
+!               THE KEY-WORD ROUGHNESS COEFFICIENT OF BOUNDARIES
+                IF(P_DOTS(CHBORD,CHBORD,MESH).EQ.0.D0) THEN
+                  CALL OS('X=C     ', X=CHBORD, C=SB)
+                ENDIF
+              ENDIF
             ENDIF
-
-            ! Type of friction law for each node
+            ! TYPE OF FRICTION LAW FOR EACH NODE
             ! ----------------------------------
             DO I=1, CF%DIM1
               NKFROT%I(I) = KFROT
@@ -123,17 +131,17 @@ C
 !
          ENDIF
 !
-!     Computation
+!     COMPUTATION
 !     -----------
 !
       ELSE
 !
-         ! Friction by zones
+         ! FRICTION BY ZONES
          ! -----------------
          IF (FRICTB) THEN
 ! FH : FOR QUASI-BUBBLE
 ! FH : 2004/03/01
-!jaj for quadratic elements
+!JAJ FOR QUADRATIC ELEMENTS
 ! =>
             IF (CF%ELM /= H%ELM) THEN
               IF (CF%ELM==12 .AND. H%ELM==11) THEN
@@ -144,15 +152,13 @@ C
                 CALL FRICTION_QUAD
      &              (IKLE%I, NPOIN, NELEM, NELMAX, LINDNER, NKFROT,
      &               CHESTR, NDEFMA, LINDDP, LINDSP)
-!                WRITE (LU,*) 
-!     &           'FRICTION_CHOICE::QUADRATIC ELEMENTS NOT IMPLEMENTED.'
-!                CALL PLANTE(1)
               ELSE
                 WRITE (LU,*)
      &           'FRICTION_CHOICE::DISCRETISATION NOT IMPLEMENTED.'
                 WRITE (LU,*)
      &           'CF%ELM, H%ELM: ',CF%ELM, H%ELM
                 CALL PLANTE(1)
+                STOP
               ENDIF
             ENDIF
 !
@@ -161,19 +167,19 @@ C
      &            LINDDP, LINDSP, KFRO_B, NDEF_B, ITURB, LISRUG,
      &            LINDNER, VK, KARMAN, GRAV, T1, T2, CF, CFBOR)
 ! <=
-!jaj for quadratic elements
+!JAJ FOR QUADRATIC ELEMENTS
 ! FH : 2004/03/01
 ! FH : FOR QUASI-BUBBLE
 !
-         ! Uniform friction
+         ! UNIFORM FRICTION
          ! ----------------
          ELSE
             CALL FRICTION_UNIF
-     &           (MESH, H, U, V, CHESTR, S, KFROT, ITURB, LISRUG,
+     &           (MESH,H,U,V,CHESTR,S,KFROT,KFROTL,ITURB, LISRUG,
      &            LINDNER, SB, NDEF, DP, SP, VK, KARMAN, GRAV, T1,
      &            T2, CHBORD, CF, CFBOR)
 !
-         ENDIF   
+         ENDIF
       ENDIF
 !
 !======================================================================!

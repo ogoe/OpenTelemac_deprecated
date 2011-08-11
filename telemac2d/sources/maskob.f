@@ -1,59 +1,69 @@
-C                       *****************
-                        SUBROUTINE MASKOB
-C                       *****************
-C
-     *(MASKEL,X,Y,IKLE,NELEM,NELMAX,NPOIN,AT,LT)
-C
-C***********************************************************************
-C  TELEMAC 2D VERSION 5.2    17/08/94      J-M JANIN (LNH) 30 87 72 84
-C
-C***********************************************************************
-C
-C     FONCTION : SOUS-PROGRAMME UTILISATEUR
-C                SERVANT A ELIMINER FORMELLEMENT DES ELEMENTS
-C                DU MAILLAGE, AVEC UN TABLEAU DE MASQUE MASKEL
-C
-C     POUR UN ELEMENT MASQUE : MASKEL = 0.D0
-C     POUR UN ELEMENT NORMAL : MASKEL = 1.D0
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |   MASKEL       |<-->|  TABLEAU DE MASQUAGE DES ELEMENTS
-C |                |    |  =1. : NORMAL   =0. : ELEMENT MASQUE
-C |   X,Y          | -->|  COORDONNEES DES POINTS
-C |   IKLE         | -->|  NUMEROS GLOBAUX DES POINTS DES ELEMENTS
-C |   NELEM        | -->|  NOMBRE D'ELEMENTS.
-C |   NPOIN        | -->|  NOMBRE DE POINTS
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C APPELE PAR: TELMAC
-C***********************************************************************
-C                                                                      *
-C                                                                      *
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE MASKOB
+!                    *****************
+!
+     &(MASKEL,X,Y,IKLE,NELEM,NELMAX,NPOIN,AT,LT)
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    FORMALLY REMOVES ELEMENTS FROM THE MESH,
+!+                USING THE MASKING ARRAY MASKEL:
+!+
+!+            MASKEL = 0.D0 FOR MASKED ELEMENTS
+!+
+!+            MASKEL = 1.D0 FOR'NORMAL' ELEMENTS
+!
+!warning  USER SUBROUTINE; DOES NOTHING BY DEFAULT
+!
+!history  J-M JANIN (LNH)
+!+        17/08/1994
+!+        V5P2
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| AT             |-->| TIME IN SECONDS
+!| IKLE           |-->| CONNECTIVITY TABLE.
+!| LT             |-->| CURRENT TIME STEP
+!| MASKEL         |-->| MASKING OF ELEMENTS
+!|                |   | =1. : NORMAL   =0. : MASKED ELEMENT
+!| NELEM          |-->| NUMBER OF ELEMENTS
+!| NELMAX         |-->| MAXIMUM NUMBER OF ELEMENTS
+!| NPOIN          |-->| NUMBER OF POINTS
+!| X              |-->| ABSCISSAE OF POINTS IN THE MESH
+!| Y              |-->| ORDINATES OF POINTS IN THE MESH
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN) :: NELEM,NPOIN,NELMAX,LT
       INTEGER, INTENT(IN) :: IKLE(NELMAX,*)
-C
+!
       DOUBLE PRECISION, INTENT(INOUT) :: MASKEL(NELEM)
       DOUBLE PRECISION, INTENT(IN) :: X(NPOIN),Y(NPOIN),AT
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-C
-C-----------------------------------------------------------------------
-C
-C
-C-----------------------------------------------------------------------
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+!
+!-----------------------------------------------------------------------
+!
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END
- 

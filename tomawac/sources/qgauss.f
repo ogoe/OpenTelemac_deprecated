@@ -1,72 +1,76 @@
-C                       ***************
-                        FUNCTION QGAUSS
-C                       ***************
-C
-     *( B     , N     , A     , XM    )
-C
-C**********************************************************************
-C  TOMAWAC - V1.1    F. BECQ                 (EDF/DER/LNH)  -  26/03/96
-C**********************************************************************
-C
-C  FONCTION : CALCULE L'INTEGRALE DE 0 A INFINI DE LA FONCTION DONNEE 
-C  ********** PAR "FONCRO", A L'AIDE DES QUADRATURES DE GAUSS.
-C
-C  ARGUMENTS :
-C  ***********
-C +-------------+----+--------------------------------------------+
-C ! NOM         !MODE! SIGNIFICATION - OBSERVATIONS               !
-C +-------------+----+--------------------------------------------+
-C ! QGAUSS      !<-- ! VALEUR DE L'INTEGRALE                      !
-C ! B           ! -->! PARAMETRE B DE LA FONCTION A INTEGRER      !
-C ! N           ! -->! EXPOSANT N  DE LA FONCTION A INTEGRER      !
-C ! A           ! -->! PARAMETRE A DE LA FONCTION A INTEGRER      !
-C ! XM          ! -->! PARAMETRE M DE LA FONCTION A INTEGRER      !
-C +-------------+----+--------------------------------------------+
-C ! MODE   (-> : NON-MODIFIE)  (<-> : MODIFIE)  (<- : INITIALISE) !
-C +---------------------------------------------------------------+
-C
-C  APPELS :    - PROGRAMME(S) APPELANT  :  QBREK3
-C  ********    - PROGRAMME(S) APPELE(S) :  BORNES, FONCRO
-C
-C  REMARQUES :
-C  ***********
-C
-C  REFERENCES :
-C  ************
-C
-C**********************************************************************
-C
+!                    ***************
+                     FUNCTION QGAUSS
+!                    ***************
+!
+     &( B     , N     , A     , XM    )
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   23/06/2011
+!***********************************************************************
+!
+!brief    COMPUTES THE INTEGRAL (0 TO INFINITY) OF THE FUNCTION
+!+                GIVEN BY 'FONCRO', USING GAUSS QUADRATURES.
+!
+!history  F. BECQ (EDF/DER/LNH)
+!+        26/03/96
+!+        V1P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        23/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| A              |-->| PARAMETER A OF THE FUNCTION TO BE INTEGRATED
+!| B              |-->| PARAMETER B OF THE FUNCTION TO BE INTEGRATED
+!| N              |-->| EXPONENT N OF THE FUNCTION TO BE INTEGRATED
+!| XM             |-->| PARAMETER M OF THE FUNCTION TO BE INTEGRATED
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
-C     VARIABLES TRANSMISES.
-C     """""""""""""""""""""
+!
+!     VARIABLES IN ARGUMENT
+!     """""""""""""""""""""
       INTEGER  N
       DOUBLE PRECISION QGAUSS, B     , A     , XM
-C
-C     VARIABLES LOCALES.
-C     """"""""""""""""""
+!
+!     LOCAL VARIABLES
+!     """"""""""""""""""
       INTEGER  J     , I     , NFOIS
       DOUBLE PRECISION XB    , XR    , DX    , DA    , SS    , W(5)
       DOUBLE PRECISION A1    , A2    , A3    , Y2    , X(5)
-C
-C     FONCTIONS EXTERNES.
-C     """""""""""""""""""
+!
+!     EXTERNAL FUNCTIONS
+!     """""""""""""""""""
       DOUBLE PRECISION  FONCRO
       EXTERNAL          FONCRO
-C
+!
       DATA X/.1488743389D0,.4333953941D0,.6794095682D0,
-     *       .8650633666D0,.9739065285D0/
+     &       .8650633666D0,.9739065285D0/
       DATA W/.2955242247D0,.2692667193D0,.2190863625D0,
-     *       .1494513491D0,.0666713443D0/
-C
-C
+     &       .1494513491D0,.0666713443D0/
+!
+!
       NFOIS = 1
-C
+!
       CALL BORNES
-     *( B     , N     , A     , XM    , A2    , A3    )
+     &( B     , N     , A     , XM    , A2    , A3    )
       QGAUSS = 0.D0
       DA = (A3-A2)/DBLE(NFOIS)
-C
+!
       DO I=1,NFOIS
          A1 = A2
          A2 = A2+DA
@@ -76,11 +80,11 @@ C
          DO J=1,5
             DX = XR*X(J)
             SS = SS + W(J)*(FONCRO(XB+DX,B,N,A,XM)
-     *                     +FONCRO(XB-DX,B,N,A,XM))
+     &                     +FONCRO(XB-DX,B,N,A,XM))
          ENDDO
          Y2 = XR*SS
          QGAUSS = QGAUSS + Y2
       ENDDO
-C
+!
       RETURN
       END

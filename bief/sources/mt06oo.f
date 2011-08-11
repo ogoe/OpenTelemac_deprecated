@@ -1,122 +1,128 @@
-C                       *****************
-                        SUBROUTINE MT06OO
-C                       *****************
-C
-     *(A11,A12,A22,XMUL,SF,F,LGSEG,IKLE1,IKLE2,NBOR,NELEM,NELMAX)
-C
-C***********************************************************************
-C BIEF VERSION 5.9        20/03/08    J-M HERVOUET (LNHE) 01 30 87 80 18
-C                         04/09/92    F  LEPEINTRE (LNH) 30 87 78 54
-C
-C***********************************************************************
-C
-C FONCTION :
-C
-C    CE SOUS-PROGRAMME CALCULE LES COEFFICIENTS DE LA MATRICE SUIVANTE:
-C
-C                              /
-C                    A    =   /  F (P *P )*J(X,Y) DX
-C                     I J    /L      I  J
-C
-C     PAR MAILLE ELEMENTAIRE .
-C
-C     J(X,Y) : JACOBIEN DE LA TRANSFORMATION ISOPARAMETRIQUE
-C
-C     L'ELEMENT EST LE SEGMENT P1
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |     A11,A12... |<-- |  ELEMENTS DE LA MATRICE
-C |     XMUL       | -->|  FACTEUR MULTIPLICATIF
-C |     SF,SG,SH   | -->|  STRUCTURES DE F,G ET H.
-C |     SU,SV,SW   | -->|  STRUCTURES DE U,V ET W.
-C |     F,G,H      | -->|  FONCTIONS INTERVENANT DANS LE CALCUL DE LA
-C |                |    |  MATRICE.
-C |     U,V,W      | -->|  COMPOSANTES D'UN VECTEUR INTERVENANT DANS LE
-C |                |    |  CALCUL DE LA MATRICE.
-C |     XEL,YEL,ZEL| -->|  COORDONNEES DES POINTS DANS L'ELEMENT
-C |     SURFAC     | -->|  SURFACE DES TRIANGLES.
-C |     IKLE1..3   | -->|  PASSAGE DE LA NUMEROTATION LOCALE A GLOBALE
-C |     NELEM      | -->|  NOMBRE D'ELEMENTS DU MAILLAGE
-C |     NELMAX     | -->|  NOMBRE MAXIMUM D'ELEMENTS DU MAILLAGE
-C |                |    |  (CAS D'UN MAILLAGE ADAPTATIF)
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES : NEANT
-C
-C**********************************************************************
-C     -------------
-C     | ATTENTION | : LE JACOBIEN DOIT ETRE POSITIF .
-C     -------------
-C**********************************************************************
-C
+!                    *****************
+                     SUBROUTINE MT06OO
+!                    *****************
+!
+     &(A11,A12,A22,XMUL,SF,F,LGSEG,IKLE1,IKLE2,NBOR,NELEM,NELMAX)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    COMPUTES THE COEFFICIENTS OF THE FOLLOWING MATRIX:
+!code
+!+                              /
+!+                    A    =   /  F (P *P )*J(X,Y) DX
+!+                     I J    /L      I  J
+!+
+!+     BY ELEMENTARY CELL; THE ELEMENT IS THE P1 SEGMENT
+!+
+!+     J(X,Y): JACOBIAN OF THE ISOPARAMETRIC TRANSFORMATION
+!
+!warning  THE JACOBIAN MUST BE POSITIVE
+!
+!history  F  LEPEINTRE (LNH)
+!+        04/09/92
+!+
+!+
+!
+!history  J-M HERVOUET (LNHE)
+!+        20/03/08
+!+        V5P9
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| A11            |<--| ELEMENTS OF MATRIX
+!| A12            |<--| ELEMENTS OF MATRIX
+!| A13            |<--| ELEMENTS OF MATRIX
+!| A22            |<--| ELEMENTS OF MATRIX
+!| A23            |<--| ELEMENTS OF MATRIX
+!| A33            |<--| ELEMENTS OF MATRIX
+!| F              |-->| FUNCTION F USED IN THE FORMULA
+!| IKLE1          |-->| FIRST POINTS OF SEGMENTS
+!| IKLE2          |-->| SECOND POINTS OF SEGMENTS
+!| LGSEG          |-->| LENGTH OF SEGMENTS
+!| NBOR           |-->| GLOBAL NUMBER OF BOUNDARY POINTS
+!| NELEM          |-->| NUMBER OF ELEMENTS
+!| NELMAX         |-->| MAXIMUM NUMBER OF ELEMENTS
+!| SF             |-->| BIEF_OBJ STRUCTURE OF F
+!| SURFAC         |-->| AREA OF TRIANGLES
+!| XMUL           |-->| MULTIPLICATION FACTOR
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_MT06OO => MT06OO
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN) :: NELEM,NELMAX
       INTEGER, INTENT(IN) :: IKLE1(*),IKLE2(*),NBOR(*)
-C
+!
       DOUBLE PRECISION, INTENT(IN) :: XMUL
-C
+!
       DOUBLE PRECISION, INTENT(IN) :: F(*)
-C
-C     STRUCTURE DE F
+!
+!     STRUCTURE OF F
       TYPE(BIEF_OBJ), INTENT(IN) :: SF
-C
+!
       DOUBLE PRECISION, INTENT(IN)    :: LGSEG(NELMAX)
       DOUBLE PRECISION, INTENT(INOUT) :: A11(NELMAX)
       DOUBLE PRECISION, INTENT(INOUT) :: A12(NELMAX)
       DOUBLE PRECISION, INTENT(INOUT) :: A22(NELMAX)
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER IELEM,IELMF
       DOUBLE PRECISION SUR12,DET1,F1,F2,F12
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       SUR12  = XMUL/12.D0
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IELMF = SF%ELM
-C
-C     F CONSTANTE PAR SEGMENT, DANS UN TABLEAU DE BORD
-C
+!
+!     F CONSTANT BY SEGMENT, IN A BOUNDARY ARRAY
+!
       IF(IELMF.EQ.0) THEN
-C
+!
       DO 1 IELEM = 1 , NELEM
-C  A OPTIMISER
+!  TO BE OPTIMISED
       F1 = F(IELEM)
       F2 = F(IELEM)
-C
+!
       F12 = F1 + F2
-C
+!
       DET1 = LGSEG(IELEM) * SUR12
-C
+!
       A11(IELEM) = DET1 * (F12+2*F1)
       A12(IELEM) = DET1 * F12
       A22(IELEM) = DET1 * (F12+2*F2)
-C
+!
 1     CONTINUE
-C
-C     F LINEAIRE PAR SEGMENT, DANS UN TABLEAU DE BORD
-C     NOTE : IKLE EST ICI UN IKLE DE BORD
-C
+!
+!     F LINEAR BY SEGMENT, IN A BOUNDARY ARRAY
+!     NOTE: IKLE IS HERE A BOUNDARY IKLE
+!
       ELSEIF(IELMF.EQ.1) THEN
-C
+!
       DO 2 IELEM = 1 , NELEM
-C
+!
       F1 = F(IKLE1(IELEM))
       F2 = F(IKLE2(IELEM))
       F12 = F1 + F2
@@ -124,15 +130,15 @@ C
       A11(IELEM) = DET1 * (F12+2*F1)
       A12(IELEM) = DET1 * F12
       A22(IELEM) = DET1 * (F12+2*F2)
-C
+!
 2     CONTINUE
-C
-C     F LINEAIRE, DANS UN TABLEAU DEFINI SUR LE DOMAINE
-C
+!
+!     F LINEAR, IN AN ARRAY DEFINED ON THE DOMAIN
+!
       ELSEIF(IELMF.EQ.11.OR.IELMF.EQ.21) THEN
-C
+!
       DO 3 IELEM = 1 , NELEM
-C
+!
       F1 = F(NBOR(IKLE1(IELEM)))
       F2 = F(NBOR(IKLE2(IELEM)))
       F12 = F1 + F2
@@ -140,27 +146,27 @@ C
       A11(IELEM) = DET1 * (F12+2*F1)
       A12(IELEM) = DET1 * F12
       A22(IELEM) = DET1 * (F12+2*F2)
-C
+!
 3     CONTINUE
-C
-C     AUTRES TYPES DE DISCRETISATION DE F
-C
+!
+!     OTHER TYPES OF DISCRETISATION OF F
+!
       ELSE
-C
+!
        IF (LNG.EQ.1) WRITE(LU,100) IELMF,SF%NAME
        IF (LNG.EQ.2) WRITE(LU,101) IELMF,SF%NAME
 100    FORMAT(1X,'MT0600 (BIEF) :',/,
-     *        1X,'DISCRETISATION DE F NON PREVUE : ',1I6,
-     *        1X,'NOM REEL : ',A6)
+     &        1X,'DISCRETISATION DE F NON PREVUE : ',1I6,
+     &        1X,'NOM REEL : ',A6)
 101    FORMAT(1X,'MT0600 (BIEF) :',/,
-     *        1X,'DISCRETIZATION OF F NOT AVAILABLE:',1I6,
-     *        1X,'REAL NAME: ',A6)
+     &        1X,'DISCRETIZATION OF F NOT AVAILABLE:',1I6,
+     &        1X,'REAL NAME: ',A6)
        CALL PLANTE(1)
        STOP
-C
+!
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

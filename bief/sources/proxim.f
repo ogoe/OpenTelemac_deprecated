@@ -1,71 +1,83 @@
-C                       *****************
-                        SUBROUTINE PROXIM
-C                       *****************
-C
-     *(IP,XP,YP,X,Y,NP,NPOIN,IKLE,NELEM,NELMAX)
-C
-C***********************************************************************
-C BIEF VERSION 6.0      03/07/2009    J-M HERVOUET (LNHE) 01 30 87 80 18
-C***********************************************************************
-C
-C  FONCTION : RECHERCHE DES POINTS DU MAILLAGE LES PLUS PROCHES
-C             POUR UN ENSEMBLE DE POINTS DONNES.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |    IP          |<-- |  ADRESSES DES POINTS TROUVES.
-C |    XP,YP       | -->|  COORDONNEES DES POINTS DONNES.
-C |    X,Y         | -->|  COORDONNEES DES POINTS DU MAILLAGE
-C |    NP          | -->|  NOMBRE DE POINTS DONNES.
-C |    NPOIN       | -->|  NOMBRE DE POINTS DU MAILLAGE.
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMME APPELANT : TELMAC
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE PROXIM
+!                    *****************
+!
+     &(IP,XP,YP,X,Y,NP,NPOIN,IKLE,NELEM,NELMAX)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    IDENTIFIES THE POINTS OF THE MESH CLOSEST TO A SET
+!+                OF GIVEN POINTS.
+!
+!history  J-M HERVOUET (LNHE)
+!+        03/07/2009
+!+        V6P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| IKLE           |-->| CONNECTIVITY TABLE.
+!| IP             |<--| ADDRESSES OF NEAREST POINTS
+!| NELEM          |-->| NUMBER OF ELEMENTS
+!| NELMAX         |-->| MAXIMUM NUMBER OF ELEMENTS
+!| NP             |-->| NUMBER OF POINTS IN THE SET
+!| NPOIN          |-->| NUMBER OF POINTS IN THE MESH
+!| X              |-->| ABSCISSAE OF POINTS IN THE MESH
+!| XP             |-->| ABSCISSAE OF POINTS IN THE SET
+!| Y              |-->| ORDINATES OF POINTS IN THE MESH
+!| YP             |-->| ORDINATES OF POINTS IN THE SET
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_PROXIM => PROXIM
-C
+!
       IMPLICIT NONE
-C
+!
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN)    :: NP,NPOIN,NELEM,NELMAX
       INTEGER, INTENT(INOUT) :: IP(NP)
       INTEGER, INTENT(IN)    :: IKLE(NELMAX,3)
-C      
+!
       DOUBLE PRECISION, INTENT(IN) :: XP(NP),YP(NP),X(NPOIN),Y(NPOIN)
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER I,K,IELEM
       DOUBLE PRECISION X1,Y1,X2,Y2,X3,Y3,A31,A12,A23,DIST2,D2,ALERT
       DOUBLE PRECISION XX,YY
-C
+!
       INTRINSIC SQRT
-C
+!
       DOUBLE PRECISION P_DSUM,P_DMAX
       EXTERNAL         P_DSUM,P_DMAX
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       DO 10 K=1,NP
         IP(K)=0
         DIST2=1.D10
         ALERT=0.D0
         XX=-1.D10
         YY=-1.D10
-C
-C       BOUCLE SUR LES TRIANGLES :
-C
+!
+!       LOOP ON THE TRIANGLES:
+!
         DO 20 IELEM=1,NELEM
           X1=X(IKLE(IELEM,1))
           X2=X(IKLE(IELEM,2))
@@ -77,7 +89,7 @@ C
           A12=XP(K)*Y1-YP(K)*X1+X1*Y2-X2*Y1+X2*YP(K)-XP(K)*Y2
           A23=XP(K)*Y2-YP(K)*X2+X2*Y3-X3*Y2+X3*YP(K)-XP(K)*Y3
           IF(A31.GT.-1.D-6.AND.A12.GT.-1.D-6.AND.A23.GT.-1.D-6) THEN
-C           ON PREND LE POINT LE PLUS PROCHE
+!           TAKES THE NEAREST NODE
             DO I=1,3
               D2=(XP(K)-X(IKLE(IELEM,I)))**2+(YP(K)-Y(IKLE(IELEM,I)))**2
               IF(D2.LT.DIST2) THEN
@@ -133,8 +145,8 @@ C           ON PREND LE POINT LE PLUS PROCHE
           STOP
         ENDIF
 10    CONTINUE
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

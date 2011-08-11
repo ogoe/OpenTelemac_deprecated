@@ -1,63 +1,75 @@
-C                       ***************
-                        FUNCTION QBBJ78
-C                       ***************
-C
-     *( B     , IQBBJ )
-C
-C**********************************************************************
-C  TOMAWAC - V1.1         F.BECQ & M. BENOIT (EDF/DER/LNH)  -  14/02/96
-C**********************************************************************
-C
-C  FONCTION : CALCUL DE LA PROBABILITE DE DEFERLEMENT : QB EST UTILISEE
-C  ********** DANS LE MODELE DE BATTJES ET JANSSEN (1978).
-C
-C  ARGUMENTS :
-C  ***********
-C +-------------+----+--------------------------------------------+
-C ! NOM         !MODE! SIGNIFICATION - OBSERVATIONS               !
-C +-------------+----+--------------------------------------------+
-C ! B           ! -->! (HE/HM)                                    !
-C ! IQBBJ       ! -->! INDICE DE LA METHODE UTILISEE              !
-C +-------------+----+--------------------------------------------+
-C ! MODE   (-> : NON-MODIFIE)  (<-> : MODIFIE)  (<- : INITIALISE) !
-C +---------------------------------------------------------------+
-C
-C  APPELS :    - PROGRAMME(S) APPELANT  :  QBREK1
-C  ********    - PROGRAMME(S) APPELE(S) :    -
-C
-C  REFERENCES : - BATTJES ET JANSSEN (1978) : ENERGY LOSS AND SET-UP
-C  ************   DUE TO BREAKING OF RANDOM WAVES. (ICCE'78)
-C
-C               - DINGEMANS (1983) : VERIFICATION OF NUMERICAL WAVE
-C                 PROPAGATION MODELS WITH FIELD MEASUREMENTS.
-C                 CREDIZ VERIFICATION HARINGVLIET.
-C
-C**********************************************************************
-C
+!                    ***************
+                     FUNCTION QBBJ78
+!                    ***************
+!
+     &( B     , IQBBJ )
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   23/06/2011
+!***********************************************************************
+!
+!brief    COMPUTES THE FRACTION OF BREAKING WAVES: QB.
+!+                QB IS USED IN BATTJES AND JANSSEN (1978).
+!
+!reference  BATTJES AND JANSSEN (1978) :
+!+                     "ENERGY LOSS AND SET-UP DUE TO BREAKING
+!+                      OF RANDOM WAVES". ICCE'78.
+!reference DINGEMANS (1983) :
+!+                     "VERIFICATION OF NUMERICAL WAVE PROPAGATION
+!+                      MODELS WITH FIELD MEASUREMENTS. CREDIZ
+!+                      VERIFICATION HARINGVLIET".
+!
+!history  F.BECQ; M. BENOIT (EDF/DER/LNH)
+!+        14/02/96
+!+        V1P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        23/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| B              |-->| (H_RMS/H_MAX)
+!| IQBBJ          |-->| INDEX OF THE SLECTED COMPUTATION METHOD
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
-C.....VARIABLES TRANSMISES
-C     """"""""""""""""""""
+!
+!.....VARIABLES IN ARGUMENT
+!     """"""""""""""""""""
       DOUBLE PRECISION QBBJ78, B
       INTEGER  IQBBJ
-C
-C.....VARIABLES LOCALES
-C     """""""""""""""""
+!
+!.....LOCAL VARIABLES
+!     """""""""""""""""
       DOUBLE PRECISION F     , CB    , EPS   , QMAX  , QMIN  , Q0
       DOUBLE PRECISION B2    , EXPO
-C
-C
+!
+!
       EPS = 1.D-7
-C
+!
       IF (B.GE.1.D0) THEN
         QBBJ78 = 1.D0
         RETURN
       ENDIF
-C
+!
       IF(IQBBJ.EQ.0) THEN
-C       =========================
-C       RESOLUTION PAR DICHOTOMIE
-C       =========================
+!       =========================
+!       SOLVES BY DICHOTOMY
+!       =========================
         QMIN  = 0.D0
         QMAX  = B
    10   CONTINUE
@@ -70,22 +82,22 @@ C       =========================
            QMIN = QBBJ78
         ENDIF
         GOTO 10
-C
+!
       ELSEIF(IQBBJ.EQ.1) THEN
-C       ======================================================
-C       FORMULATION EXPLICITE 1 (INSPIREE DE CREDIZ VERSION-1)
-C       ======================================================
+!       ======================================================
+!       EXPLICIT FORMULATION 1 (INSPIRED FROM CREDIZ VERSION-1)
+!       ======================================================
       CB = 0.5D0
         IF (B.GE.CB) THEN
           QBBJ78 = ((B-CB)/(1.D0-CB))**2
         ELSE
           QBBJ78 = 0.D0
         ENDIF
-C
+!
       ELSEIF(IQBBJ.EQ.2) THEN
-C       ======================================================
-C       FORMULATION EXPLICITE 2 (INSPIREE DE CREDIZ VERSION-2)
-C       ======================================================
+!       ======================================================
+!       EXPLICIT FORMULATION 2 (INSPIRED FROM CREDIZ VERSION-2)
+!       ======================================================
         CB = 0.3D0
         IF (B.LT.CB) THEN
           QBBJ78 = 0.D0
@@ -101,14 +113,14 @@ C       ======================================================
         ELSE
           QBBJ78 = (2.D0*B-1.D0)**2
         ENDIF
-C
+!
       ELSEIF(IQBBJ.EQ.3) THEN
-C       ======================================================
-C       FORMULATION EXPLICITE 3 (INSPIREE DE CREDIZ VERSION-3)
-C       ======================================================
+!       ======================================================
+!       EXPLICIT FORMULATION 3 (INSPIRED FROM CREDIZ VERSION-3)
+!       ======================================================
         QBBJ78 = 2.4D0*B**7
-C
+!
       ENDIF
-C
+!
       RETURN
       END

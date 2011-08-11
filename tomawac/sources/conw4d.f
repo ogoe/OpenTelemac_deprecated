@@ -1,73 +1,84 @@
-C                       *****************
-                        SUBROUTINE CONW4D
-C                       *****************
-C
-     *(CX,CY,CT,CF,U,V,XK,CG,COSF,TGF,DEPTH,DZHDT,DZX,DZY,DUX,DUY,
-     * DVX,DVY,FREQ,COSTET,SINTET,NPOIN2,NPLAN,JF,NF,PROINF,SPHE,
-     * COURAN,TRA01,TRA02)
-C
-C***********************************************************************
-C TOMAWAC   V1.0            01/02/95       F MARCOS   (LNH) 30 87 72 66
-C***********************************************************************
-C
-C      FONCTION:
-C      =========
-C
-C    CALCULE LE CHAMP CONVECTEUR
-C                 -->                            -->
-C    ATTENTION ICI X EST VERTICAL VERS LE HAUT ET Y EST HORIZONTAL
-C      VERS LA DROITE ET TETA EST LA DIRECTION / NORD COMPTE DANS LE
-C      SENS INVERSE DU SENS TRIGO
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C !      NOM       !MODE!                   ROLE                       !
-C !________________!____!______________________________________________!
-C !    CX,CY,CT,CF !<-- !  CHAMP CONVECTEUR SELON X(OU PHI),           !
-C !                !    !  Y(OU LAMBDA) ET TETA  ET FREQ               !
-C !    U,V         ! -->!  COMPOSANTES DU CHAMP DE COURANT             !
-C !    XK          ! -->!  NOMBRE D'ONDE DISCRETISE                    !
-C !    CG          ! -->!  VITESSE DE GROUPE DISCRETISEE               !
-C !    COSF        ! -->!  COSINUS DES LATITUDES DES POINTS 2D         !
-C !    TGF         ! -->!  TANGENTES DES LATITUDES DES POINTS 2D       !
-C !    DEPTH       ! -->!  PROFONDEUR                                  !
-C !    DZHDT       ! -->!  GRADIENT DE FOND SELON T                    !
-C !    DZX         ! -->!  GRADIENT DE FOND SELON X                    !
-C !    DZY         ! -->!  GRADIENT DE FOND SELON Y                    !
-C !    DUX         ! -->!  GRADIENT DE COURANT U SELON X               !
-C !    DUY         ! -->!  GRADIENT DE COURANT U SELON Y               !
-C !    DVX         ! -->!  GRADIENT DE COURANT V SELON X               !
-C !    DVY         ! -->!  GRADIENT DE COURANT V SELON Y               !
-C !    FREQ        ! -->!  FREQUENCES DISCRETISEES                     !
-C !    COSTET      ! -->!  COSINUS TETA                                !
-C !    SINTET      ! -->!  SINUS TETA                                  !
-C !    NPOIN2      ! -->!  NOMBRE DE POINTS DU MAILLAGE 2D             !
-C !    NPLAN       ! -->!  NOMBRE DE PLANS OU DE DIRECTIONS            !
-C !    JF          ! -->!  FREQUENCES COURANTE                         !
-C !    NF          ! -->!  NOMBRE DE FREQUENCES                        !
-C !    PROINF      ! -->!  LOGIQUE INDIQUANT SI ON EST EN PROF INFINIE !
-C !    SPHE        ! -->!  LOGIQUE INDIQUANT SI ON EST EN COORD. SPHER.!
-C !    COURAN      ! -->!  LOGIQUE INDIQUANT SI ON A UN COURANT        !
-C !    TRA01       !<-->!  TABLEAU DE TRAVAIL                          !
-C !    TRA02       !<-->!  TABLEAU DE TRAVAIL                          !
-C !________________!____!______________________________________________!
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C SOUS-PROGRAMME APPELE PAR : WAC
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE CONW4D
+!                    *****************
+!
+     &(CX,CY,CT,CF,U,V,XK,CG,COSF,TGF,DEPTH,DZHDT,DZX,DZY,DUX,DUY,
+     & DVX,DVY,FREQ,COSTET,SINTET,NPOIN2,NPLAN,JF,NF,PROINF,SPHE,
+     & COURAN,TRA01,TRA02)
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   14/06/2011
+!***********************************************************************
+!
+!brief    COMPUTES THE ADVECTION FIELD.
+!
+!warning  IN THIS CASE THE X AXIS IS VERTICAL ORIENTED UPWARDS AND
+!+            THE Y AXIS IS HORIZONTAL ORIENTED TOWARDS THE RIGHT;
+!+            TETA IS THE DIRECTION WRT NORTH, CLOCKWISE
+!
+!history  F MARCOS (LNH)
+!+        01/02/95
+!+        V1P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        14/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CG             |-->| DISCRETIZED GROUP VELOCITY
+!| COSF           |-->| COSINE OF THE LATITUDES OF THE POINTS 2D
+!| COSTET         |-->| COSINE OF TETA ANGLE
+!| COURAN         |-->| LOGICAL INDICATING IF THERE IS A CURRENT
+!| CT             |<--| ADVECTION FIELD ALONG TETA
+!| CX             |<--| ADVECTION FIELD ALONG X(OR PHI)
+!| CY             |<--| ADVECTION FIELD ALONG Y(OR LAMBDA)
+!| CF             |<--| ADVECTION FIELD ALONG FREQUENCY
+!| DEPTH          |-->| WATER DEPTH
+!| DUX            |-->| DERIVATIVE OF CURRENT SPEED DU/DX
+!| DUY            |-->| DERIVATIVE OF CURRENT SPEED DU/DY
+!| DVX            |-->| DERIVATIVE OF CURRENT SPEED DV/DX
+!| DVY            |-->| DERIVATIVE OF CURRENT SPEED DV/DY
+!| DZHDT          |-->| WATER DEPTH DERIVATIVE WITH RESPECT TO T
+!| DZX            |-->| SEA BOTTOM SLOPE ALONG X
+!| DZY            |-->| SEA BOTTOM SLOPE ALONG Y
+!| FREQ           |-->| DISCRETIZED FREQUENCIES
+!| JF             |-->| INDEX OF THE FREQUENCY
+!| NF             |-->| NUMBER OF FREQUENCIES
+!| NPLAN          |-->| NUMBER OF DIRECTIONS
+!| NPOIN2         |-->| NUMBER OF POINTS IN 2D MESH
+!| PROINF         |-->| LOGICAL INDICATING INFINITE DEPTH ASSUMPTION
+!| SINTET         |-->| SINE OF TETA ANGLE
+!| SPHE           |-->| LOGICAL INDICATING SPHERICAL COORD ASSUMPTION
+!| TGF            |-->| TANGENT OF THE LATITUDES OF THE POINTS 2D
+!| TRA01          |<->| WORK TABLE
+!| TRA02          |<->| WORK TABLE
+!| U              |-->| CURRENT SPEED ALONG X
+!| V              |-->| CURRENT SPEED ALONG Y
+!| XK             |-->| DISCRETIZED WAVE NUMBER
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
+!
       INTEGER LNG,LU
       COMMON/INFO/ LNG,LU
-C
+!
       INTEGER NF,NPLAN,NPOIN2
       INTEGER JF,IP,IPOIN
-C
+!
       DOUBLE PRECISION CX(NPOIN2,NPLAN,JF),CY(NPOIN2,NPLAN,JF)
       DOUBLE PRECISION CT(NPOIN2,NPLAN,JF),CF(NPOIN2,NPLAN,JF)
       DOUBLE PRECISION FREQ(NF)
@@ -77,38 +88,38 @@ C
       DOUBLE PRECISION DUX(NPOIN2),DUY(NPOIN2),DVX(NPOIN2),DVY(NPOIN2)
       DOUBLE PRECISION COSTET(NPLAN),SINTET(NPLAN)
       DOUBLE PRECISION COSF(NPOIN2),TGF(NPOIN2)
-C
+!
       DOUBLE PRECISION TRA01(NPLAN),TRA02(NPLAN)
       DOUBLE PRECISION GSQP,SR,R,SRCF,TFSR
       DOUBLE PRECISION DDDN,DSDNSK,LSDUDN,GRADEG,LSDUDS
       DOUBLE PRECISION DSDD,USGD,USDPI,DEUPI,DEUKD
-C
+!
       LOGICAL PROINF,SPHE,COURAN
-C
-C***********************************************************************
-C
+!
+!***********************************************************************
+!
       GSQP=0.780654996D0
       R=6400.D3
       USDPI=0.159154943D0
       DEUPI=6.283185307D0
-C
-C-----------------------------------------------------------------------
-C     EN PROFONDEUR INFINIE ...
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!     INFINITE WATER DEPTH ...
+!-----------------------------------------------------------------------
+!
       IF (PROINF) THEN
-C
+!
         DO IP=1,NPLAN
           TRA01(IP)=GSQP/FREQ(JF)*COSTET(IP)
           TRA02(IP)=GSQP/FREQ(JF)*SINTET(IP)
         ENDDO
-C
-C       ----------------------------------------------------------------
-C       ... ET COORDONNEES CARTESIENNES
-C       ----------------------------------------------------------------
-C
+!
+!       ----------------------------------------------------------------
+!       ... AND IN CARTESIAN COORDINATE SYSTEM
+!       ----------------------------------------------------------------
+!
         IF (.NOT.SPHE) THEN
-C
+!
           DO IPOIN=1,NPOIN2
             DO IP=1,NPLAN
               CX(IPOIN,IP,JF)=TRA01(IP)
@@ -116,33 +127,33 @@ C
               CT(IPOIN,IP,JF)=0.D0
             ENDDO
           ENDDO
-C
+!
           IF (COURAN) THEN
             DO IPOIN=1,NPOIN2
              DO IP=1,NPLAN
               LSDUDN= SINTET(IP)*
-     *                 (-COSTET(IP)*DUX(IPOIN)-SINTET(IP)*DVX(IPOIN))
-     *              + COSTET(IP)*
-     *                 ( COSTET(IP)*DUY(IPOIN)+SINTET(IP)*DVY(IPOIN))
+     &                 (-COSTET(IP)*DUX(IPOIN)-SINTET(IP)*DVX(IPOIN))
+     &              + COSTET(IP)*
+     &                 ( COSTET(IP)*DUY(IPOIN)+SINTET(IP)*DVY(IPOIN))
               LSDUDS= COSTET(IP)*
-     *                 (COSTET(IP)*DUX(IPOIN)+SINTET(IP)*DVX(IPOIN))
-     *              + SINTET(IP)*
-     *                 (COSTET(IP)*DUY(IPOIN)+SINTET(IP)*DVY(IPOIN))
+     &                 (COSTET(IP)*DUX(IPOIN)+SINTET(IP)*DVX(IPOIN))
+     &              + SINTET(IP)*
+     &                 (COSTET(IP)*DUY(IPOIN)+SINTET(IP)*DVY(IPOIN))
               CX(IPOIN,IP,JF)=CX(IPOIN,IP,JF)+U(IPOIN)
               CY(IPOIN,IP,JF)=CY(IPOIN,IP,JF)+V(IPOIN)
               CT(IPOIN,IP,JF)= -LSDUDN
               CF(IPOIN,IP,JF)= -CG(IPOIN,JF)*XK(IPOIN,JF)*
-     *                          LSDUDS*USDPI
+     &                          LSDUDS*USDPI
              ENDDO
             ENDDO
           ENDIF
-C
-C       ----------------------------------------------------------------
-C       ... ET COORDONNEES SPHERIQUES
-C       ----------------------------------------------------------------
-C
+!
+!       ----------------------------------------------------------------
+!       ... AND IN SPHERICAL COORDINATE SYSTEM
+!       ----------------------------------------------------------------
+!
         ELSE
-C
+!
           SR=1.D0/R
           GRADEG=180.D0/3.1415926D0
           DO IPOIN=1,NPOIN2
@@ -154,42 +165,42 @@ C
               CT(IPOIN,IP,JF)=TRA02(IP)*TFSR
             ENDDO
           ENDDO
-C
+!
           IF (COURAN) THEN
             DO IPOIN=1,NPOIN2
              SRCF=SR/COSF(IPOIN)
              DO IP=1,NPLAN
               LSDUDN= SINTET(IP)*SR*
-     *                 (-COSTET(IP)*DUX(IPOIN)-SINTET(IP)*DVX(IPOIN))
-     *                 + COSTET(IP)*SRCF*
-     *                 ( COSTET(IP)*DUY(IPOIN)+SINTET(IP)*DVY(IPOIN))
+     &                 (-COSTET(IP)*DUX(IPOIN)-SINTET(IP)*DVX(IPOIN))
+     &                 + COSTET(IP)*SRCF*
+     &                 ( COSTET(IP)*DUY(IPOIN)+SINTET(IP)*DVY(IPOIN))
               LSDUDS= COSTET(IP)*SR*
-     *                 (COSTET(IP)*DUX(IPOIN)+SINTET(IP)*DVX(IPOIN))
-     *                + SINTET(IP)*SRCF*
-     *                 (COSTET(IP)*DUY(IPOIN)+SINTET(IP)*DVY(IPOIN))
+     &                 (COSTET(IP)*DUX(IPOIN)+SINTET(IP)*DVX(IPOIN))
+     &                + SINTET(IP)*SRCF*
+     &                 (COSTET(IP)*DUY(IPOIN)+SINTET(IP)*DVY(IPOIN))
               CX(IPOIN,IP,JF)=CX(IPOIN,IP,JF) + U(IPOIN)*SR*GRADEG
               CY(IPOIN,IP,JF)=CY(IPOIN,IP,JF) + V(IPOIN)*SRCF*GRADEG
               CT(IPOIN,IP,JF)=CT(IPOIN,IP,JF) - LSDUDN*GRADEG
               CF(IPOIN,IP,JF)= - LSDUDS*GRADEG*
-     *                          CG(IPOIN,JF)*XK(IPOIN,JF)*USDPI
+     &                          CG(IPOIN,JF)*XK(IPOIN,JF)*USDPI
              ENDDO
             ENDDO
           ENDIF
         ENDIF
-C
-C
-C-----------------------------------------------------------------------
-C     EN PROFONDEUR FINIE ....
-C-----------------------------------------------------------------------
-C
+!
+!
+!-----------------------------------------------------------------------
+!     FINITE WATER DEPTH ....
+!-----------------------------------------------------------------------
+!
       ELSE
-C
-C       ----------------------------------------------------------------
-C       ... ET EN COORDONNEES CARTESIENNES
-C       ----------------------------------------------------------------
-C
+!
+!       ----------------------------------------------------------------
+!       ... AND IN CARTESIAN COORDINATE SYSTEM
+!       ----------------------------------------------------------------
+!
         IF (.NOT.SPHE) THEN
-C
+!
           DO IPOIN=1,NPOIN2
             DO IP=1,NPLAN
               DDDN=-SINTET(IP)*DZX(IPOIN)+COSTET(IP)*DZY(IPOIN)
@@ -204,18 +215,18 @@ C
               CT(IPOIN,IP,JF)=-DSDNSK*DDDN
             ENDDO
           ENDDO
-C
+!
           IF (COURAN) THEN
             DO IPOIN=1,NPOIN2
               DO IP=1,NPLAN
                 LSDUDN= SINTET(IP)*
-     *                 (-COSTET(IP)*DUX(IPOIN)-SINTET(IP)*DVX(IPOIN))
-     *                + COSTET(IP)*
-     *                 ( COSTET(IP)*DUY(IPOIN)+SINTET(IP)*DVY(IPOIN))
+     &                 (-COSTET(IP)*DUX(IPOIN)-SINTET(IP)*DVX(IPOIN))
+     &                + COSTET(IP)*
+     &                 ( COSTET(IP)*DUY(IPOIN)+SINTET(IP)*DVY(IPOIN))
                 LSDUDS= COSTET(IP)*
-     *                 (COSTET(IP)*DUX(IPOIN)+SINTET(IP)*DVX(IPOIN))
-     *                + SINTET(IP)*
-     *                 (COSTET(IP)*DUY(IPOIN)+SINTET(IP)*DVY(IPOIN))
+     &                 (COSTET(IP)*DUX(IPOIN)+SINTET(IP)*DVX(IPOIN))
+     &                + SINTET(IP)*
+     &                 (COSTET(IP)*DUY(IPOIN)+SINTET(IP)*DVY(IPOIN))
                 DEUKD=2.D0*XK(IPOIN,JF)*DEPTH(IPOIN)
                 IF (DEUKD.GT.7.D2) THEN
                   DSDD = 0.D0
@@ -227,17 +238,17 @@ C
                 CY(IPOIN,IP,JF)=CY(IPOIN,IP,JF) + V(IPOIN)
                 CT(IPOIN,IP,JF)=CT(IPOIN,IP,JF) - LSDUDN
                 CF(IPOIN,IP,JF)= (DSDD*(USGD+DZHDT(IPOIN))
-     *                 - LSDUDS*CG(IPOIN,JF)*XK(IPOIN,JF))*USDPI
+     &                 - LSDUDS*CG(IPOIN,JF)*XK(IPOIN,JF))*USDPI
               ENDDO
             ENDDO
           ENDIF
-C
-C       --------------------------------------------------------------
-C       ... ET EN COORDONNEES SPHERIQUES
-C       --------------------------------------------------------------
-C
+!
+!       --------------------------------------------------------------
+!       ... AND IN SPHERICAL COORDINATE SYSTEM
+!       --------------------------------------------------------------
+!
         ELSE
-C
+!
           SR=1.D0/R
           GRADEG=180.D0/3.1415926D0
           DO IPOIN=1,NPOIN2
@@ -254,22 +265,22 @@ C
                DSDNSK = DEUPI*FREQ(JF)/SINH(DEUKD)
              ENDIF
              CT(IPOIN,IP,JF)=CG(IPOIN,JF)*SINTET(IP)*TFSR
-     *                                  -DSDNSK*DDDN*GRADEG
+     &                                  -DSDNSK*DDDN*GRADEG
             ENDDO
           ENDDO
-C
+!
           IF (COURAN) THEN
             DO IPOIN=1,NPOIN2
               SRCF=SR/COSF(IPOIN)
               DO IP=1,NPLAN
                 LSDUDN= SINTET(IP)*SR*
-     *                 (-COSTET(IP)*DUX(IPOIN)-SINTET(IP)*DVX(IPOIN))
-     *                + COSTET(IP)*SRCF*
-     *                 ( COSTET(IP)*DUY(IPOIN)+SINTET(IP)*DVY(IPOIN))
+     &                 (-COSTET(IP)*DUX(IPOIN)-SINTET(IP)*DVX(IPOIN))
+     &                + COSTET(IP)*SRCF*
+     &                 ( COSTET(IP)*DUY(IPOIN)+SINTET(IP)*DVY(IPOIN))
                 LSDUDS= COSTET(IP)*SR*
-     *                 ( COSTET(IP)*DUX(IPOIN)+SINTET(IP)*DVX(IPOIN))
-     *                + SINTET(IP)*SRCF*
-     *                 ( COSTET(IP)*DUY(IPOIN)+SINTET(IP)*DVY(IPOIN))
+     &                 ( COSTET(IP)*DUX(IPOIN)+SINTET(IP)*DVX(IPOIN))
+     &                + SINTET(IP)*SRCF*
+     &                 ( COSTET(IP)*DUY(IPOIN)+SINTET(IP)*DVY(IPOIN))
                 DEUKD=2.D0*XK(IPOIN,JF)*DEPTH(IPOIN)
                 IF (DEUKD.GT.7.D2) THEN
                   DSDD = 0.D0
@@ -281,15 +292,15 @@ C
                 CY(IPOIN,IP,JF)=CY(IPOIN,IP,JF) + V(IPOIN)*SRCF*GRADEG
                 CT(IPOIN,IP,JF)=CT(IPOIN,IP,JF) - LSDUDN*GRADEG
                 CF(IPOIN,IP,JF)=  (DSDD*(USGD*GRADEG+DZHDT(IPOIN))
-     *            -LSDUDS*GRADEG*CG(IPOIN,JF)*XK(IPOIN,JF))*USDPI
+     &            -LSDUDS*GRADEG*CG(IPOIN,JF)*XK(IPOIN,JF))*USDPI
               ENDDO
             ENDDO
           ENDIF
-C      
+!
         ENDIF
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

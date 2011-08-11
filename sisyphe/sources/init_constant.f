@@ -1,74 +1,64 @@
-C                     ************************  
-                      SUBROUTINE INIT_CONSTANT
-C                     ************************  
-C
+!                    ************************
+                     SUBROUTINE INIT_CONSTANT
+!                    ************************
+!
      &(KARIM_HOLLY_YANG,KARMAN,PI)
-C
-C**********************************************************************
-C SISYPHE VERSION 5.7  11/01/04                           F. HUVELIN                            
-C**********************************************************************
-C
-C
-C            ! ===================================== !
-C            ! Setting the constants used by sisyphe !
-C            ! ===================================== !
-C
-C
-C COPYRIGHT EDF-DTMPL-SOGREAH-LHF-GRADIENT
-C**********************************************************************C
-C                                                                      C
-C                 SSSS I   SSSS Y   Y PPPP  H   H EEEEE                C
-C                S     I  S      Y Y  P   P H   H E                    C
-C                 SSS  I   SSS    Y   PPPP  HHHHH EEEE                 C
-C                    S I      S   Y   P     H   H E                    C
-C                SSSS  I  SSSS    Y   P     H   H EEEEE                C
-C                                                                      C
-C----------------------------------------------------------------------C
-C                             ARGUMENTS                                C
-C .________________.____.______________________________________________C
-C |      NOM       |MODE|                   ROLE                       C
-C |________________|____|______________________________________________C
-C |________________|____|______________________________________________C
-C                    <=  Can't be change by the user                   C
-C                    =>  Can be changed by the user                    C 
-C ---------------------------------------------------------------------C
-!                                                                      !
-! CALLED BY SISYPHE                                                    !
-!                                                                      !
-! CALL                                                                 !
-!                                                                      !
-!======================================================================!
-!======================================================================!
-!                    DECLARATION DES TYPES ET DIMENSIONS               !
-!======================================================================!
-!======================================================================!
+!
+!***********************************************************************
+! SISYPHE   V6P1                                   21/07/2011
+!***********************************************************************
+!
+!brief    SETS THE CONSTANTS USED BY SISYPHE.
+!
+!history  F. HUVELIN
+!+        11/01/2004
+!+        V5P7
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| KARIM_HOLLY_YAN|-->| KARIM, HOLLY & YANG CONSTANT
+!| KARMAN         |-->| VON KARMAN CONSTANT
+!| PI             |-->| PI 
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       DOUBLE PRECISION, INTENT(INOUT) :: KARIM_HOLLY_YANG
       DOUBLE PRECISION, INTENT(INOUT) :: KARMAN
       DOUBLE PRECISION, INTENT(INOUT) :: PI
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
 !
-! Karim, Holly & Yang constant
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+!
+! KARIM, HOLLY & YANG CONSTANT
 ! ----------------------------
 !
       KARIM_HOLLY_YANG = 0.85D0
 !
-! Von Karman constant
+! VON KARMAN CONSTANT
 ! -------------------
 !
       KARMAN = 0.4D0
 !
-! Partheniades constant : doit être exprimée en m/s
+! PARTHENIADES CONSTANT : EXPRESSED IN M/S
 ! ---------------------
-! cette valeur est maintenant donnée dans user_krone_part
+! THIS VALUE IS NOW GIVEN IN USER_KRONE_PART
 !      PARTHENIADES = 2.D-5/XMVS
 !
 ! PI

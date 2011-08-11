@@ -1,48 +1,54 @@
-C                       *************************
-                        SUBROUTINE P_MPI_ADDRESS2
-C                       *************************
-C
-     *(LOCATION,ADDRESS,IER)
-C
-C***********************************************************************
-C  PARA VERSION 5.9    19/08/2008   J.-M. HERVOUET (LNHE) 01 30 87 80 18
-C  
-C***********************************************************************
-C
-C      FONCTIONS: APPEL DE LA FONCTION MPI_ADDRESS
-C      ==========
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________|
-C |                | -->|
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR :
-C
-C SOUS-PROGRAMMES APPELES : NEANT
-C
-C**********************************************************************
-C
+!                    *************************
+                     SUBROUTINE P_MPI_ADDRESS2
+!                    *************************
+!
+     &(LOCATION,ADDRESS,IER)
+!
+!***********************************************************************
+! PARAVOID   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    CALLS FUNCTION MPI_ADDRESS (HERE 1ST ARGUMENT
+!+                DOUBLE PRECISION).
+!
+!warning  EMPTY SHELL IN SCALAR MODE FOR PARALLEL COMPATIBILITY
+!
+!history  J.-M. HERVOUET (LNHE)
+!+        19/08/2008
+!+        V5P9
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| ADDRESS        |-->| LOCATION IN CALLER MEMORY
+!| IER            |<--| ERROR VALUE
+!| LOCATION       |<--| ADDRESS OF LOCATION
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
+!
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
+!
       DOUBLE PRECISION LOCATION
       INTEGER ADDRESS,IER
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(LNG.EQ.1) WRITE(LU,*) 'APPEL DE P_MPI_ADDRESS2 VERSION VIDE'
       IF(LNG.EQ.2) WRITE(LU,*) 'CALL OF P_MPI_ADDRESS2 VOID VERSION'
-C
-C----------------------------------------------------------------------
-C
+!
+!----------------------------------------------------------------------
+!
       RETURN
       END

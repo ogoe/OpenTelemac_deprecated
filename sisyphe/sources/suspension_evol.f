@@ -1,115 +1,150 @@
-C recalculer les ES à la fin et verifier le critère 
-C ELAY=ZF-ZR
-      ! ************************** !
-        SUBROUTINE SUSPENSION_EVOL
-      ! ************************** !
-
-     *  (ZFCL_S,FLUDP,FLUER,DT, NPOIN,CSF,XMVS, QFLUX,MS,
-     *   SEDCO,CONC_VASE,NCOUCH_TASS)
-C 
-C ---------------------------------------------------------------------C
-!                                                                       !
-! CALLED BY SUSPENSION_COMPUTATION                                      !
-!      CALCUL DE L'EVOLUTION POUR LA VASE EN FONCTION DES FLUDP ET FLUER! 
-!      ET MISE A JOUR DE LA MASSE DES COUCHE ET EPAISSEURS DE CHAQUE COUCHE
-!             ET EPAISSEUR TOTALE                                       !    
-!                                                                       !
-!                                                                       !
-!======================================================================!
-!======================================================================!
-!                    DECLARATION DES TYPES ET DIMENSIONS               !
-!======================================================================!
-!======================================================================!
-
-      ! 1/ MODULES
-      ! ----------
+!                    **************************
+                     SUBROUTINE SUSPENSION_EVOL
+!                    **************************
+!
+     &  (ZFCL_S,FLUDP,FLUER,DT, NPOIN,XMVS, QFLUX,MS_VASE,ES,
+     &   CONC_VASE,NCOUCH_TASS)
+!
+!***********************************************************************
+! SISYPHE   V6P1                                   21/07/2011
+!***********************************************************************
+!
+!brief    COMPUTES THE EVOLUTION FOR MUD ACCORDING TO FLUDP
+!+                AND FLUER; AND UPDATES THE MASS OF THE LAYERS +
+!+                EACH LAYER THICKNESS + TOTAL THICKNESS.
+!
+!note     COMPUTE ES AGAIN AT THE END AND
+!+         VERIFY THE CRITERION ELAY=ZF-ZR
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  C.VILLARET (EDF-LNHE), P.TASSI (EDF-LNHE)
+!+        19/07/2011
+!+        V6P1
+!+   Name of variables   
+!+   
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CONC_VASE      |-->|  INPUT CONCENTRATION OF EACH LAYER (IN KG/M3)
+!| CSF            |-->|  SAND BED CONCENTRATION (NOT USED)
+!| DT             |-->| TIME STEP
+!| FLUDP          |<->| DEPOSITION FLUX
+!| FLUER          |<->| EROSION FLUX
+!| MS_VASE        |<->| MASS OF MUD PER LAYER (KG/M2)
+!| NCOUCH_TASS    |-->| NUMBER OF VERTICAL BED LAYERS
+!| NPOIN          |-->| NUMBER OF POINTS
+!| QFLUX          |---| NET EROSION MINUS DEPOSITION RATE
+!| SEDCO          |-->| LOGICAL, SEDIMENT COHESIVE OR NOT
+!| XMVS           |-->| WATER DENSITY
+!| ZFCL_S         |<->| BED EVOLUTION PER CLASS, DUE TO SUSPENDED SEDIMENT 
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-
       ! 2/ GLOBAL VARIABLES
       TYPE (BIEF_OBJ),  INTENT(INOUT) :: ZFCL_S,FLUDP,FLUER,QFLUX
-      DOUBLE PRECISION, INTENT(IN)    :: DT, XMVS, CSF
+      DOUBLE PRECISION, INTENT(IN)    :: DT, XMVS
       INTEGER, INTENT(IN) :: NPOIN,NCOUCH_TASS
-      LOGICAL, INTENT(IN) :: SEDCO 
       DOUBLE PRECISION, INTENT(IN) :: CONC_VASE(NCOUCH_TASS)
-      DOUBLE PRECISION,  INTENT(INOUT) :: MS(NPOIN,NCOUCH_TASS)
- 
-C
+      DOUBLE PRECISION,  INTENT(INOUT) :: MS_VASE(NPOIN,NCOUCH_TASS)
+      DOUBLE PRECISION,  INTENT(INOUT) :: ES(NPOIN,NCOUCH_TASS)
+!
       ! 3/ LOCAL VARIABLES
       ! ------------------
-      INTEGER :: I,J 
-C      
-      DOUBLE PRECISION ZERO
-      DOUBLE PRECISION CONC,MER
-C
+      INTEGER :: I,J
+!
+      DOUBLE PRECISION ZERO, MER
+!
 !======================================================================!
 !======================================================================!
-!                               PROGRAMME                              !
+!                               PROGRAM                                !
 !======================================================================!
 !======================================================================!
 !
        ZERO = 1.D-08
-C
-C CALCUL DU flux de sédiments à chadue pas de temps
-C
+! 
+! COMPUTES THE SEDIMENT FLUX DURING EACH TIMESTEP
+!  QFLUX IS IN KG/M2 (MUD CONC ARE ALSO IN KG/M3) 
+! 
            CALL OS('X=Y-Z   ', X=QFLUX, Y=FLUDP, Z=FLUER)
            CALL OS('X=CX    ', X=QFLUX, C=DT)
-           IF(NCOUCH_TASS.EQ.1)   CALL OS('X=CY    ', 
-     *         X=ZFCL_S, Y= QFLUX, C=1.D0/CSF)
-
-           IF(NCOUCH_TASS.GT.1) THEN
- 
-             DO I = 1, NPOIN       
+           CALL OS('X=CX    ', X=QFLUX, C=XMVS)
 C
-C DEPOT DANS LA PREMIERE COUCHE 
-C
-             IF (QFLUX%R(I).GT.ZERO) THEN
-                ZFCL_S%R(I) = QFLUX%R(I) / CSF  
-                MS(I,1) = MS (I,1) +QFLUX%R(I)*XMVS
+         IF(NCOUCH_TASS.EQ.1)  THEN
+              CALL OS('X=CY    ', X=ZFCL_S,Y= QFLUX, 
+     &             C=1.D0/CONC_VASE(1))
 !
-              ELSEIF(QFLUX%R(I).LT.ZERO) THEN 
-C
-C EROSION DES COUCHES SUCCESSIVES
-C               
-C
+         ELSE
+             DO I = 1, NPOIN
+!
+! DEPOSITION IN THE FIRST LAYER
+!
+             IF (QFLUX%R(I).GT.ZERO) THEN
+                ZFCL_S%R(I) = QFLUX%R(I) / CONC_VASE(1)
+                MS_VASE(I,1) = MS_VASE (I,1) +QFLUX%R(I)
+!
+              ELSEIF(QFLUX%R(I).LT.ZERO) THEN
+!
+! EROSION OF SUCCESSIVE LAYERS
+!
+!
                 ZFCL_S%R(I) = 0.D0
-                MER = - QFLUX%R(I) *XMVS
-C            
+                MER = - QFLUX%R(I)
+!
                 DO J = 1, NCOUCH_TASS
-C           
-                 IF(.NOT.SEDCO) CONC= XMVS * CSF
-                 IF(SEDCO) CONC=XMVS*CONC_VASE(J)
-C
-                 IF (MER.LE.MS(I,J)) THEN            
-                   MS(I,J)= MS(I,J) - MER
-                   ZFCL_S%R(I)= ZFCL_S%R(I) - MER/CONC
+!
+! CONC ARE IN KG/M3
+!
+                 IF (MER.LE.MS_VASE(I,J)) THEN
+                   MS_VASE(I,J)= MS_VASE(I,J) - MER
+                   ZFCL_S%R(I)= ZFCL_S%R(I) - MER/CONC_VASE(J)
+                   ES(I,J)= MS_VASE(I,J)/CONC_VASE(J)
                    GO TO 40
-C
+!
                 ELSE
-C
-C EROSION DE LA TOTALITE DE LA SOUS-COUCHE
-C
-                   MER= MER - MS(I,J)
-                   ZFCL_S%R(I)= ZFCL_S%R(I) - 
-     *                MS(I,J)/CONC             
-                   MS(I,J)=0.D0
-C                                       
+!
+! EROSION OF THE WHOLE LAYER
+!
+                   MER= MER - MS_VASE(I,J)
+                   ZFCL_S%R(I)= ZFCL_S%R(I) -ES(I,J)
+!     &                MS_VASE(I,J)/CONC_VASE(J)
+                   MS_VASE(I,J)=0.D0
+                   ES(I,J) = 0.D0
+! 
                ENDIF
-C FIN DE LA BOUCLE SUR LES COUCHES
+! END OF THE LOOP ON THE LAYERS
              ENDDO
-C fin erosio
+          IF(LNG.EQ.1) THEN
+            WRITE(LU,*) 'ATTENTION COUCHES VIDES: NOEUD I=',I
           ENDIF
-C
-  40      CONTINUE  
-C
-C FIN DE LA BOUCLE SUR LES POINTS
-C
+          IF(LNG.EQ.2) THEN
+            WRITE(LU,*) 'BEWARE, ALL LAYERS EMPTY, NODE I=',I
+          ENDIF
+!          CALL PLANTE(1)
+!          STOP
+! END EROSION
+          ENDIF
+!
+  40      CONTINUE
+!
+! END OF THE LOOP ON THE NODES
+!
         ENDDO
       ENDIF
 !======================================================================!
 !======================================================================!
 !
-      RETURN      
+      RETURN
       END

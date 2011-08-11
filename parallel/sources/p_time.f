@@ -1,46 +1,56 @@
-C                       **********************
-                        REAL*8 FUNCTION P_TIME
-C                       **********************
-C
-     &() 
-C
-C***********************************************************************
-C  PARA       VERSION 5.9         23/06/2008        J-M HERVOUET (LNH)
-C  ADAPTED FOR MPI              /10/99       RAINER JOHANNI (SGI MUNICH)
-C  VERSION 5.0 MODIFIED       28/12/99    J.A. JANKOWSKI (BAW KARLSRUHE)
-C***********************************************************************
-C
-C      FONCTIONS: TEMPS DU PROCESSEUR.
-C      ==========
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________|
-C |                | -->|
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR :
-C
-C SOUS-PROGRAMMES APPELES : NEANT
-C
-C**********************************************************************
-C
+!                    **********************
+                     REAL*8 FUNCTION P_TIME
+!                    **********************
+!
+     &()
+!
+!***********************************************************************
+! PARALLEL   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    TIME OF THE PROCESSOR.
+!
+!history  RAINER JOHANNI (SGI MUNICH)
+!+        **/10/1999
+!+
+!+   ADAPTED FOR MPI
+!
+!history  J.A. JANKOWSKI (BAW KARLSRUHE)
+!+        28/12/1999
+!+
+!+   RELEASE 5.0 MODIFIED
+!
+!history  J-M HERVOUET (LNH)
+!+        23/06/2008
+!+        V5P9
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
+!
       INCLUDE 'mpif.h'
-C
-C-----------------------------------------------------------------------
-C  
+!
+!-----------------------------------------------------------------------
+!
       P_TIME=MPI_WTIME()
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

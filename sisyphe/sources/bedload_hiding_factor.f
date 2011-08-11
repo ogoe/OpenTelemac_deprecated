@@ -1,51 +1,57 @@
-!       ********************************
-        SUBROUTINE BEDLOAD_HIDING_FACTOR
-!       ********************************
+!                    ********************************
+                     SUBROUTINE BEDLOAD_HIDING_FACTOR
+!                    ********************************
 !
      &(ACLADM, HIDFAC, NPOIN, HIDI, DM, KARIM_HOLLY_YANG, HIDING)
 !
-!**********************************************************************C
-! SISYPHE VERSION 5.5  14/09/2004  F. HUVELIN                          C
-! SISYPHE VERSION 5.3  --/--/2002  M. GONZALES DE LINARES              C
-! SISYPHE VERSION 5.3  --/11/2002  B. MINH DUC                         C
-!**********************************************************************C
+!***********************************************************************
+! SISYPHE   V6P1                                   21/07/2011
+!***********************************************************************
 !
+!brief    HIDING FACTOR FOR EACH NODE, SEDIMENT CLASS
+!+                AND TIME STEP.
 !
-!     ! ========================================================= !
-!     ! Hiding factor for each node, sediment class and time step !
-!     ! ========================================================= !
+!history  B. MINH DUC
+!+        **/11/2002
+!+        V5P3
+!+
 !
+!history  M. GONZALES DE LINARES
+!+        **/**/2002
+!+        V5P3
+!+
 !
-! COPYRIGHT EDF-BAW-IFH   
-!**********************************************************************C
-!                                                                      C
-!                 SSSS I   SSSS Y   Y PPPP  H   H EEEEE                C
-!                S     I  S      Y Y  P   P H   H E                    C
-!                 SSS  I   SSS    Y   PPPP  HHHHH EEEE                 C
-!                    S I      S   Y   P     H   H E                    C
-!                SSSS  I  SSSS    Y   P     H   H EEEEE                C
-!                                                                      C
-!----------------------------------------------------------------------C
-!                             ARGUMENTS                                C
-! .________________.____.______________________________________________C
-! |      NOM       |MODE|                   ROLE                       C
-! |________________|____|______________________________________________C
-! |________________|____|______________________________________________C
+!history  F. HUVELIN
+!+        14/09/2004
+!+        V5P5
+!+
 !
-! ---------------------------------------------------------------------C
-!                                                                      !
-! CALLED BY SISYPHE                                                    !
-!                                                                      !
-! CALL                                                                 !
-!                                                                      !
-!======================================================================!
-!======================================================================!
-!                    DECLARATION DES TYPES ET DIMENSIONS               !
-!======================================================================!
-!======================================================================!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
 !
-! 1/ MODULES
-! ----------
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  C.VILLARET (EDF-LNHE), P.TASSI (EDF-LNHE)
+!+        19/07/2011
+!+        V6P1
+!+  Name of variables   
+!+   
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| ACLADM         |-->| MEAN DIAMETER OF SEDIMENT
+!| DM             |-->| SEDIMENT GRAIN DIAMETER
+!| HIDFAC         |-->| HIDING FACTOR FORMULAS
+!| HIDI           |-->| HIDING FACTOR FOR PARTICULAR SIZE CLASS (HIDFAC =0)
+!| HIDING         |-->| HIDING FACTOR CORRECTION  
+!| NPOIN          |-->| NUMBER OF POINTS
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       USE INTERFACE_SISYPHE,
      &    EX_BEDLOAD_HIDING_FACTOR => BEDLOAD_HIDING_FACTOR
@@ -53,31 +59,31 @@
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-!      
-!
-! 2/ GLOBAL VARIABLES
-! -------------------
-!
-      TYPE(BIEF_OBJ),   INTENT(IN)  :: ACLADM
-      INTEGER,          INTENT(IN)  :: HIDFAC, NPOIN
-      DOUBLE PRECISION, INTENT(IN)  :: HIDI, DM, KARIM_HOLLY_YANG
+      !
+      !
+      ! 2/ GLOBAL VARIABLES
+      ! -------------------
+      !
+      TYPE(BIEF_OBJ),   INTENT(IN)    :: ACLADM
+      INTEGER,          INTENT(IN)    :: HIDFAC, NPOIN
+      DOUBLE PRECISION, INTENT(IN)    :: HIDI, DM, KARIM_HOLLY_YANG
       TYPE(BIEF_OBJ),   INTENT(INOUT) :: HIDING
-!
-!
-! 3/ LOCAL VARIABLES
-! ------------------
-!
+      !
+      !
+      ! 3/ LOCAL VARIABLES
+      ! ------------------
+      !
       INTEGER          :: J
       DOUBLE PRECISION :: C1, C2
 !
 !======================================================================!
 !======================================================================!
-!                               PROGRAMME                              !
+!                               PROGRAM                                !
 !======================================================================!
 !======================================================================!
 !
 ! *************************** !
-! Ia - CONSTANT HIDING FACTOR !
+! IA - CONSTANT HIDING FACTOR !
 ! *************************** !
 !
       IF (HIDFAC == 0) THEN
@@ -85,7 +91,7 @@
          CALL OS('X=C     ', X=HIDING, C=HIDI)
 !
 ! ************************** !
-! Ib - FORMULA OF EGIAZAROFF ! 
+! IB - EGIAZAROFF FORMULATION !
 ! ************************** !
 !
       ELSEIF (HIDFAC == 1) THEN
@@ -97,7 +103,7 @@
          ENDDO
 !
 ! ********************************** !
-! Ic - FORMULA OF ASHIDA AND MICHIUE !
+! IC - ASHIDA AND MICHIUE FORMULATION !
 ! ********************************** !
 !
       ELSEIF (HIDFAC == 2) THEN
@@ -115,9 +121,9 @@
          ENDDO
 !
 ! ************************************* !
-! Ie - FORMULA OF KARIM, HOLLY AND YANG !
+! IE - KARIM, HOLLY AND YANG FORMULATION !
 ! ************************************* !
-!      
+!
       ELSEIF (HIDFAC == 4) THEN
 !
          CALL OS('X=1/Y   ', X=HIDING, Y=ACLADM)
@@ -128,13 +134,13 @@
 !
         IF(LNG.EQ.1) THEN
           WRITE(LU,*) 'FORMULE DE MASQUAGE INCONNUE : ',HIDFAC
-        ENDIF 
+        ENDIF
         IF(LNG.EQ.2) THEN
           WRITE(LU,*) 'UNKNOWN HIDING FACTOR FORMULA: ',HIDFAC
-        ENDIF 
+        ENDIF
         CALL PLANTE(1)
-        STOP     
-!      
+        STOP
+!
       ENDIF
 !
 !======================================================================!

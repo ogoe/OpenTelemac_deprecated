@@ -1,15 +1,14 @@
-#
-#
-include_directories("${PROJECT_BINARY_DIR}/bief/sources")
 #CMake buildfile for telemac/sisyphe
 #Author: Oliver Goethel (Email: coding at ogoethel.de)
+#
+include_directories("${PROJECT_BINARY_DIR}/bief/sources")
 #
 FILE(GLOB CTR_SOURCES sisyphe/sources *.f)
 #
 #
-file(GLOB to_remove bedload_interact_CV.f)
-#
-list(REMOVE_ITEM CTR_SOURCES ${to_remove}) 
+# file(GLOB to_remove bedload_interact_CV.f)
+# #
+# list(REMOVE_ITEM CTR_SOURCES ${to_remove}) 
 #
 #define the library
 add_library(sisyphe${TELEMAC_VERSION} STATIC ${CTR_SOURCES})

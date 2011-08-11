@@ -1,82 +1,74 @@
-C                       *****************
-                        SUBROUTINE GTSH13
-C                       *****************
-C
-     *(U,V,X,Y,SHP,ELT,IKLE,INDIC,NLOC,NPOIN,
-     * NELEM,NELMAX,LV,MSK,MASKEL)
-C
-C
-C  A SUPPRIMER : U,V,X,Y,INDIC,NLOC,LV
-C
-C***********************************************************************
-C BIEF VERSION 5.9           08/08/08    ALGIANE FROEHLY (MATMECA)
-C
-C***********************************************************************
-C
-C      FONCTION:
-C
-C   - FIXE, POUR LES TRIANGLES P1 DE TELEMAC-2D ET,
-C     AVANT LA REMONTEE DES COURBES CARACTERISTIQUES,
-C     LES COORDONNEES BARYCENTRIQUES DE TOUS LES NOEUDS DU
-C     MAILLAGE DANS L'ELEMENT VERS OU POINTE CETTE COURBE.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |    U,V         | -->| COMPOSANTES DE LA VITESSE                    |
-C |    X,Y         | -->| COORDONNEES DES POINTS DU MAILLAGE.          |
-C |    SHP         |<-- | COORDONNEES BARYCENTRIQUES DES NOEUDS DANS   |
-C |                |    | LEURS ELEMENTS "ELT" ASSOCIES.               |
-C |    ELT         |<-- | NUMEROS DES ELEMENTS CHOISIS POUR CHAQUE     |
-C |                |    | NOEUD.                                       |
-C |    IKLE        | -->| TRANSITION ENTRE LES NUMEROTATIONS LOCALE    |
-C |                |    | ET GLOBALE.                                  |
-C |    NPOIN       | -->| NOMBRE DE POINTS.                            |
-C |    NELEM       | -->| NOMBRE D'ELEMENTS.                           |
-C |    NELMAX      | -->| NOMBRE MAXIMAL D'ELEMENTS DANS LE MAILLAGE 2D|
-C |    MSK         | -->| SI OUI, PRESENCE D'ELEMENTS MASQUES.         |
-C |    MASKEL      | -->| TABLEAU DE MASQUAGE DES ELEMENTS             |
-C |                |    |  =1. : NORMAL   =0. : ELEMENT MASQUE.        |
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : CARACT
-C
-C SOUS-PROGRAMME APPELE : NEANT
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE GTSH13
+!                    *****************
+!
+     &(SHP,ELT,IKLE,NPOIN,NELEM,NELMAX,MSK,MASKEL)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    FIXES THE BARYCENTRIC COORDINATES OF ALL THE MESH
+!+                NODES IN THE ELEMENT TOWARDS WHICH POINTS THE
+!+                CHARACTERISTIC CURVE, FOR THE TELEMAC-2D P1 TRIANGLES
+!+                AND BEFORE TRACING BACK IN TIME THE CHARACTERISTIC
+!+                CURVES.
+!
+!history  ALGIANE FROEHLY (MATMECA)
+!+        08/08/08
+!+        V5P9
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| ELT            |<--| ELEMENT CHOSEN FOR EVERY POINT
+!| IKLE           |-->| CONNECTIVITY TABLE
+!| MASKEL         |-->| MASKING OF ELEMENTS
+!|                |   | =1. : NORMAL   =0. : MASKED ELEMENT
+!| MSK            |-->| IF YES, THERE IS MASKED ELEMENTS.
+!| NELEM          |-->| NUMBER OF ELEMENTS
+!| NELMAX         |-->| MAXIMUM NUMBER OF ELEMENTS
+!| NPOIN          |-->| NUMBER OF POINTS.
+!| SHP            |<--| BARYCENTRIC COORDINATES OF NODES IN THEIR
+!|                |   | ASSOCIATED ELEMENT "ELT".
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_GTSH13 => GTSH13
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C 
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-      INTEGER, INTENT(IN)    :: NPOIN,NELEM,NELMAX,LV
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+      INTEGER, INTENT(IN)    :: NPOIN,NELEM,NELMAX
       INTEGER, INTENT(IN)    :: IKLE(NELMAX,6)
-      INTEGER, INTENT(INOUT) :: ELT(NPOIN),INDIC(NPOIN),NLOC(NPOIN)
-C
-      DOUBLE PRECISION, INTENT(IN)    :: U(NPOIN),V(NPOIN)
-      DOUBLE PRECISION, INTENT(IN)    :: X(*),Y(*)
+      INTEGER, INTENT(INOUT) :: ELT(NPOIN)
+!
       DOUBLE PRECISION, INTENT(INOUT) :: SHP(3,NPOIN)
       DOUBLE PRECISION, INTENT(IN)    :: MASKEL(NELMAX)
-C
+!
       LOGICAL, INTENT(IN) :: MSK
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-      INTEGER I,IELEM,IPOIN,N1,N2,N3,N4,N5,N6
-C
-C***********************************************************************
-C
-C     FIRST LOOP, TO GET AN ELEMENT FOR ALL POINTS
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+      INTEGER IELEM,N1,N2,N3,N4,N5,N6
+!
+!***********************************************************************
+!
+!     FIRST LOOP: GETS AN ELEMENT FOR ALL POINTS
+!
       DO IELEM = 1,NELEM
           N1=IKLE(IELEM,1)
           N2=IKLE(IELEM,2)
@@ -109,10 +101,10 @@ C
           ELT(N5)=IELEM
           ELT(N6)=IELEM
       ENDDO
-C
-C     SECOND LOOP IF MASKING, TO GET AN ELEMENT WHICH IS NOT MASKED,
-C                             IF THERE IS ONE
-C
+!
+!     SECOND LOOP IF MASKING: GETS AN ELEMENT WHICH IS NOT MASKED,
+!                             IF THERE IS ONE
+!
       IF(MSK) THEN
         DO IELEM = 1,NELEM
           IF(MASKEL(IELEM).GT.0.5D0) THEN
@@ -149,8 +141,8 @@ C
           ENDIF
         ENDDO
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

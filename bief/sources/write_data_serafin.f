@@ -1,56 +1,63 @@
-C                       *****************************
-                        SUBROUTINE WRITE_DATA_SERAFIN
-C                       *****************************
-C
-     *(NFIC,NVARS,TIME,TIMESTEP,OUTVAR,BVARSOR,FFORMAT,N)
-C
-C***********************************************************************
-C BIEF VERSION 6.0           01/04/2009               R NEBAUER (LNHE) 
-C***********************************************************************
-C
-C FONCTION : WRITES RECORDS OF RESULTS IN A SERAFIN FORMAT FILE
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |   NFIC         | -->| LOGICAL UNIT OF FILE
-C |   NVARS        | -->| NUMBER OF VARIABLES
-C |   TIME         | -->| LOGICAL UNIT OF FILE
-C |   TIMESTEP     | -->| 
-C |   OUTVAR       | -->| INDICATES FOR EACH VARIABLE IF WE SHOULD 
-C |                |    | PRINT IT OUT OR NOT
-C |   BVARSOR      | -->| BIEF_OBJ BLOCK WITH DATA VALUES
-C |   FFORMAT      | -->| FILE FORMAT
-C |   N            | -->| NUMBER OF VALUES (MAY BE DIFFERENT FROM
-C |                |    | THE NUMBER OF DEGREES OF FREEDOM, E.G. FOR
-C |                |    | QUADRATIC ELEMENTS ONLY THE LINEAR VALUES
-C |                |    | ARE EXITED)
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES : RIEN EN STANDARD
-C
-C***********************************************************************
-C
+!                    *****************************
+                     SUBROUTINE WRITE_DATA_SERAFIN
+!                    *****************************
+!
+     &(NFIC,NVARS,TIME,TIMESTEP,OUTVAR,BVARSOR,FFORMAT,N)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    WRITES RECORDS OF RESULTS IN A SERAFIN FORMAT FILE.
+!
+!history  R NEBAUER (LNHE)
+!+        01/04/2009
+!+        V6P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| BVARSOR        |-->| BIEF_OBJ BLOCK WITH DATA VALUES
+!| FFORMAT        |-->| FILE FORMAT
+!| N              |-->| NUMBER OF VALUES (MAY BE DIFFERENT FROM
+!|                |   | THE NUMBER OF DEGREES OF FREEDOM, E.G. FOR
+!|                |   | QUADRATIC ELEMENTS ONLY THE LINEAR VALUES
+!|                |   | ARE EXITED)
+!| NFIC           |-->| LOGICAL UNIT OF FILE
+!| NVARS          |-->| NUMBER OF VARIABLES
+!| OUTVAR         |-->| INDICATES FOR EACH VARIABLE IF WE SHOULD
+!|                |   | PRINT IT OUT OR NOT
+!| TIME           |-->| LOGICAL UNIT OF FILE
+!| TIMESTEP       |-->| TIME STEP (INTEGER, NOT DT)
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER        ,  INTENT(IN)          :: NFIC,NVARS,N,TIMESTEP
       DOUBLE PRECISION, INTENT(IN)          :: TIME
       LOGICAL, DIMENSION(NVARS), INTENT(IN) :: OUTVAR
       TYPE(BIEF_OBJ),            INTENT(IN) :: BVARSOR
       CHARACTER(LEN=8), INTENT(IN)          :: FFORMAT
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       CHARACTER(LEN=2)               :: RF
       DOUBLE PRECISION, DIMENSION(1) :: TTIME
       INTEGER                        :: K,ISTAT
@@ -72,15 +79,15 @@ C
       CALL ECRI2(TTIME,IBID,CBID,1,RF,NFIC,'STD',ISTAT)
 !
       DO K=1,NVARS
-        IF(OUTVAR(K)) THEN 
-          ! EN ESPERANT QUE CA VA MARCHER COMME CA ... 
-          ! PUISQUE N N'EST PAS UN ARGUMENT ..
+        IF(OUTVAR(K)) THEN
+          ! HOPING THAT IT WILL WORK ...
+          ! GIVEN THAT N IS NOT AN ARGUMENT ...
           ! N = BVARSOR%ADR(K)%P%DIM1
 !  CORRECTION JMH 21/04/2009 NO, N IS GIVEN AND MAY BE DIFFERENT
 !  FROM BVARSOR%ADR(K)%P%DIM1 (QUASI-BUBBLE AND QUADRATIC ELEMENTS)
           IF(ASSOCIATED(BVARSOR%ADR(K)%P%R)) THEN
             CALL ECRI2(BVARSOR%ADR(K)%P%R,IBID,CBID,N,RF,NFIC,'STD',
-     *                 ISTAT)
+     &                 ISTAT)
           ELSE
             IF(LNG.EQ.1) THEN
               WRITE(LU,*) 'WRITE_DATA_SERAFIN : VARIABLE NO : ',K

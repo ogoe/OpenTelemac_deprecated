@@ -1,55 +1,49 @@
-C                       ************************
-                        SUBROUTINE FRICTION_USER
-C                       ************************
-C
-C***********************************************************************
-C  TELEMAC-2D VERSION 5.4                 J-M HERVOUET (LNH) 30 87 80 18
-C***********************************************************************
-C
-C 15/04/04 : subroutine written by F. Huvelin
-C
-C
-          ! ----------------------------------------------- !
-          !       Friction zones definition (by node)       !
-          ! ----------------------------------------------- !
-C
-C
-C               TTTTT EEEEE L     EEEEE M   M   AA  CCCCC
-C                 T   E     L     E     MM MM  A  A C
-C                 T   EEE   L     EEE   M M M  AAAA C
-C                 T   E     L     E     M   M  A  A C
-C                 T   EEEEE LLLLL EEEEE M   M  A  A CCCCC
-C
-C
-C----------------------------------------------------------------------C
-C                             ARGUMENTS                                C
-C .________________.____.______________________________________________C
-C |      NOM       |MODE|                   ROLE                       C
-C |________________|____|______________________________________________C
-C |                |    |                                              C
-C |________________|____|______________________________________________C
-C                    <=  input value                                   C
-C                    =>  output value                                  C 
-C ---------------------------------------------------------------------C
-
-!=======================================================================!
-!=======================================================================!
-!                    DECLARATION DES TYPES ET DIMENSIONS                !
-!=======================================================================!
-!=======================================================================!
-
+!                    ************************
+                     SUBROUTINE FRICTION_USER
+!                    ************************
+!
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    DEFINES FRICTION ZONES (BY NODE).
+!
+!history  F. HUVELIN
+!+        15/04/2004
+!+
+!+
+!
+!history  J-M HERVOUET (LNHE)
+!+
+!+        V5P4
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
       USE FRICTION_DEF
       USE DECLARATIONS_TELEMAC
       USE DECLARATIONS_TELEMAC2D
-      IMPLICIT NONE      
+      IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-
-      !1/ Global variables
+      !1/ GLOBAL VARIABLES
       !-------------------
-
-      !2/ Local variables
+      !2/ LOCAL VARIABLES
       !------------------
       INTEGER :: I, NPOIN_CF
 !=======================================================================!
@@ -57,16 +51,14 @@ C ---------------------------------------------------------------------C
 !                               PROGRAMME                               !
 !=======================================================================!
 !=======================================================================!
-
 ! EXAMPLE :
 ! ---------
 !
-!      NPOIN_CF = CF%DIM1 ! number of point for the discretization of CF
+!      NPOIN_CF = CF%DIM1 ! NUMBER OF POINT FOR THE DISCRETIZATION OF CF
 !
 !      DO I = 1, NPOIN_CF
 !         KFROPT%I(I) = 1
 !      ENDDO
-
 !=======================================================================!
 !=======================================================================!
       RETURN

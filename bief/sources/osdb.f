@@ -1,74 +1,78 @@
-C                       ***************
-                        SUBROUTINE OSDB
-C                       ***************
-C
-     * ( OP , X , Y , Z , C , MESH )
-C
-C***********************************************************************
-C BIEF VERSION 5.5           06/12/94    J-M HERVOUET (LNH) 30 87 80 18
-C***********************************************************************
-C
-C  FONCTION : OPERATIONS SUR LES VECTEURS
-C
-C             X,Y ET Z DOIVENT ETRE DES STRUCTURES
-C
-C             ICI X EST UN VECTEUR DEFINI SUR LE DOMAINE
-C                 Y ET Z SONT DES VECTEURS DE BORD
-C
-C   Y NE DOIT PAS ETRE UNE STRUCTURE FACTICE.
-C   Z NON PROGRAMME POUR L'INSTANT.
-C
-C   OP EST UNE CHAINE DE 8 CARACTERES QUI INDIQUE L'OPERATION QUI SERA
-C   EFFECTUEE SUR LES VECTEURS X,Y ET Z ET LA CONSTANTE C. LE RESULTAT
-C   EST LE VECTEUR X.
-C
-C   OP = 'X=Y     '     :  Y COPIE DANS X
-C   OP = 'X=+Y    '     :  IDEM
-C   OP = 'X=X+Y   '     :  Y AJOUTE A X
-C   OP = 'X=X-Y   '     :  Y RETRANCHE DE X
-C   OP = 'X=CY    '     :  CY MIS DANS X
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |      OP        | -->| CHAINE DE CARACTERES INDIQUANT L'OPERATION
-C |                |   >| A EFFECTUER.
-C |      X         |<-- | VECTEUR RESULTAT
-C |      Y         | -->| VECTEUR OPERANDE
-C |      Z         | -->| VECTEUR OPERANDE
-C |      C         | -->| CONSTANTE DONNEE
-C |      NPOIN     | -->| DIMENSION DES VECTEURS
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELANTS :
-C PROGRAMMES APPELES   : NEANT
-C
-C**********************************************************************
-C
+!                    ***************
+                     SUBROUTINE OSDB
+!                    ***************
+!
+     & ( OP , X , Y , Z , C , MESH )
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    OPERATIONS ON VECTORS.
+!code
+!+   OP IS A STRING OF 8 CHARACTERS, WHICH INDICATES THE OPERATION TO BE
+!+   PERFORMED ON VECTORS X,Y AND Z AND CONSTANT C.
+!+
+!+   HERE X IS A VECTOR DEFINED IN THE DOMAIN.
+!+   Y AND Z ARE VECTORS DEFINED ON THE BOUNDARY.
+!+   X, Y AND Z MUST BE STRUCTURES.
+!+   Y SHOULD NOT BE A DUMMY STRUCTURE.
+!+   Z NOT YET IMPLEMENTED.
+!+
+!+   THE RESULT IS VECTOR X.
+!+
+!+   OP = 'X=Y     '     :  COPIES Y IN X
+!+   OP = 'X=+Y    '     :  IDEM
+!+   OP = 'X=X+Y   '     :  ADDS Y TO X
+!+   OP = 'X=X-Y   '     :  SUBTRACTS Y FROM X
+!+   OP = 'X=CY    '     :  MULTIPLIES Y BY C
+!
+!history  J-M HERVOUET (LNH)
+!+        06/12/94
+!+        V5P5
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| C              |-->| A GIVEN CONSTANT USED IN OPERATION OP
+!| MESH           |-->| MESH STRUCTURE
+!| OP             |-->| OPERATION TO BE DONE (SEE ABOVE)
+!| X              |<--| RESULTING VECTOR
+!| Y              |-->| VECTOR USED IN OPERATION OP
+!| Z              |-->| VECTOR USED IN OPERATION OP
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_OSDB => OSDB
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-C
+!
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+!
       DOUBLE PRECISION, INTENT(IN)  :: C
       CHARACTER(LEN=8), INTENT(IN)  :: OP
       TYPE(BIEF_OBJ), INTENT(INOUT) :: X
       TYPE(BIEF_OBJ), INTENT(IN)    :: Y,Z
       TYPE(BIEF_MESH), INTENT(IN)   :: MESH
-C
-C+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-C
+!
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+!
       INTEGER NPTFR,IELMX,IELMY
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(X%TYPE.NE.2.OR.Y%TYPE.NE.2) THEN
         IF (LNG.EQ.1) WRITE(LU,100)
         IF (LNG.EQ.2) WRITE(LU,101)
@@ -77,12 +81,12 @@ C
         CALL PLANTE(1)
         STOP
       ENDIF
-C
+!
       IELMX = X%ELM
       IELMY = Y%ELM
-C
+!
       IF((DIMENS(IELMX).NE.2.OR.DIMENS(IELMY).NE.1).AND.
-     *   (DIMENS(IELMX).NE.3.OR.DIMENS(IELMY).NE.2)) THEN
+     &   (DIMENS(IELMX).NE.3.OR.DIMENS(IELMY).NE.2)) THEN
         IF (LNG.EQ.1) WRITE(LU,102)
         IF (LNG.EQ.2) WRITE(LU,103)
 102     FORMAT(1X,'OSDB (BIEF) : X ET Y ONT DE MAUVAISES DIMENSIONS')
@@ -90,19 +94,20 @@ C
         CALL PLANTE(1)
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       NPTFR = Y%DIM1
-C
-CC MAILLAGE-3D
+!
+!     3D MESH
+!
       IF(IELMX.EQ.11.OR.IELMX.EQ.21.OR.IELMX.EQ.31.OR.IELMX.EQ.61.OR.
-     *   IELMX.EQ.12.OR.IELMX.EQ.41.OR.IELMX.EQ.51.OR.IELMX.EQ.81) THEN
-C       TABLEAU NBOR
+     &   IELMX.EQ.12.OR.IELMX.EQ.41.OR.IELMX.EQ.51.OR.IELMX.EQ.81) THEN
+!       ARRAY NBOR
         CALL OVDB( OP , X%R , Y%R , Z%R , C , MESH%NBOR%I , NPTFR )
       ELSEIF(IELMX.EQ.10.OR.IELMX.EQ.20.OR.
-     *       IELMX.EQ.40.OR.IELMX.EQ.50.OR.IELMX.EQ.80) THEN
-C       TABLEAU NELBOR
+     &       IELMX.EQ.40.OR.IELMX.EQ.50.OR.IELMX.EQ.80) THEN
+!       ARRAY NELBOR
         CALL OVDB( OP , X%R , Y%R , Z%R , C , MESH%NELBOR%I , NPTFR )
       ELSE
         IF (LNG.EQ.1) WRITE(LU,104)
@@ -112,8 +117,8 @@ C       TABLEAU NELBOR
         CALL PLANTE(1)
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

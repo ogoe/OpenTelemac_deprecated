@@ -1,84 +1,77 @@
-C                       *****************
-                        SUBROUTINE GTSH41
-C                       *****************
-C
-     *(U,V,WS,X,Y,SHP,SHZ,ELT,ETA,IKLE2,INDIC,NLOC,NPOIN2,NELEM2,NPLAN,
-     * LV,MSK,MASKEL)
-C
-C  A ENLEVER : U,V,X,Y,NLOC,INDIC
-C
-C***********************************************************************
-C BIEF VERSION 5.9           21/08/2008    J-M JANIN (LNH) 30 87 72 84
-C
-C***********************************************************************
-C
-C      FONCTION:
-C
-C   - FIXE, POUR LES PRISMES DE TELEMAC-3D ET,
-C     AVANT LA REMONTEE DES COURBES CARACTERISTIQUES,
-C     LES COORDONNEES BARYCENTRIQUES DE TOUS LES NOEUDS DU
-C     MAILLAGE DANS L'ELEMENT VERS OU POINTE CETTE COURBE.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |    U,V         | -->| COMPOSANTES DE LA VITESSE                    |
-C |    X,Y         | -->| COORDONNEES DES POINTS DU MAILLAGE.          |
-C |    SHP         |<-- | COORDONNEES BARYCENTRIQUES DES NOEUDS DANS   |
-C |                |    | LEURS ELEMENTS "ELT" ASSOCIES.               |
-C |    ELT         |<-- | NUMEROS DES ELEMENTS CHOISIS POUR CHAQUE     |
-C |                |    | NOEUD.                                       |
-C |    IKLE        | -->| TRANSITION ENTRE LES NUMEROTATIONS LOCALE    |
-C |                |    | ET GLOBALE.                                  |
-C |    NPOIN       | -->| NOMBRE DE POINTS.                            |
-C |    NELEM       | -->| NOMBRE D'ELEMENTS.                           |
-C |    NELMAX      | -->| NOMBRE MAXIMAL D'ELEMENTS DANS LE MAILLAGE 2D|
-C |    NPTFR       | -->| NOMBRE DE POINTS FRONTIERES.                 |
-C |    MSK         | -->| SI OUI, PRESENCE D'ELEMENTS MASQUES.         |
-C |    MASKEL      | -->| TABLEAU DE MASQUAGE DES ELEMENTS             |
-C |                |    |  =1. : NORMAL   =0. : ELEMENT MASQUE.        |
-C |    MASKPT      | -->| TABLEAU DE MASQUAGE DES POINTS               |
-C |                |    |  =1. : NORMAL   =0. : POINT MASQUE.          |
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : CARACT
-C
-C SOUS-PROGRAMME APPELE : NEANT
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE GTSH41
+!                    *****************
+!
+     &(WS,SHP,SHZ,ELT,ETA,IKLE2,NPOIN2,NELEM2,NPLAN,MSK,MASKEL)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    FIXES THE BARYCENTRIC COORDINATES OF ALL THE MESH
+!+                NODES IN THE ELEMENT TOWARDS WHICH POINTS THE
+!+                CHARACTERISTIC CURVE, FOR THE TELEMAC-3D PRISMS AND
+!+                BEFORE TRACING BACK IN TIME THE CHARACTERISTIC
+!+                CURVES.
+!
+!history  J-M JANIN (LNH)
+!+        21/08/2008
+!+        V5P9
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| ELT            |<--| ELEMENT CHOSEN FOR EVERY POINT
+!| ETA            |---|
+!| IKLE2          |-->| 2D CONNECTIVITY TABLE
+!| MASKEL         |-->| MASKING OF ELEMENTS
+!|                |   | =1. : NORMAL   =0. : MASKED ELEMENT
+!| MSK            |-->| IF YES, THERE IS MASKED ELEMENTS.
+!| NELEM2         |-->| NUMBER OF ELEMENTS IN 2D
+!| NPLAN          |-->| NUMBER OF PLANES
+!| NPOIN2         |-->| NUMBER OF 2D POINTS
+!| SHP            |<--| HORIZONTAL BARYCENTRIC COORDINATES OF NODES IN 
+!|                |   | THEIR ASSOCIATED ELEMENT "ELT".
+!| SHZ            |-->| VERTICAL BARYCENTRIC COORDINATES
+!| WS             |-->| VERTICAL VELOCITY
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-      INTEGER, INTENT(IN)    :: NPOIN2,NELEM2,NPLAN,LV
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+      INTEGER, INTENT(IN)    :: NPOIN2,NELEM2,NPLAN
       INTEGER, INTENT(IN)    :: IKLE2(NELEM2,3)
       INTEGER, INTENT(INOUT) :: ELT(NPOIN2,NPLAN),ETA(NPOIN2,NPLAN)
-      INTEGER, INTENT(INOUT) :: INDIC(NPOIN2),NLOC(NPOIN2)
-C
-      DOUBLE PRECISION, INTENT(IN) :: U(NPOIN2,NPLAN),V(NPOIN2,NPLAN)
+!
       DOUBLE PRECISION, INTENT(IN) :: WS(NPOIN2,NPLAN)
-      DOUBLE PRECISION, INTENT(IN) :: X(NPOIN2),Y(NPOIN2),MASKEL(NELEM2)
+      DOUBLE PRECISION, INTENT(IN) :: MASKEL(NELEM2)
       DOUBLE PRECISION, INTENT(INOUT) :: SHP(3,NPOIN2,NPLAN)
       DOUBLE PRECISION, INTENT(INOUT) :: SHZ(NPOIN2,NPLAN)
-C
+!
       LOGICAL, INTENT(IN) :: MSK
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER IPLAN,IPOIN,IELEM,I1,I2,I3
-C
-C***********************************************************************
-C
-C     LOOP ON ALL POINTS
-C
+!
+!***********************************************************************
+!
+!     LOOP ON ALL POINTS
+!
       DO IPLAN = 1,NPLAN
         DO IELEM=1,NELEM2
           I1=IKLE2(IELEM,1)
@@ -98,13 +91,13 @@ C
           SHP(3,I3,IPLAN)=1.D0
         ENDDO
       ENDDO
-C
-C     ON THE VERTICAL, IT IS DONE DEPENDING ON THE VERTICAL VELOCITY
-C
+!
+!     ON THE VERTICAL, IT IS DONE DEPENDING ON THE VERTICAL VELOCITY
+!
       DO IPLAN = 1,NPLAN
         DO IPOIN=1,NPOIN2
           IF((WS(IPOIN,IPLAN).GT.0.D0.AND.IPLAN.NE.1).OR.
-     *                                              IPLAN.EQ.NPLAN) THEN
+     &                                              IPLAN.EQ.NPLAN) THEN
             ETA(IPOIN,IPLAN) = IPLAN-1
             SHZ(IPOIN,IPLAN) = 1.D0
           ELSE
@@ -113,8 +106,8 @@ C
           ENDIF
         ENDDO
       ENDDO
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-      END 
+      END

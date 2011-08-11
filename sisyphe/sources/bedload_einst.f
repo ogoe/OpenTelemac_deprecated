@@ -1,92 +1,85 @@
-      ! ************************ !
-        SUBROUTINE BEDLOAD_EINST ! (_IMP)
-      ! ************************ !
-
+!                    *********************************
+                     SUBROUTINE BEDLOAD_EINST ! (_IMP)
+!                    *********************************
+!
      &  (TETAP, NPOIN, DENS, GRAV, DM, DSTAR, QSC)
-
-
-C**********************************************************************C
-C SISYPHE VERSION 5.4  --/10/2003   C.VILLARET                         C
-C SISYPHE VERSION 5.1  11/09/1995  E. PELTIER                          C
-C SISYPHE VERSION 5.1  11/09/1995  C. LENORMANT                        C
-C SISYPHE VERSION 5.1  11/09/1995  J.-M. HERVOUET                      C
-C**********************************************************************C
-
-
-           ! ============================================== !
-           !   Bed-load transport formula of Einstein-Brown !
-           ! ============================================== !
-
-
-C COPYRIGHT EDF-DTMPL-SOGREAH-LHF-GRADIENT
-C**********************************************************************C
-C                                                                      C
-C                 SSSS I   SSSS Y   Y PPPP  H   H EEEEE                C
-C                S     I  S      Y Y  P   P H   H E                    C
-C                 SSS  I   SSS    Y   PPPP  HHHHH EEEE                 C
-C                    S I      S   Y   P     H   H E                    C
-C                SSSS  I  SSSS    Y   P     H   H EEEEE                C
-C                                                                      C
-C----------------------------------------------------------------------C
-C                             ARGUMENTS                                C
-C .________________.____.______________________________________________C
-C |      NOM       |MODE|                   ROLE                       C
-C |________________|____|______________________________________________C
-C |________________|____|______________________________________________C
-C                    <=  Can't be change by the user                   C
-C                    =>  Can be changed by the user                    C 
-C ---------------------------------------------------------------------C
-!                                                                      !
-! CALLED BY BEDLOAD_FORMULA                                            !
-!                                                                      !
-! CALL      ------                                                     !
-!                                                                      !
-!======================================================================!
-!======================================================================!
-!                    DECLARATION DES TYPES ET DIMENSIONS               !
-!======================================================================!
-!======================================================================!
-
-      ! 1/ MODULES
-      ! ----------
+!
+!***********************************************************************
+! SISYPHE   V6P1                                   21/07/2011
+!***********************************************************************
+!
+!brief    EINSTEIN-BROWN BEDLOAD TRANSPORT FORMULATION.
+!
+!history  E. PELTIER; C. LENORMANT; J.-M. HERVOUET
+!+        11/09/1995
+!+        V5P1
+!+
+!
+!history  C.VILLARET
+!+        **/10/2003
+!+        V5P4
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  C.VILLARET (EDF-LNHE), P.TASSI (EDF-LNHE)
+!+        19/07/2011
+!+        V6P1
+!+  Name of variables   
+!+   
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| DENS           |-->| RELATIVE SENSITY OF SEDIMENT
+!| DM             |-->| SEDIMENT GRAIN DIAMETER
+!| DSTAR          |-->| NON-DIMENSIONAL DIAMETER
+!| GRAV           |-->| ACCELERATION OF GRAVITY
+!| NPOIN          |-->| NUMBER OF POINTS
+!| QSC            |<->| BED LOAD TRANSPORT
+!| TETAP          |-->| ADIMENSIONAL SKIN FRICTION
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE INTERFACE_SISYPHE,
-     %    EX_BEDLOAD_EINST => BEDLOAD_EINST
+     &    EX_BEDLOAD_EINST => BEDLOAD_EINST
       USE BIEF
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-
-
+!
       ! 2/ GLOBAL VARIABLES
       ! -------------------
       TYPE(BIEF_OBJ),   INTENT(IN)    :: TETAP
       INTEGER,          INTENT(IN)    :: NPOIN
       DOUBLE PRECISION, INTENT(IN)    :: DENS, GRAV, DM, DSTAR
       TYPE(BIEF_OBJ),   INTENT(INOUT)   :: QSC
-
-
+!
       ! 3/ LOCAL VARIABLES
       ! ------------------
       INTEGER          :: I
       DOUBLE PRECISION :: CEINST
-
-
+!
 !======================================================================!
 !======================================================================!
-!                               PROGRAMME                              !
+!                               PROGRAM                                !
 !======================================================================!
 !======================================================================!
-
-
- 
+!
       ! **************************** !
-      ! II - TRANSPORT PAR CHARRIAGE ! (_IMP_)
+      ! II - BEDLOAD TRANSPORT       ! (_IMP_)
       ! **************************** !
       CEINST = 36.D0/(DSTAR**3)
       CEINST = SQRT(2.D0/3.D0+CEINST) -  SQRT(CEINST)
       CEINST = CEINST * SQRT(DENS*GRAV*(DM**3))
       DO I = 1, NPOIN
-
          IF (TETAP%R(I) < 2.5D-3) THEN
             QSC%R(I) = 0.D0
          ELSE IF (TETAP%R(I) < 0.2D0) THEN
@@ -94,11 +87,8 @@ C ---------------------------------------------------------------------C
          ELSE
             QSC%R(I) = 40.D0 * CEINST * (TETAP%R(I)**3.D0)
          ENDIF
-
       ENDDO
-
 !======================================================================!
 !======================================================================!
-
       RETURN
       END SUBROUTINE BEDLOAD_EINST

@@ -1,46 +1,61 @@
-C                       *********************
-                        SUBROUTINE AS3_1212_Q
-C                       *********************
-C
-     *(XM,NSEG11,NSEG12,XMT,NELMAX,NELEM,ELTSEG1,ELTSEG2,ELTSEG3,
-     *                                   ELTSEG4,ELTSEG5,ELTSEG6,
-     *                                   ORISEG1,ORISEG2,ORISEG3)
-C
-C***********************************************************************
-C BIEF VERSION 5.6         29/12/05   J-M HERVOUET (LNHE) 01 30 87 80 18
-C***********************************************************************
-C
-C FONCTION : ASSEMBLING EXTRA-DIAGONAL TERMS OF MATRICES
-C            IN THE CASE OF EDGE-BASED STORAGE
-C
-C            CASE OF QUASIBUBBLE-QUASIBUBBLE ELEMENT
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C !      NOM       !MODE!                   ROLE                       !
-C !________________!____!______________________________________________!
-C !  XMAS          !<-- ! TERMES EXTRA-DIAGONAUX ASSEMBLES XA12,23,31
-C !  XM2           ! -->! TERMES EXTRA-DIAGONAUX XA21,32,31
-C !  TR            ! -->! TABLEAU DE TRAVAIL DE TAILLE > NPTFR
-C !  NELMAX        ! -->! PREMIERE DIMENSION DE IKLE ET W.
-C !                !    ! (CAS D'UN MAILLAGE ADAPTATIF)
-C !  NELEM         ! -->! NOMBRE D'ELEMENTS DANS LE MAILLAGE.
-C !  NPTFR         ! -->! NOMBRE DE POINTS FRONTIERES.
-C !________________!____!_______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C SOUS-PROGRAMME APPELANT : ASSVEC
-C
-C***********************************************************************
-C
+!                    *********************
+                     SUBROUTINE AS3_1212_Q
+!                    *********************
+!
+     &(XM,NSEG11,NSEG12,XMT,NELMAX,NELEM,ELTSEG1,ELTSEG2,ELTSEG3,
+     &                                   ELTSEG4,ELTSEG5,ELTSEG6,
+     &                                   ORISEG1,ORISEG2,ORISEG3)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    ASSEMBLES MATRICES EXTRA-DIAGONAL TERMS
+!+                IN THE CASE OF EDGE-BASED STORAGE.
+!+
+!+            CASE OF QUASIBUBBLE-QUASIBUBBLE ELEMENT.
+!
+!history  J-M HERVOUET (LNH)
+!+        29/12/05
+!+        V5P6
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| ELTSEG1        |-->| FIRST SEGMENT OF A TRIANGLE
+!| ELTSEG2        |-->| SECOND SEGMENT OF A TRIANGLE
+!| ELTSEG3        |-->| THIRD SEGMENT OF A TRIANGLE
+!| ELTSEG4        |-->| FOURTH SEGMENT OF A QUADRATIC TRIANGLE
+!| ELTSEG5        |-->| FIFTH SEGMENT OF A QUADRATIC TRIANGLE
+!| ELTSEG6        |-->| SIXTH SEGMENT OF A QUADRATIC TRIANGLE
+!| NELEM          |-->| NUMBER OF ELEMENTS IN THE MESH
+!| NELMAX         |-->| FIRST DIMENSION OF IKLE AND W.
+!| NSEG11         |-->| NUMBER OF SEGMENTS (HERE JOINING LINEAR POINTS)
+!| NSEG12         |-->| NUMBER OF SEGMENTS (HERE QUADRATIC)
+!| ORISEG1        |-->| ORIENTATION OF SEGMENT 1 OF TRIANGLE
+!| ORISEG2        |-->| ORIENTATION OF SEGMENT 2 OF TRIANGLE
+!| ORISEG3        |-->| ORIENTATION OF SEGMENT 3 OF TRIANGLE
+!| XM             |<--| ASSEMBLED OFF-DIAGONAL TERMS XA12,23,31
+!| XMT            |-->| ELEMENT BY ELEMENT STORAGE OF MATRIX
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER         , INTENT(IN)    :: NELMAX,NELEM,NSEG11,NSEG12
       INTEGER         , INTENT(IN)    :: ELTSEG1(NELMAX)
       INTEGER         , INTENT(IN)    :: ELTSEG2(NELMAX)
@@ -53,61 +68,61 @@ C
       INTEGER         , INTENT(IN)    :: ORISEG3(NELMAX)
       DOUBLE PRECISION, INTENT(IN)    :: XMT(NELMAX,*)
       DOUBLE PRECISION, INTENT(INOUT) :: XM(NSEG12*2)
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER ISEG,IELEM
-C
-C-----------------------------------------------------------------------
-C
-C  INITIALISATION
-C
+!
+!-----------------------------------------------------------------------
+!
+!  INITIALISES
+!
       DO ISEG = 1 , NSEG11
         XM(ISEG       ) = 0.D0
         XM(ISEG+NSEG12) = 0.D0
       ENDDO
-C
-C  ASSEMBLAGE PARTIE P1
-C
+!
+!  ASSEMBLES PART P1
+!
       DO IELEM = 1,NELEM
-C         TERME 12
-          XM(ELTSEG1(IELEM)+NSEG12*(ORISEG1(IELEM)-1)) 
-     *  = XM(ELTSEG1(IELEM)+NSEG12*(ORISEG1(IELEM)-1)) + XMT(IELEM,01)
-C         TERME 23
+!         TERM 12
+          XM(ELTSEG1(IELEM)+NSEG12*(ORISEG1(IELEM)-1))
+     &  = XM(ELTSEG1(IELEM)+NSEG12*(ORISEG1(IELEM)-1)) + XMT(IELEM,01)
+!         TERM 23
           XM(ELTSEG2(IELEM)+NSEG12*(ORISEG2(IELEM)-1))
-     *  = XM(ELTSEG2(IELEM)+NSEG12*(ORISEG2(IELEM)-1)) + XMT(IELEM,04)
-C         TERME 31 
+     &  = XM(ELTSEG2(IELEM)+NSEG12*(ORISEG2(IELEM)-1)) + XMT(IELEM,04)
+!         TERM 31
           XM(ELTSEG3(IELEM)+NSEG12*(ORISEG3(IELEM)-1))
-     *  = XM(ELTSEG3(IELEM)+NSEG12*(ORISEG3(IELEM)-1)) + XMT(IELEM,08)
-C         TERME 21 
+     &  = XM(ELTSEG3(IELEM)+NSEG12*(ORISEG3(IELEM)-1)) + XMT(IELEM,08)
+!         TERM 21
           XM(ELTSEG1(IELEM)+NSEG12*(2-ORISEG1(IELEM)))
-     *  = XM(ELTSEG1(IELEM)+NSEG12*(2-ORISEG1(IELEM))) + XMT(IELEM,07)
-C         TERME 32 
+     &  = XM(ELTSEG1(IELEM)+NSEG12*(2-ORISEG1(IELEM))) + XMT(IELEM,07)
+!         TERM 32
           XM(ELTSEG2(IELEM)+NSEG12*(2-ORISEG2(IELEM)))
-     *  = XM(ELTSEG2(IELEM)+NSEG12*(2-ORISEG2(IELEM))) + XMT(IELEM,10)
-C         TERME 13 
+     &  = XM(ELTSEG2(IELEM)+NSEG12*(2-ORISEG2(IELEM))) + XMT(IELEM,10)
+!         TERM 13
           XM(ELTSEG3(IELEM)+NSEG12*(2-ORISEG3(IELEM)))
-     *  = XM(ELTSEG3(IELEM)+NSEG12*(2-ORISEG3(IELEM))) + XMT(IELEM,02)    
+     &  = XM(ELTSEG3(IELEM)+NSEG12*(2-ORISEG3(IELEM))) + XMT(IELEM,02)
       ENDDO
-C
-C  ASSEMBLAGE PARTIE QUASIBULLE
-C
+!
+!  ASSEMBLES QUASIBUBBLE PART
+!
       DO IELEM = 1,NELEM
-C       TERME 14
+!       TERM 14
         XM(ELTSEG4(IELEM)) = XMT(IELEM,03)
-C       TERME 24
+!       TERM 24
         XM(ELTSEG5(IELEM)) = XMT(IELEM,05)
-C       TERME 34 
+!       TERM 34
         XM(ELTSEG6(IELEM)) = XMT(IELEM,06)
-C       TERME 41 
+!       TERM 41
         XM(ELTSEG4(IELEM)+NSEG12) = XMT(IELEM,09)
-C       TERME 42 
+!       TERM 42
         XM(ELTSEG5(IELEM)+NSEG12) = XMT(IELEM,11)
-C       TERME 43 
-        XM(ELTSEG6(IELEM)+NSEG12) = XMT(IELEM,12)    
+!       TERM 43
+        XM(ELTSEG6(IELEM)+NSEG12) = XMT(IELEM,12)
       ENDDO
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

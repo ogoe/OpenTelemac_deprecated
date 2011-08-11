@@ -1,112 +1,121 @@
-C                       ****************
-                        SUBROUTINE PUOG1
-C                       ****************
-C
-     *(X, A,B ,DITR,MESH,COPY)
-C
-C***********************************************************************
-C BIEF VERSION 5.1           23/12/94    J-M HERVOUET (LNH) 30 87 80 18
-C***********************************************************************
-C
-C FONCTION : CALCUL DU VECTEUR X = U B     (ELEMENT PAR ELEMENT)
-C
-C            ICI LA MATRICE L EST LE RESULTAT D'UNE DECOMPOSITION
-C            EFFECTUEE PAR LE SOUS-PROGRAMME DECLDU.
-C
-C            CHAQUE MATRICE ELEMENTAIRE A ETE DECOMPOSEE SOUS LA FORME :
-C
-C            LE X DE X UE
-C
-C            LE : TRIANGULAIRE INFERIEURE AVEC DES 1 SUR LA DIAGONALE.
-C            DE : DIAGONALE
-C            UE : TRIANGULAIRE SUPERIEURE AVEC DES 1 SUR LA DIAGONALE.
-C
-C                                                T
-C            SI LA MATRICE EST SYMETRIQUE : LE =  UE
-C
-C-----------------------------------------------------------------------
-C  SIGNIFICATION DE IELM :
-C
-C  TYPE D'ELEMENT      NOMBRE DE POINTS          PROGRAMME ICI
-C
-C  11 : TRIANGLE P1            3                       OUI
-C  12 : TRIANGLE QUASI-BULLE   4                       OUI
-C  21 : QUADRILATERE Q1        4                       OUI
-C  41 : PRISMES TELEMAC-3D     6                       OUI
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |      X         |<-- |  SOLUTION DU SYSTEME AX = B
-C |      A         |<-- |  MATRICE A SOUS FORME LDU
-C |      B         |<-- |  SECOND MEMBRE DU SYSTEME A RESOUDRE.
-C |      DITR      | -->|  CARACTERE  'D' : ON CALCULE AVEC A
-C |                |    |             'T' : ON CALCULE AVEC A TRANSPOSEE
-C |      MESH      | -->|  BLOC DES TABLEAUX D'ENTIERS DU MAILLAGE.
-C |      COPY      | -->|  SI .TRUE. B EST RECOPIE SUR X.
-C |                |    |  AU PREALABLE.
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES : TNOMER , PLANTE
-C
-C**********************************************************************
-C
+!                    ****************
+                     SUBROUTINE PUOG1
+!                    ****************
+!
+     &(X, A,B ,DITR,MESH,COPY)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    COMPUTES THE VECTOR X = U B     (ELEMENT BY ELEMENT).
+!code
+!+            MATRIX L IS HERE THE RESULT OF A DECOMPOSITION
+!+            PERFORMED IN SUBROUTINE DECLDU.
+!+
+!+            EACH ELEMENTARY MATRIX WAS FACTORISED IN THE FORM:
+!+
+!+            LE X DE X UE
+!+
+!+            LE : LOWER TRIANGULAR WITH 1 ON THE DIAGONAL
+!+            DE : DIAGONAL
+!+            UE : UPPER TRIANGULAR WITH 1 ON THE DIAGONAL
+!+
+!+                                                T
+!+            IF THE MATRIX IS SYMMETRICAL : LE =  UE
+!
+!code
+!+-----------------------------------------------------------------------
+!+  MEANING OF IELM :
+!+
+!+  TYPE OF ELEMENT      NUMBER OF POINTS      CODED IN THIS SUBROUTINE
+!+
+!+  11 : P1 TRIANGLE            3                       YES
+!+  12 : QUASI-BUBBLE TRIANGLE  4                       YES
+!+  21 : Q1 QUADRILATERAL       4                       YES
+!+  41 : TELEMAC-3D PRISMS      6                       YES
+!+
+!+-----------------------------------------------------------------------
+!
+!history  J-M HERVOUET (LNH)
+!+        23/12/94
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| A              |<--| MATRIX IN LDU FORM
+!| B              |<--| RIGHT-HAND SIDE OF THE LINEAR SYSTEM TO BE SOLVED
+!| COPY           |-->| IF .TRUE. B IS COPIED INTO X TO START WITH
+!| DITR           |-->| CHARACTER, IF  'D' : DIRECT MATRIX A CONSIDERED
+!|                |   |                'T' : TRANSPOSED MATRIX A CONSIDERED
+!| MESH           |-->| MESH STRUCTURE
+!| X              |<--| SOLUTION OF THE SYSTEM AX = B
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_PUOG1 => PUOG1
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+      
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       CHARACTER(LEN=1), INTENT(IN) :: DITR
-C
+!
       LOGICAL, INTENT(IN) :: COPY
-C
-C-----------------------------------------------------------------------
-C
-C  STRUCTURES DE VECTEURS
-C
+!
+!-----------------------------------------------------------------------
+!
+!  VECTORS STRUCTURES
+!
       TYPE(BIEF_OBJ), INTENT(INOUT) :: X,B
-C
-C-----------------------------------------------------------------------
-C
-C  STRUCTURE DE MAILLAGE
-C
+!
+!-----------------------------------------------------------------------
+!
+!  MESH STRUCTURE
+!
       TYPE(BIEF_MESH), INTENT(INOUT) :: MESH
-C
-C-----------------------------------------------------------------------
-C
-C  STRUCTURE DE MATRICE
-C
+!
+!-----------------------------------------------------------------------
+!
+!  MATRIX STRUCTURE
+!
       TYPE(BIEF_OBJ), INTENT(IN) :: A
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER IELM,NPOIN,NELEM,NELMAX
       CHARACTER(LEN=1) :: TYPX
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       TYPX  = A%TYPEXT
       NPOIN = A%D%DIM1
       IELM  = A%ELMLIN
       NELEM = MESH%NELEM
       NELMAX= MESH%NELMAX
       CALL CPSTVC(B,X)
-C
-C-----------------------------------------------------------------------
-C
-C 1) DESCENTE AVEC RECOPIE DE B DANS X
-C
+!
+!-----------------------------------------------------------------------
+!
+! 1) DESCENT WITH RECOPY OF B IN X
+!
       CALL TNOMER(X%R,A%X%R,TYPX,
-     *     B%R,MESH%IKLE%I,NELEM,NELMAX,NPOIN,IELM,DITR,COPY,MESH%LV)
-C
-C-----------------------------------------------------------------------
-C
+     &     B%R,MESH%IKLE%I,NELEM,NELMAX,NPOIN,IELM,DITR,COPY,MESH%LV)
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-      END 
+      END

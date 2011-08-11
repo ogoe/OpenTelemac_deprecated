@@ -1,61 +1,53 @@
-C                       ***************
-                        SUBROUTINE HREF
-C                       ***************
-C
-C***********************************************************************
-C TELEMAC 2D VERSION 5.2      01/03/90    J-M HERVOUET
-C***********************************************************************
-C
-C  FONCTION  : CALCUL DE LA HAUTEUR DE REFERNCE POUR LES EQUATIONS
-C              DE BOUSSINESQ
-C
-C              PAR DEFAUT ON PREND LA HAUTEUR INITIALE
-C     
-C              CE SOUS-PROGRAMME PEUT ETRE MODIFIE
-C
-C              ON PEUT METTRE PAR EXEMPLE LA HAUTEUR DE LINEARISATION
-C
-C              SI ON VEUT RETOMBER SUR SAINT-VENANT, ON PEUT METTRE
-C              H0 = 0
-C
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|_______________________________________________
-C |      H0        |<-- | HAUTEUR DE REFERENCE
-C |      H         | -->| HAUTEUR INITIALE
-C |      X,Y,(Z)   | -->| COORDONNEES DU MAILLAGE (Z N'EST PAS EMPLOYE).
-C |      ZF        | -->| FOND A MODIFIER.
-C |      HAULIN    | -->| PROFONDEUR DE LINEARISATION
-C |      COTINI    | -->| COTE INITIALE
-C |      MESH      | -->| MAILLAGE
-C |      PRIVE     | -->| TABLEAU PRIVE POUR L'UTILISATEUR.
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMME APPELANT :
-C PROGRAMMES APPELES : RIEN EN STANDARD
-C
-C***********************************************************************
-C
+!                    ***************
+                     SUBROUTINE HREF
+!                    ***************
+!
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    COMPUTES THE REFERENCE DEPTH FOR THE BOUSSINESQ
+!+                EQUATIONS. BY DEFAULT THIS IS THE INITIAL DEPTH.
+!
+!note     THIS SUBROUTINE CAN BE USER-MODIFIED.
+!+            FOR EXAMPLE IT CAN BE A LINEARISED DEPTH.
+!+            TO GET BACK TO SAINT-VENANT, CAN HAVE H0 = 0.
+!
+!history  J-M HERVOUET (LNHE)
+!+        01/03/1990
+!+        V5P2
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
       USE DECLARATIONS_TELEMAC2D
-C
+!
       IMPLICIT NONE
-      INTEGER LNG,LU                                                 
-      COMMON/INFO/LNG,LU        
-C
-C-----------------------------------------------------------------------
-C
+      INTEGER LNG,LU
+      COMMON/INFO/LNG,LU
+!
+!-----------------------------------------------------------------------
+!
       CALL OS( 'X=Y     ' , H0 , H , H , 0.D0 )
-C     NEXT LINE WILL DEGENERATE BOUSSINESQ INTO SAINT-VENANT
-C     CALL OS( 'X=C     ' , H0 , H , H , 0.D0 )
-C
-C-----------------------------------------------------------------------
-C
+!     NEXT LINE WILL DEGENERATE BOUSSINESQ INTO SAINT-VENANT
+!     CALL OS( 'X=C     ' , H0 , H , H , 0.D0 )
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-      END       
- 
+      END

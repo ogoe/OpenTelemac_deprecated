@@ -1,125 +1,160 @@
-C                       *****************                               
-                        SUBROUTINE VOLFIN                               
-C                       *****************                          
-C                                                                       
-     * (W1,AT,DT,LT,NIT,NELEM,NPTFR,                
-     *  TB,ZF,CF,NPOIN,HN,H,U,V,QU,QV,G,LISTIN,                         
-     *  S,MSK,MASKEL,MESH,LIMPRO,NBOR,KDIR,KNEU,KDDL,             
-     *  HBOR,UBOR,VBOR,MASSES,FLUENT,FLUSOR,CFLWTD,DTVARI,KFROT,
-     *  NREJET,ISCE,TSCE2,MAXSCE,MAXTRA,YASMH,SMH,
-     *  NTRAC,DIMT,T,HT,TN,DLIMT,LIMTRA,
-     *  TBOR,MASSOU,FLUTENT,FLUTSOR,DTHAUT,DPX,DPY,DJX,DJY,CMI,JMI,
-     *  DJXT,DJYT,DIFVIT,ITURB,PROPNU,DIFT,DIFNU,
-     *  DX,DY,OPTVF,
-     *  HSTOK,HCSTOK,LOGFR,DSZ,FLUXT,FLUHBOR,DTN,FLUSORTN,FLUENTN,LTT,
-     *  FLUXTEMP,FLUHBTEMP,HC,SMTR,AIRST,TMAX,DTT)
-C                                                      
-C***********************************************************************
-C  TELEMAC-2D VERSION 5.8    05/08/07  J-M HERVOUET (LNH) 01 30 87 80 18 
-C  COPYRIGHT EDF-1997                    INRIA                          
-C-----------------------------------------------------------------------
-C                                                                       
-C  FONCTION  : INTERFACE POUR APPEL DU SOUS-PROGRAMME RESOLU.           
-C                                                                       
-C-----------------------------------------------------------------------
-C                             ARGUMENTS                                 
-C .________________.____.______________________________________________ 
-C |      NOM       |MODE|                   ROLE                       | 
-C |________________|____|______________________________________________|
-C |      W1        |<-->| TABLEAU DE TRAVAIL                           | 
-C |                |    | VOIR SON DIMENSIONNEMENT DANS POINT          | 
-C |                |    | ICI DE TAILLE MINIMUM 9*NPOIN + 3*NPTFR      | 
-C |      AT,DT,LT  | -->| TEMPS, PAS DE TEMPS, NUMERO DU PAS           | 
-C |      NIT       | -->| NOMBRE TOTAL D'ITERATIONS.                   | 
-C |      NELEM     | -->| NOMBRE D'ELEMENTS                            | 
-C |      NPTFR     | -->| NOMBRE DE POINTS FRONTIERE                   | 
-C |      TB        | -->| BLOC DE TABLEAUX DE TRAVAIL DIMENSION NPOIN  | 
-C |      ZF        | -->| COTES DU FOND                                | 
-C |      CF        | -->| COEFFICIENT DE FROTTEMENT                    !
-C |      NPOIN     | -->| NOMBRE DE POINTS DU MAILLAGE.                | 
-C |      HN,H      |<-->| HAUTEURS D'EAU AU TEMPS N ET N+1             | 
-C |      U,V       |<-->| COMPOSANTES DE LA VITESSE.                   | 
-C |      QU,QV     |<-->| COMPOSANTES DU DEBIT.                        | 
-C |      G         | -->| GRAVITENTES DU DEBIT.                        | 
-C |      LISTIN    | -->| SI OUI, MESSAGES IMPRIMES SUR LISTING.       | 
-C |      S         | -->| STRUCTURE VIDE POUR APPEL A VECTOR.          | 
-C |      MSK       | -->| SI OUI, MASQUAGE D'ELEMENTS.                 | 
-C |      MASKEL    | -->| MASQUE DES ELEMENTS.                         | 
-C |      MESH      | -->| BLOC DE TABLEAUX D'ENTIERS DU MAILLAGE.      |
-C |      LIMPRO    | -->| TYPES DE CONDITIONS AUX LIMITES.             | 
-C |      NBOR      | -->| NUMEROS GLOBAUX DES POINTS DE BORD.          | 
-C |      KDIR      | -->| CONVENTION POUR LES POINTS DIRICHLET.        | 
-C |      KNEU      | -->| CONVENTION POUR LES POINTS NEUMANN.          | 
-C |      KDDL      | -->| CONVENTION POUR LES POINTS LIBRES.           | 
-C |      HBOR      | -->| VALEURS IMPOSEES DE H                        | 
-C |      UBOR      | -->| VALEURS IMPOSEES DE U                        | 
-C |      VBOR      | -->| VALEURS IMPOSEES DE V                        | 
-C |      MASSES    |<-- | MASSE AJOUTEE PAR TERME SOURCE               | 
-C !  FLUENT,FLUSORT|<-- | FLUX MASSE ENTREE ET SORTIE DE TN A TN+1     |
-C !  CFLWTD        ! -->! NOMBRE DE CFL                                !
-C |  KFROT         | -->| LOI DE FROTTEMENT SUR LE FOND                |
-C |  NREJET        | -->| NOMBRE DE SOURCES/PUITS                      |
-C |  ISCE          | -->| POINTS SOURCES                               |
-C |  YASMH         | -->|  INDIQUE SI ON PREND EN COMPTE SMH           |
-C |  SMH           | -->|  TERMES SOURCES DE L'EQUATION DE CONTINUITE  |
-C |  TRAC          | -->|  LOGIQUE INDIQUANT LA PRESENCE D'UN TRACEUR  |
-C !  DIMT          ! -->!  DIMENSION DU TRACEUR                        !
-C !  T             !<-- !  TRACEUR MIS A JOUR                          !
-C !  HT            !<-->!  HT AU TEMPS N                               !
-C !  TN            ! -->!  T  AU TEMPS N                               !
-C |  TSCE          | -->|  VALEURS DU TRACEUR AUX SOURCES              |
-C !  DLIMT         ! -->!  DIMENSION DU TRACEUR AU BORD                !
-C |  LIMTRA        | -->|  TYPES DE CONDITIONS AUX LIMITES SUR TRACEUR |
-C |  TBOR          | -->|  CONDITIONS AUX LIMITES SUR T                !
-C |  MASSOU        |<-- |  MASSE DE TRACEUR AJOUTEE PAR TERME SOURCE   |
-C ! FLUTENT,FLUTSOR|<-- |  FLUX TRACEUR ENTREE ET SORTIE               | 
-C |  DTHAUT        ! -->!  UTILISE POUR CONDITION CFL                  !
-C |  DPX, DPY      ! -->!  GRADIENTS DES FONCTIONS DE BASE             !
-C |  DJX, DJY      ! -- !  TABLEAUX DE TRAVAIL                         !
-C !  CMI           ! -->!  COORDONNEES DES POINTS MILIEUX D'INTERFACE  !
-C !  JMI           ! -->!  NUMERO DU TRIANGLE AUQUEL APPARTIENT LE     !
-C |                !    !  POINT MILIEU DE L'INTERFACE                 !
-C |  DJXT,DJYT     | -- |  TABLEAUX DE TRAVAIL POUR TRACEUR            |
-C |  DIFVIT        | -->|  INDIQUE S'IL FAUT FAIRE LA DIFFUSION DE U,V |
-C |  ITURB         | -->|  MODELE DE TURBULENCE  1 : LAMINAIRE         |
-C |  PROPNU        | -->|  COEFFICIENT DE DIFFUSION MOLECULAIRE        |
-C |  DIFT          | -->|  LOGIQUE INDIQUANT S'IL Y A DIFFUSION TRACEUR|
-C |  DIFNU         | -->|  COEFFICIENT DE DIFFUSION DU TRACEUR         |
-C |  DX,DY         | -- |  TABLEAUX DE TRAVAIL                         |
-C |  OPTVF         ! -->!  OPTION SCHEMA                               !
-C |                !    !0:ROE, 1:CINETIQUE ORDRE 1,2:CINETIQUE ORDRE 2!
-C |  HSTOK,HCSTOK  !<-->!  H, H CORRIGE  A STOCKER POUR TRACEUR        !
-C |  LOGFR         !<-->!  REFERENCE DES NOEUDS FRONTIERE              !
-C |  DSZ           !<-->!  VARIATION DE Z POUR ORDRE 2                 !
-C |  DTN           !<-->!  PAS DE TEMPS   DE TN+1 A TN+2               !
-C |  FLUXT,FLUHBOR !<-->!  FLUX, FLUX BORD ACCUMULES POUR TRACEUR      !
-C |FLUSORTN,FLUENTN!<-->!  FLUX MASSE ENTREE ET SORTIE DE TN+1 A TN+2  !
-C |  LTT           !<-->!  NOMBRE DE PAS DE TEMPS TRACEUR              !
-C |  FLUXTEMP      !<-->!  FLUX POUR TRACEUR                           !
-C !  FLUHBTEMP     !<-->!  FLUX BORD POUR TRACEUR                      !
-C !  HC            !<-->!  H RECONSTRUIT ORDRE 2   CORRIGE             !
-C |  SMTR          |<-->!  TERMES SOURCES DU TRACEUR                   !
-C |  AIRST         ! -->!  AIRES DES SOUS-TRIANGLES DANS CELLULES      !
-C !  TMAX          ! -->!  TEMPS DE FIN DU CALCUL                      !
-C !  DTT           !<-->!  PAS DE TEMPS TRACEUR                        !
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE) 
-C-----------------------------------------------------------------------
-C                                                                       
-C PROGRAMME APPELANT : TELMAC                                           
-C PROGRAMMES APPELES : RESOLU                                           
-C                                                                       
-C***********************************************************************
-C
+C                       *****************
+                        SUBROUTINE VOLFIN 
+!                       *****************
+!
+     & (W1,AT,DT,LT,NIT,NELEM,NPTFR,
+     &  TB,ZF,CF,NPOIN,HN,H,U,V,QU,QV,G,LISTIN,
+     &  S,MSK,MASKEL,MESH,LIMPRO,NBOR,KDIR,KNEU,KDDL, 
+     &  HBOR,UBOR,VBOR,MASSES,FLUENT,FLUSOR,CFLWTD,DTVARI,KFROT,
+     &  NREJET,ISCE,TSCE2,MAXSCE,MAXTRA,YASMH,SMH,
+     &  NTRAC,DIMT,T,HT,TN,DLIMT,LIMTRA,
+     &  TBOR,MASSOU,FLUTENT,FLUTSOR,DTHAUT,DPX,DPY,DJX,DJY,CMI,JMI,
+     &  DJXT,DJYT,DIFVIT,ITURB,PROPNU,DIFT,DIFNU,DX,DY,OPTVF,
+     &  HSTOK,HCSTOK,LOGFR,DSZ,FLUXT,FLUHBOR,FLBOR,DTN,FLUSORTN,
+     &  FLUENTN,LTT,
+     &  FLUXTEMP,FLUHBTEMP,HC,SMTR,AIRST,TMAX,DTT,GAMMA,FLUX_OLD)
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    1. SOLVES THE PROBLEM BY A METHOD OF TYPE ROE OR BY A KINETIC 
+!            SCHEME (ORDER 1 OR 2) OR TCHAMEN/ZOKAGOA SCHEME
+!            FOR INTERIOR FLUXES 
+!            AND OF TYPE STEGER AND WARMING FOR I/O;
+!+
+!+
+!+            2. SOLVES IN TIME USING A NEWMARK TYPE SCHEME OF SECOND ORDER.
+!
+!history  N.GOUTAL; INRIA
+!+        22/03/1998
+!+
+!+   ROE SCHEME (NG); KINETIC SCHEMES (INRIA)
+!
+!history  J-M HERVOUET (LNHE)
+!+        05/09/2007
+!+
+!+   MULTIPLE TRACERS
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  R. ATA (EDF-LNHE)
+!+        03/15/2011
+!+        V6P1
+!+    CHANGE EXPLICIT EULER BY NEWMARK SCHEME
+!+    ADD TCHAMEN AND ZOKAGA FLUXES 
+!
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| AIRE           |-->| ELEMENT AREA
+!| AIRS           |-->| CELL AREA
+!| AIRST          |-->| AREA OF SUB-TRIANGLES (SECOND ORDER)
+!| AT,DT,LT       |-->| TIME, TIME STEP AND NUMBER OF THE STEP
+!| CF             |-->| FRICTION COEFFICIENT
+!| CFLWTD         |-->| WANTED CFL NUMBER
+!| CMI            |-->| COORDINATES OF MIDDLE PONTS OF EDGES
+!| DIFNU          |-->| COEFFICIENT OF DIFFUSION FOR TRACER
+!| DIFT           |-->| LOGICAL: DIFFUSION FOR TRACER OR NOT
+!| DIFVIT         |-->|  LOGICAL: DIFFUSION FOR VELOCITY OR NOT
+!| DIMT           |-->| DIMENSION OF TRACER
+!| DJXT,DJYT      |<->| WORKING TABLES FOR TRACER
+!| DLIMT          |-->| DIMENSION OF TRACER ON THE BOUNDARY
+!| DSZ            |<->| VARIATION OF Z FOR ORDER 2
+!| DTHAUT         |-->| CHARACTERISTIC LENGTH (DX) USED FOR CFL
+!| DTN            |<->| TIME STEP   FROM TN+1 TO TN+2
+!| DTT            |<->| TIME STEP FOR TRACER
+!| DTVARI         |-->| DT VARIALE OR NOT
+!| DX,DY          |<->| WORKING TABLES
+!| DXT,DYT        |<->| WORKING TABLES FOR TRACER
+!| FLUENT,FLUSORT |<--| MASS FLUX MASSE INLET AND OUTLET FROM TN TO TN+1
+!| FLUHBTEMP      |<->| BORD FLUX FOR TRACER
+!| FLUSCE         |-->| SOURCE FLUXES
+!| FLUSORTN,FLUENT|<->| MASS FLUX MASSE INLET AND OUTLET FROM TN+1 TO TN+2
+!| FLUTENT,FLUTSOR|<--| FLUX TRACER INLET AND OUTLET
+!| FLUX           |<--| FLUX
+!| FLUXT,FLUHBOR  |<->| FLUX, FLUX BORD FOR TRACER
+!| FLUXTEMP       |<->| FLUX POUR TRACER
+!| FLUX_OLD       |<->| FLUX OF OLD TIME STEP
+!| GAMMA          |-->| NEWMARK COEFFICIENT FOR TIME INTEGRATION
+!| G              |-->| GRAVITY
+!| H              |<--| WATER DEPTH AT TIME N+1
+!| HBOR           |-->| IMPOSED VALUE FOR H
+!| HC             |<->| H RECONSTRUCTED (ORDER 2) CORRECTED
+!| HN             |-->| WATER DEPTH AT TIME N
+!| HSTOK,HCSTOK   |<->| H, H CORRECTED TO STOCK FOR TRACER
+!| HTN,TN         |-->| HT, T  AT TIME N
+!| IKLE           |-->| INDICES OF NODES FOR TRIANGLE
+!| ISCE           |-->| SOURCE POINTS
+!| ITURB          |-->| MODEL OF TURBULENCE  1 : LAMINAIRE
+!| JMI            |-->| NUMBER OF THE TRIANGLE IN WHICH IS LOCATED 
+!|                |   | THE MIDPOINT OF THE INTERFACE
+!| KDDL           |-->| CONVENTION FOR FREE POINTS (BC)
+!| KDIR           |-->| CONVENTION FOR DIRICHLET POINTS
+!| KFROT          |-->| BED FRICTION LAW 
+!| KNEU           |-->| CONVENTION NEUMANN POINTS
+!| LIMPRO         |-->| TYPES OF BOUNDARY CONDITION
+!| LIMTRA         |-->| TYPES OF BOUNDARY CONDITION FOR TRACER
+!| LISTIN         |-->| IF YES, PRINT MESSAGES AT LISTING.
+!| LOGFR          |<->| REFERENCE OF BOUNDARY NODES
+!| LTT            |<->| NUMBER OF TIME STEP FOR TRACER
+!| MASSES         |<--| ADDED MASS BY SOURCE TERMS
+!| MASSOU         |<--| ADDED TRACER MASS BY SOURCE TERM
+!| MAXSCE         |-->| MAXIMUM NUMBER OF SOURCES
+!| MAXTRA         |-->| MAXIMUM NUMBER OF TRACERS
+!| NBOR           |-->| GLOBAL INDICES FOR BORD NODES
+!| NELEM          |-->| NUMBER OF ELEMENTS
+!| NELMAX         |-->| MAXIMUM NUMBER OF ELEMENTS
+!| NIT            |-->| TOTAL NUMBER OF TIME STEPS
+!| NPOIN          |-->| TOTAL NUMBER OF NODES
+!| NPTFR          |-->| TOTAL NUMBER OF BOUNDARY NODES
+!| NREJET         |-->| NUMBER OF SOURCE/SINK
+!| NSEG           |-->| NUMBER OF EDGES
+!| NTRAC          |-->| NUMBER OF TRACERS
+!| NUBO           |-->| GLOBAL INDICES OF EDGE EXTREMITIES
+!| OPTVF          |-->| OPTION OF THE SCHEME
+!|                |   | 0:ROE, 1:KINETIC ORDRE 1,2:KINETIC ORDRE 2
+!|                |   | 3:ZOKAGOA, 4:TCHAMEN,4:HLLC
+!| PROPNU         |-->| COEFFICIENT OF MOLECULAR DIFFUSION 
+!| QU,QV          |<->| FLOW COMPOENENTS AT TIME N THEN AT TIME  N+1
+!| SMH            |-->| SOURCE TERMS FOR CONTINUITY EQUATION
+!| SMTR           |<--| SOURCE TERMS FOR TRACERS
+!| T              |<--| TRACER UPDATED
+!| TBOR           |-->| PRESCRIBED BOUNDARY CONDITIONS FOR T
+!| TMAX           |-->| FINAL TIME
+!| TSCE2          |-->| VALUES OF TRACERS AT SOURCES
+!| U,V            |<--| VELOCITY COMPONENTS AT TIME N+1
+!| UBOR           |-->| IMPOSED VALUES FOR U
+!| VBOR           |-->| IMPOSED VALUES FOR V
+!| VNOIN          |-->| NORMAL TO THE INTERFACE
+!|                |   | (2 FIRST COMPONENTS) AND 
+!|                |   | SEGMENT LENGTH (3RD COMPONENT)
+!| W              |<->| WORKING TABLE
+!| WINF           |---| ???????  NOT USED
+!| X,Y            |-->| COORDINATES FOR MESH NODES
+!| XNEBOR,YNEBOR  |-->| NORMAL TO BOUNDARY POINTS
+!| YASMH          |-->| LOGICAL: TO TAKE INTO ACCOUNT SMH
+!| ZF             |-->| BED TOPOGRAPHY (BATHYMETRY)
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
       USE INTERFACE_TELEMAC2D, EX_VOLFIN => VOLFIN
-C                                                                       
-      IMPLICIT NONE                                                     
-      INTEGER LNG,LU                                                    
-      COMMON/INFO/LNG,LU                                                
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+! 
+      IMPLICIT NONE 
+      INTEGER LNG,LU
+      COMMON/INFO/LNG,LU
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN)    :: NPTFR,KDIR,KNEU,KDDL,DIMT,KFROT,OPTVF
       INTEGER, INTENT(IN)    :: NELEM,NPOIN,LT,NIT,NREJET,ITURB,DLIMT
       INTEGER, INTENT(IN)    :: NTRAC,MAXSCE,MAXTRA
@@ -129,7 +164,7 @@ C
       INTEGER, INTENT(IN)    :: ISCE(NREJET)
       INTEGER, INTENT(INOUT) :: JMI(*),LOGFR(NPOIN)
       LOGICAL, INTENT(IN)    :: DIFVIT,DIFT,LISTIN,MSK,DTVARI,YASMH
-      DOUBLE PRECISION, INTENT(IN) :: PROPNU,DIFNU
+      DOUBLE PRECISION, INTENT(IN)    :: PROPNU,DIFNU,GAMMA
       DOUBLE PRECISION, INTENT(INOUT) :: AT,DT,MASSES,DTT
       DOUBLE PRECISION, INTENT(INOUT) :: H(NPOIN),QU(NPOIN),QV(NPOIN)           
       DOUBLE PRECISION, INTENT(INOUT) :: W1(*)
@@ -156,41 +191,38 @@ C                                              NSEG    NSEG
       TYPE(BIEF_MESH), INTENT(INOUT)  :: MESH
       TYPE(BIEF_OBJ) , INTENT(IN)     :: TBOR,TN
       TYPE(BIEF_OBJ) , INTENT(INOUT)  :: T,HT,SMTR,FLUHBOR,FLUHBTEMP
-      TYPE(BIEF_OBJ) , INTENT(INOUT)  :: FLUXTEMP,FLUXT             
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                   
-C                        
-C     MASSE AJOUTEE PAR TERME SOURCE (NULLE POUR L'INSTANT)                
-C                                                                       
+      TYPE(BIEF_OBJ) , INTENT(INOUT)  :: FLUXTEMP,FLUXT,FLBOR,FLUX_OLD   
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+!
       MASSES = 0.D0  
-C                                                                       
-C     CALCUL DES AIRES DES CELLULES                                     
-C                                                                       
-      CALL VECTOR(TB%ADR(1)%P,'=','MASBAS          ',11,      
-     *            1.D0,S,S,S,S,S,S,MESH,MSK,MASKEL)                                             
-C
-      CALL RESOLU(W1,W1(1+3*NPOIN),MESH%NUBO%I,                         
-     *            MESH%VNOIN%R,W1(1+9*NPOIN),AT,DT,LT,NIT,   
-     *            NELEM,MESH%NSEG,NPTFR,W1(1+6*NPOIN),                       
-     *            TB%ADR(1)%P%R,MESH%SURFAC%R,
-     *            MESH%X%R,MESH%Y%R,MESH%IKLE%I, 
-     *            ZF,CF,NPOIN,HN,H,U,V,QU,QV,G,LISTIN,                  
-     *            MESH%XNEBOR%R,MESH%YNEBOR%R, 
-     *            LIMPRO,NBOR,KDIR,KNEU,KDDL,HBOR,UBOR,VBOR,            
-     *            FLUSOR,FLUENT,CFLWTD,DTVARI,MESH%NELMAX,KFROT,
-     *            NREJET,ISCE,TSCE2,MAXSCE,MAXTRA,YASMH,SMH,MASSES,
-     *            NTRAC,DIMT,T,HT,TN,DIMT,LIMTRA,
-     *            TBOR,MASSOU,FLUTENT,FLUTSOR,DTHAUT,DPX,DPY,DJX,DJY,
-     *            CMI,JMI,SMTR,
-     *            TB%ADR(3)%P%R,TB%ADR(4)%P%R,
-     *            DJXT,DJYT,DIFVIT,ITURB,PROPNU,DIFT,DIFNU,
-     *            DX,DY,OPTVF,
-     *            FLUSORTN,FLUENTN,DSZ,AIRST,HSTOK,HCSTOK,FLUXT,FLUHBOR,
-     *            LOGFR,LTT,DTN,FLUXTEMP,FLUHBTEMP,HC,TMAX,DTT,
-     *            TB%ADR(6)%P%R,TB%ADR(7)%P%R,TB%ADR(8)%P%R,
-     *            TB%ADR(9)%P%R,TB%ADR(10)%P%R)
-C                                                                      
-C-----------------------------------------------------------------------
-C                                                                       
-      RETURN                                                            
+!
+!     COMPUTE CELL AREAS 
+!
+      CALL VECTOR(TB%ADR(1)%P,'=','MASBAS          ',11,
+     &            1.D0,S,S,S,S,S,S,MESH,MSK,MASKEL)
+!
+      CALL RESOLU(W1,W1(1+3*NPOIN),MESH%NUBO%I,
+     &            MESH%VNOIN%R,W1(1+9*NPOIN),AT,DT,LT,NIT, 
+     &            NELEM,MESH%NSEG,NPTFR,W1(1+6*NPOIN),
+     &            TB%ADR(1)%P%R,MESH%SURFAC%R,
+     &            MESH%X%R,MESH%Y%R,MESH%IKLE%I, 
+     &            ZF,CF,NPOIN,HN,H,U,V,QU,QV,G,LISTIN,
+     &            MESH%XNEBOR%R,MESH%YNEBOR%R, 
+     &            MESH%XSGBOR%R,MESH%YSGBOR%R, 
+     &            LIMPRO,NBOR,KDIR,KNEU,KDDL,HBOR,UBOR,VBOR,
+     &            FLUSOR,FLUENT,CFLWTD,DTVARI,MESH%NELMAX,KFROT,
+     &            NREJET,ISCE,TSCE2,MAXSCE,MAXTRA,YASMH,SMH,MASSES,
+     &            NTRAC,DIMT,T,HT,TN,DIMT,LIMTRA,
+     &            TBOR,MASSOU,FLUTENT,FLUTSOR,DTHAUT,DPX,DPY,DJX,DJY,
+     &            CMI,JMI,SMTR,TB%ADR(3)%P%R,TB%ADR(4)%P%R,
+     &            DJXT,DJYT,DIFVIT,ITURB,PROPNU,DIFT,DIFNU,DX,DY,OPTVF,
+     &            FLUSORTN,FLUENTN,DSZ,AIRST,HSTOK,HCSTOK,FLUXT,FLUHBOR,
+     &            FLBOR,LOGFR,LTT,DTN,FLUXTEMP,FLUHBTEMP,HC,TMAX,DTT,
+     &            TB%ADR(6)%P%R,TB%ADR(7)%P%R,TB%ADR(8)%P%R,
+     &            TB%ADR(9)%P%R,TB%ADR(10)%P%R,GAMMA,FLUX_OLD%R)
+!
+!-----------------------------------------------------------------------
+!
+      RETURN
       END

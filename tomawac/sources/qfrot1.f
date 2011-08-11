@@ -1,88 +1,98 @@
-C                       *****************
-                        SUBROUTINE QFROT1
-C                       *****************
-C
-     *( TSTOT , TSDER , F     , XK    , DEPTH , CFROT1, GRAVIT, NF    ,
-     *  NPLAN , NPOIN2, BETA  )
-C
-C**********************************************************************
-C  TOMAWAC - V1.0    P. THELLIER & M. BENOIT (EDF/DER/LNH)  -  03/04/95
-C**********************************************************************
-C
-C  FONCTION : CALCUL DE LA CONTRIBUTION DU TERME SOURCE DE FROTTEMENT
-C  ********** SUR LE FOND BASE SUR L'EXPRESSION PROPOSEE PAR HASSELMANN
-C             ET AL. (1973) ET MODIFIEE PAR BOUWS ET KOMEN (1983).
-C
-C  ARGUMENTS :
-C  ***********
-C +-------------+----+--------------------------------------------+
-C ! NOM         !MODE! SIGNIFICATION - OBSERVATIONS               !
-C +-------------+----+--------------------------------------------+
-C ! TSTOT(-,-,-)!<-->! CONTRIBUTION TERME SOURCE - PARTIE TOTALE  !
-C ! TSDER(-,-,-)!<-->! CONTRIBUTION TERME SOURCE - PARTIE DERIVEE !
-C ! F(-,-,-)    ! -->! SPECTRE DIRECTIONNEL                       !
-C ! XK(-,-)     ! -->! NOMBRE D'ONDE                              !
-C ! DEPTH(-)    ! -->! TABLEAU DES PROFONDEURS                    !
-C ! CFROT1      ! -->! CONSTANTE DE L'EXPRESSION DE FROTTEMENT    !
-C ! GRAVIT      ! -->! ACCELERATION DE LA PESANTEUR               !
-C ! NF          ! -->! NOMBRE DE FREQUENCES DE DISCRETISATION     !
-C ! NPLAN       ! -->! NOMBRE DE DIRECTIONS DE DISCRETISATION     !
-C ! NPOIN2      ! -->! NOMBRE DE POINTS DU MAILLAGE SPATIAL       !
-C ! BETA(-)     !<-->! TABLEAU DE TRAVAIL (DIMENSION NPOIN2)      !
-C +-------------+----+--------------------------------------------+
-C ! MODE   (-> : NON-MODIFIE)  (<-> : MODIFIE)  (<- : INITIALISE) !
-C +---------------------------------------------------------------+
-C
-C  APPELS :    - PROGRAMME(S) APPELANT  :  SEMIMP
-C  ********    - PROGRAMME(S) APPELE(S) :    -
-C
-C  REMARQUES :
-C  ***********
-C  - CE TERME SOURCE EST LINEAIRE EN F(FREQ,TETA) ET LE COEFFICIENT
-C    LINEAIRE EST CONSTANT DANS LE TEMPS.
-C  - LA CONSTANTE CFROT1 UTILISEE DANS WAM CYCLE 4 VAUT 0.038 M2.S-3
-C
-C  REFERENCES : - HASSELMANN ET AL. (1973) : MEASUREMENTS OF WIND-WAVE
-C               GROWTH AND SWELL DECAY DURING THE JOINT NORTH SEA
-C               WAVE PROJECT (JONSWAP). DEUTSCHEN HYDROGRAPHISVHEN
-C               ZEITSCHRIFT, REIHE A(8), NUM 12.
-C               - BOUWS E., KOMEN G.J. (1983) : ON THE BALANCE BETWEEN
-C               GROWTH AND DISSIPATION IN AN EXTREME DEPTH-LIMITED
-C               WIND-SEA IN THE SOUTHERN NORTH-SEA. JPO, VOL 13.
-C
-C**********************************************************************
-C
+!                    *****************
+                     SUBROUTINE QFROT1
+!                    *****************
+!
+     &( TSTOT , TSDER , F     , XK    , DEPTH , CFROT1, GRAVIT, NF    ,
+     &  NPLAN , NPOIN2, BETA  )
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   23/06/2011
+!***********************************************************************
+!
+!brief    COMPUTES THE CONTRIBUTION OF THE BOTTOM FRICTION
+!+                SOURCE TERM BASED ON HASSELMANN ET AL.'S FORMULATION
+!+                (1973), MODIFIED BY BOUWS ET KOMEN (1983).
+!
+!note     THIS SOURCE TERM IS LINEAR IN F(FREQ,TETA), AND THE LINEAR
+!+          COEFFICIENT DOES NOT VARY WITH TIME.
+!note   CFROT1 (USED IN WAM CYCLE 4) EQUALS 0.038 M2.S-3.
+!
+!reference  HASSELMANN ET AL. (1973) :
+!+                     "MEASUREMENTS OF WIND-WAVE GROWTH AND SWELL
+!+                      DECAY DURING THE JOINT NORTH SEA WAVE PROJECT
+!+                     (JONSWAP)". DEUTSCHEN HYDROGRAPHISVHEN ZEITSCHRIFT, REIHE A(8), NUM 12.
+!reference BOUWS E., KOMEN G.J. (1983) :
+!+                     "ON THE BALANCE BETWEEN GROWTH AND DISSIPATION
+!+                      IN AN EXTREME DEPTH-LIMITED WIND-SEA IN THE
+!+                      SOUTHERN NORTH-SEA". JPO, VOL 13.
+!
+!history  P. THELLIER; M. BENOIT (EDF/DER/LNH)
+!+        03/04/95
+!+        V1P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        23/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| BETA           |<--| WORK TABLE
+!| CFROT1         |-->| BOTTOM FRICTION COEFFICIENT
+!| DEPTH          |-->| WATER DEPTH
+!| F              |-->| DIRECTIONAL SPECTRUM
+!| GRAVIT         |-->| ACCELERATION DE LA PESANTEUR
+!| NF             |-->| NOMBRE DE FREQUENCES DE DISCRETISATION
+!| NPLAN          |-->| NOMBRE DE DIRECTIONS DE DISCRETISATION
+!| NPOIN2         |-->| NOMBRE DE POINTS DU MAILLAGE SPATIAL
+!| TSDER          |<->| DERIVED PART OF THE SOURCE TERM CONTRIBUTION
+!| TSTOT          |<->| TOTAL PART OF THE SOURCE TERM CONTRIBUTION
+!| XK             |-->| DISCRETIZED WAVE NUMBER
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
-C.....VARIABLES TRANSMISES
-C     """"""""""""""""""""
-      INTEGER  NF    , NPLAN , NPOIN2 
+!
+!.....VARIABLES IN ARGUMENT
+!     """"""""""""""""""""
+      INTEGER  NF    , NPLAN , NPOIN2
       DOUBLE PRECISION CFROT1, GRAVIT
       DOUBLE PRECISION DEPTH(NPOIN2), BETA(NPOIN2)
       DOUBLE PRECISION TSTOT(NPOIN2,NPLAN,NF), TSDER(NPOIN2,NPLAN,NF)
       DOUBLE PRECISION     F(NPOIN2,NPLAN,NF),    XK(NPOIN2,NF)
-C
-C.....VARIABLES LOCALES
-C     """""""""""""""""
+!
+!.....LOCAL VARIABLES
+!     """""""""""""""""
       INTEGER  JP    , JF    , IP
       DOUBLE PRECISION COEF , DEUKD
-C
-C
+!
+!
       COEF=-2.D0*CFROT1/GRAVIT
-C
-C.....BOUCLE SUR LES FREQUENCES DE DISCRETISATION.
-C     """"""""""""""""""""""""""""""""""""""""""""
+!
+!.....LOOP OVER DISCRETISED FREQUENCIES
+!     """"""""""""""""""""""""""""""""""""""""""""
       DO JF=1,NF
-C
-C.......CALCUL DU COEFFICIENT LINEAIRE BETA : QFROT1 = BETA * F
-C       """""""""""""""""""""""""""""""""""""""""""""""""""""""
+!
+!.......COMPUTES THE LINEAR COEFFICIENT BETA : QFROT1 = BETA * F
+!       """""""""""""""""""""""""""""""""""""""""""""""""""""""
         DO IP=1,NPOIN2
           DEUKD = MIN(2.D0*DEPTH(IP)*XK(IP,JF),7.D2)
           BETA(IP) = COEF*XK(IP,JF)/SINH(DEUKD)
         ENDDO
-C
-C.......PRISE EN COMPTE DU TERME SOURCE.
-C       """"""""""""""""""""""""""""""""
+!
+!.......TAKES THE SOURCE TERM INTO ACCOUNT
+!       """"""""""""""""""""""""""""""""
         DO JP=1,NPLAN
           DO IP=1,NPOIN2
             TSTOT(IP,JP,JF) = TSTOT(IP,JP,JF)+BETA(IP)*F(IP,JP,JF)
@@ -90,6 +100,6 @@ C       """"""""""""""""""""""""""""""""
           ENDDO
         ENDDO
       ENDDO
-C
+!
       RETURN
       END

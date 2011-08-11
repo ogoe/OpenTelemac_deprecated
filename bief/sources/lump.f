@@ -1,57 +1,62 @@
-C                       ***************
-                        SUBROUTINE LUMP
-C                       ***************
-C
-     *(DIAG,A,MESH,XMUL)
-C
-C***********************************************************************
-C BIEF VERSION 5.5           08/12/94    J-M HERVOUET (LNH) 30 87 80 18
-C***********************************************************************
-C
-C     FONCTION  : SOMME DES TERMES PAR LIGNE D'UNE MATRICE A
-C                 LE RESULTAT EST MULTIPLIE PAR XMUL.
-C
-C                 ON FAIT SIMPLEMENT DIAG = A X (VECTEUR EGAL A XMUL)
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |    DIAG        |<-- | VECTEUR RESULTAT.
-C |    A           | -->| MATRICE
-C |    MESH        | -->| BLOC DES TABLEAUX ENTIERS DU MAILLAGE.
-C |    XMUL        | -->| COEFFICIENT MULTIPLICATEUR
-C |    MSK         | -->|  SI OUI, PRESENCE D'ELEMENTS MASQUES.
-C |    MASKEL      | -->|  TABLEAU DE MASQUAGE DES ELEMENTS
-C |                |    |  =1. : NORMAL   =0. : ELEMENT MASQUE
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C***********************************************************************
-C
-C SOUS-PROGRAMMES APPELES : ELMMAT , CPSTVC
-C
-C***********************************************************************
-C
+!                    ***************
+                     SUBROUTINE LUMP
+!                    ***************
+!
+     &(DIAG,A,MESH,XMUL)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    SUMS UP THE TERMS OF MATRIX A, BY LINE.
+!+
+!+            MULTIPLIES THE RESULT BY XMUL.
+!+
+!+            TO DO SO SIMPLY DOES DIAG = A X (X VECTOR EQUAL TO XMUL).
+!
+!history  J-M HERVOUET (LNH)
+!+        08/12/94
+!+        V5P5
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| A              |-->| MATRIX
+!| DIAG           |<--| RESULTING VECTOR
+!| MESH           |-->| MESH STRUCTURE
+!| XMUL           |-->| COEFFICIENT FOR MULTIPLICATION
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_LUMP => LUMP
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-C
+!
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+!
       DOUBLE PRECISION, INTENT(IN)   :: XMUL
       TYPE(BIEF_OBJ), INTENT(IN)     :: A
       TYPE(BIEF_OBJ), INTENT(INOUT)  :: DIAG
       TYPE(BIEF_MESH), INTENT(INOUT) :: MESH
-C
-C+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-C
+!
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+!
       DOUBLE PRECISION C
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(A%ELMLIN.NE.A%ELMCOL) THEN
         IF (LNG.EQ.1) WRITE(LU,50)
         IF (LNG.EQ.2) WRITE(LU,51)
@@ -60,24 +65,23 @@ C
         CALL PLANTE(1)
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       CALL CPSTVC(A%D,DIAG)
-C
-C-----------------------------------------------------------------------
-C
-C  CONSTRUCTION D'UN VECTEUR QUI VAUT PARTOUT XMUL
-C
+!
+!-----------------------------------------------------------------------
+!
+!  BUILDS A VECTOR THAT IS XMUL EVERYWHERE
+!
       CALL OS( 'X=C     ', X=DIAG , C=XMUL )
-C
-C  DIAG EST LE PRODUIT DE A PAR CE VECTEUR
-C  DIAG JOUE ICI LE ROLE DE X ET Y (ON PEUT LE FAIRE).
-C
+!
+!  DIAG IS THE PRODUCT OF A BY THIS VECTOR
+!  DIAG HERE PLAYS THE ROLE OF X AND Y (CAN BE DONE)
+!
       CALL MATVEC('X=AY    ',DIAG,A,DIAG,C,MESH,.TRUE.)
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-      END 
- 
+      END

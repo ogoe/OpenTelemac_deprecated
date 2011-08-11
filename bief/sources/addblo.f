@@ -1,45 +1,52 @@
-C                       *****************
-                        SUBROUTINE ADDBLO
-C                       *****************
-C
-     *( BLOC , OBJ )
-C
-C***********************************************************************
-C BIEF VERSION 5.5            01/03/95    J-M HERVOUET (LNH) 30 87 80 18
-C***********************************************************************
-C
-C  FONCTION  : AJOUT D'UN OBJET A UNE STRUCTURE DE BLOC
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |   BLOC         |<-->| NOM FORTRAN DU BLOC
-C |   OBJ          | -->| NOUVEL OBJET.
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES : AUCUN
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE ADDBLO
+!                    *****************
+!
+     &( BLOC , OBJ )
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    ADDS AN OBJECT TO A BLOCK STRUCTURE (WHICH IS A LIST)
+!
+!history  J-M HERVOUET (LNH)
+!+        01/03/95
+!+        V5P5
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| BLOC           |<->| FORTRAN NAME OF BLOCK
+!| OBJ            |-->| BIEF_OBJ STRUCTURE TO BE ADDED IN THE BLOCK
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_ADDBLO => ADDBLO
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       TYPE(BIEF_OBJ), INTENT(INOUT)      :: BLOC
       TYPE(BIEF_OBJ), INTENT(IN), TARGET :: OBJ
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-C     ACCROISSEMENT DU NOMBRE D'OBJETS DANS LE BLOC
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+!     INCREASES THE NUMBER OF OBJECTS IN THE BLOCK
+!
       BLOC%N = BLOC%N + 1
       IF(BLOC%N.GT.BLOC%MAXBLOCK) THEN
        IF(LNG.EQ.1) THEN
@@ -54,22 +61,21 @@ C
        ENDIF
        STOP
       ENDIF
-C
-C     AFFECTATION DE LA CIBLE OBJ AU POINTEUR DE RANG BLOC%N
-C
+!
+!     ASSIGNS THE TARGET OBJ TO THE POINTER OF RANK BLOC%N
+!
       BLOC%ADR(BLOC%N)%P => OBJ
-C
-C-----------------------------------------------------------------------
-C
-C      IF(LNG.EQ.1) THEN
-C        WRITE(LU,*) 'ADDBLO : ',OBJ%NAME,' AJOUTE A ',BLOC%NAME
-C      ENDIF
-C      IF(LNG.EQ.2) THEN
-C        WRITE(LU,*) 'ADDBLO : ',OBJ%NAME,'  ADDED TO ',BLOC%NAME
-C      ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
+!      IF(LNG.EQ.1) THEN
+!        WRITE(LU,*) 'ADDBLO : ',OBJ%NAME,' AJOUTE A ',BLOC%NAME
+!      ENDIF
+!      IF(LNG.EQ.2) THEN
+!        WRITE(LU,*) 'ADDBLO : ',OBJ%NAME,'  ADDED TO ',BLOC%NAME
+!      ENDIF
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-      END 
- 
+      END

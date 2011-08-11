@@ -1,45 +1,59 @@
-C                       *****************                                                                                         
-                        SUBROUTINE METGRA                             
-C                       *****************                                        
-C     
-     *(RO,ESTIME,GRADJ,GRADJN,JCOUT1,DESC,NPARAM,OPTID,RSTART,R02,R03)
-C     
-C***********************************************************************
-C     PROGICIEL : TELEMAC 2D        02/08/93  E. BARROS
-C             UPGRADE TO 5.2        04/10/00  A. LEOPARDI (UNINA)
-C***********************************************************************
-C     
-C     FUNCTION: ONE STEP OF GRADIENT METHOD                                                   
-C     
-C-----------------------------------------------------------------------
-C     ARGUMENTS                                         
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |    GRADJ       | -->| GRADIENT OF COST FUNCTION (ITERATION K)
-C |    GRADJN      | -->| GRADIENT OF COST FUNCTION (ITERATION K-1)
-C |    RO          |<-->| COEFFICIENT OF THE GRADIENT
-C |    NPARAM      | -->| TOTAL NUMBER OF PARAMETERS TO ESTIMATE
-C |    DESC        |<-- | VECTOR USED TO CHANGE THE SET OF STRICKLERS'
-C |    OPTID       | -->| METHOD 1=GRADIENT, 2=GRADIENT CONJUGUE, 3=LAGRANGE)
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C     
-C     APPELE PAR :            HOMERE_PIT
-C     
-C     SOUS-PROGRAMME APPELE : OS
-C     
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE METGRA
+!                    *****************
+!
+     &(RO,ESTIME,GRADJ,GRADJN,JCOUT1,DESC,NPARAM,OPTID,RSTART,R02,R03)
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    ONE STEP OF GRADIENT METHOD.
+!
+!history  E. BARROS
+!+        02/08/1993
+!+
+!+
+!
+!history  A. LEOPARDI (UNINA)
+!+        04/10/2000
+!+        V5P2
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| DESC           |<--| VECTOR USED TO CHANGE THE SET OF STRICKLERS'
+!| ESTIME         |---| ?????? NOT USED
+!| GRADJ          |-->| GRADIENT OF COST FUNCTION (ITERATION K)
+!| GRADJN         |-->| GRADIENT OF COST FUNCTION (ITERATION K-1)
+!| JCOUT1         |-->| COST FUNCTION
+!| NPARAM         |-->| TOTAL NUMBER OF PARAMETERS TO ESTIMATE
+!| OPTID          |-->| METHOD 1=GRADIENT, 2=GRADIENT CONJUGUE, 3=LAGRANGE)
+!| R02            |<--| COEFFICIENT IN THE GRADIENT METHOD
+!| R03            |<--| COEFFICIENT IN THE GRADIENT METHOD
+!| RO             |<->| COEFFICIENT OF THE GRADIENT
+!| RSTART         |-->| IF YES, STARTING FROM SCRATCH
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C      
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER , INTENT(IN)             :: NPARAM,OPTID
       CHARACTER(LEN=72)                :: ESTIME
       DOUBLE PRECISION , INTENT(IN)    :: JCOUT1
@@ -47,22 +61,22 @@ C
       TYPE(BIEF_OBJ) , INTENT(IN)      :: GRADJ,GRADJN
       TYPE(BIEF_OBJ) , INTENT(INOUT)   :: DESC
       DOUBLE PRECISION , INTENT(INOUT) :: R02,R03,RO
-C      
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C    
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER I
-C     
+!
       DOUBLE PRECISION R1,DENOM,GRAD_JN
-C     
-C     CALCUL DU VERITABLE GRADIENT (QUI TIENT COMPTE DU VERITABLE
-C                                                  NOMBRE DE PARAMETRES)     
+!
+!     COMPUTES THE TRUE GRADIENT (WHICH TAKES THE TRUE NUMBER OF
+!                                           PARAMETERS INTO ACCOUNT)
       DENOM=0.D0
       GRAD_JN=0.D0
       DO I = 1,NPARAM
         DENOM  = DENOM + GRADJ%R(I)**2
-        GRAD_JN=GRAD_JN+GRADJN%R(I)**2 
+        GRAD_JN=GRAD_JN+GRADJN%R(I)**2
       ENDDO
-C
+!
       IF(DENOM.LT.1.D-12) THEN
         IF(LNG.EQ.1) WRITE(LU,*) 'METGRA : GRADIENT TROP PETIT, ARRET'
         IF(LNG.EQ.2) WRITE(LU,*) 'METGRA: GRADIENT TOO SMALL, STOP'
@@ -70,43 +84,43 @@ C
         CALL PLANTE(1)
         STOP
       ENDIF
-C           
-C-----------------------------------------------------------------------
-C     RO = - JCOUT / GRADJ*GRADJ
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!     RO = - JCOUT / GRADJ*GRADJ
+!-----------------------------------------------------------------------
+!
       IF(OPTID.EQ.1.OR.OPTID.EQ.3.OR.RSTART) THEN
-C
+!
             R02 = - JCOUT1 / DENOM
             RO = R02
             R03=0.5D0*R02
-C     
-C           CALCUL DE LA DIRECTION DE DESCENTE INITIALE
-C     
+!
+!           COMPUTES THE DIRECTION OF INITIAL DESCENT
+!
             CALL OV('X=Y     ',DESC%R,GRADJ%R,GRADJ%R,0.D0,NPARAM)
-C     
-C-----------------------------------------------------------------------
-C     
+!
+!-----------------------------------------------------------------------
+!
       ELSEIF(OPTID.EQ.2) THEN
-C
+!
             R02 = - JCOUT1 / DENOM
-C      
+!
             R1 = GRAD_JN/DENOM
-C     
-C           CALCUL DE LA DIRECTION DE DESCENTE
-C
+!
+!           COMPUTES THE DIRECTION OF DESCENT
+!
             CALL OV('X=Y+CZ  ',DESC%R,GRADJ%R,DESC%R,R1,NPARAM)
-C     
+!
             DENOM=0.D0
             DO I=1,NPARAM
                DENOM=DENOM+GRADJ%R(I)*DESC%R(I)
-            ENDDO      
+            ENDDO
             R03 = - JCOUT1/DENOM
             RO =R03
-C
+!
       ENDIF
-C     
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

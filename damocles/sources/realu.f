@@ -1,119 +1,101 @@
-                        DOUBLE PRECISION FUNCTION REALU
-C                       *******************************
-C
-     *( ICOL , LIGNE )
-C
-C***********************************************************************
-C DAMOCLES VERSION 5.1     30/09/93  J.M. HERVOUET    (LNH)  30 87 80 18
-C                                      A. YESSAYAN
-C                          15/12/93    O. QUIQUEMPOIX (LNH)  30 87 78 70
-C
-C COPYRIGHT EDF 1994
-C
-C***********************************************************************
-C
-C FONCTION  : DECODE UN REEL A PARTIR DE LA COLONNE ICOL+1 DE LA LIGNE.
-C             AVANCE LE POINTEUR ICOL SUR LE DERNIER CARACTERE DECODE.
-C             ACCEPTE LE FORMAT F OU LE FORMAT E.
-C             ACCEPTE LES REELS SANS VIRGULES, ET LES , POUR LES .
-C             SI LA CHAINE N'EST PAS TERMINEE, RECHERCHE SUR LA LIGNE
-C             SUIVANTE.
-C             AVANCE LE POINTEUR ICOL SUR LE DERNIER CARACTERE DECODE.
-C             OU A ICOL=0 SI ON A LU LA LIGNE SUIVANTE
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C !      NOM       !MODE!                   ROLE                       !
-C !________________!____!______________________________________________!
-C !                !    !                                              !
-C !  ICOL          !<-->! POSITION COURANTE DU POINTEUR DANS LA LIGNE  !
-C !  LIGNE         !<-->! LIGNE EN COURS DE DECODAGE                   !
-C !________________!____!______________________________________________!
-C !                !    !                                              !
-C !   /COMMON/     !    !                                              !
-C !                !    !                                              !
-C !    DCINFO      !    !                                              !
-C !  . LNG         ! -->! NUMERO DE LA LANGUE DE DECODAGE              !
-C !  . LU          ! -->! NUMERO DE L'UNITE LOGIQUE DES SORTIES        !
-C !                !    !                                              !
-C !    DCMLIG      !    !                                              !
-C !  . NLIGN       !<-->! NUMERO DE LA LIGNE TRAITEE DANS LE FICHIER LU!
-C !  . LONGLI      ! -->! LONGUEUR DES LIGNES                          !
-C !                !    !                                              !
-C !    DCRARE      !    !                                              !
-C !  . ERREUR      !<-->! SORT AVEC LA VALEUR .TRUE. EN CAS D'ERREUR   !
-C !  . RETOUR      !<-->! SORT AVEC LA VALEUR .TRUE. EN CAS DE FIN DE  !
-C !                !    ! FIN DE FICHIER OU D'ERREUR DE LECTURE.       !
-C !                !    !                                              !
-C !    DCCHIE      !    !                                              !
-C !  . NFIC        ! -->! NUMERO DE CANAL DU FICHIER EN COURS DE LECT. !
-C !________________!____!______________________________________________!
-C
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C     - PORTABILITE :          IBM,CRAY,HP,SUN
-C
-C     - PRECAUTIONS D'EMPLOI : SI LA VALEUR LUE N'EST PAS UN REEL, IL
-C                              Y A UN RISQUE D'ERREUR NON CONTROLEE PAR
-C                              LE PROGRAMME.
-C
-C     - APPELE PAR :           DAMOC
-C
-C     - FONCTIONS APPELEES :   NEXT,PREVAL
-C
-C-----------------------------------------------------------------------
-C
-C
+!                    *******************************
+                     DOUBLE PRECISION FUNCTION REALU
+!                    *******************************
+!
+     &( ICOL , LIGNE )
+!
+!***********************************************************************
+! DAMOCLES   V6P0                                   21/08/2010
+!***********************************************************************
+!
+!brief    DECODES A REAL, FROM COLUMN ICOL+1 OF THE LINE.
+!+             MOVES THE POINTER ICOL TO THE LAST DECODED CHARACTER.
+!+             ACCEPTS F FORMAT OR E FORMAT.
+!+             ACCEPTS REALS WITH DECIMAL POINTS; ACCEPTS ',' FOR '.'.
+!+             IF THE STRING IS NOT COMPLETE, GOES TO THE NEXT LINE
+!+             IF NEED BE.
+!+             MOVES THE POINTER ICOL TO THE LAST DECODED CHARACTER
+!+             OR TO ICOL=0 IF THE NEXT LINE WAS READ.
+!
+!note     PORTABILITY : IBM,CRAY,HP,SUN
+!
+!warning  IF THE VALUE READ IS NOT A REAL, COULD YIELD A
+!+            NON-CONTROLLED ERROR BY THE PROGRAM
+!
+!history  J.M. HERVOUET (LNH); A. YESSAYAN
+!+        30/09/1993
+!+        V5P1
+!+
+!
+!history  O. QUIQUEMPOIX (LNH)
+!+        15/12/1993
+!+
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| ICOL           |<->| POSITION COURANTE DU POINTEUR DANS LA LIGNE
+!| LIGNE          |<->| LIGNE EN COURS DE DECODAGE
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
-C
+!
+!
       INTEGER          ICOL
       CHARACTER*(*)    LIGNE
-C
+!
       INTEGER          NEXT,PREVAL
       EXTERNAL NEXT,PREVAL
-C
+!
       INTEGER          LNG,LU
       INTEGER          NLIGN,LONGLI
       INTEGER          NFIC
       LOGICAL          ERREUR , RETOUR
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       INTRINSIC DLOG10,DBLE,INT,CHAR
-C
+!
       INTEGER          I,I1,I2,ILONG,IPOINT,IFDECI,ILDECI,JD1,JD2,I3
       LOGICAL          FORMAE,LUFIC,LISUIV,VUPOIN
       CHARACTER*1      CODE,CDEB,CDEB2,TABUL
       CHARACTER*3      LLONG,LLDECI
       CHARACTER*72     FORMA,LIGNE2
       DOUBLE PRECISION RSIGNE , RVAL
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       COMMON / DCINFO / LNG,LU
       COMMON / DCRARE / ERREUR , RETOUR
       COMMON / DCMLIG / NLIGN , LONGLI
       COMMON / DCCHIE / NFIC
-C
-C***********************************************************************
-C
+!
+!***********************************************************************
+!
       LUFIC = .FALSE.
       LISUIV = .FALSE.
       VUPOIN = .FALSE.
       TABUL = CHAR(9)
-C
+!
       I1     = NEXT( ICOL+1 , LIGNE )
-C
-C   ////  DETERMINATION DU CODE DU FORMAT : F OU E  ////
-C
+!
+!     //// DETERMINES THE FORMAT: F OR E ////
+!
       FORMAE = .FALSE.
-C
-C        //// DECODAGE EVENTUEL DU SIGNE             ////
-C
+!
+!     //// DECODES THE SIGN IF NEED BE ////
+!
       RSIGNE = +1.D0
       IF ( LIGNE(I1:I1).EQ.'-' ) THEN
            RSIGNE = -1.D0
@@ -122,40 +104,40 @@ C
            RSIGNE = +1.D0
            I1     =   NEXT ( I1+1      , LIGNE )
       ENDIF
-C
-C        //// RECHERCHE DU PREMIER BLANC APRES LE NOMBRE  ////
-C                       OU D'UN SEPARATEUR ";"
-C
+!
+!     //// SEEKS THE FIRST WHITE CHARACTER FOLLOWING THE NUMBER ////
+!                       OR A SEPARATOR ';'
+!
       I2     = PREVAL (  I1  , LIGNE ,  ' ' , ';' ,TABUL)
-C
-C     CAS OU L'ENTIER NE SE TERMINE PAS SUR LA LIGNE
-C
+!
+!     CASE WHERE THE REAL DOES NOT FINISH ON THE LINE                                                                                                                                                                                                                                                                                                                                                                                                                                              LINE
+!
       IF (I2.GT.LONGLI) THEN
          LUFIC=.TRUE.
          READ(NFIC,END=900,ERR=998,FMT='(A)') LIGNE2
          CDEB = LIGNE2(1:1)
          CDEB2 = LIGNE2(2:2)
-C
+!
          IF ((CDEB.EQ.'0'.OR.CDEB.EQ.'1'.OR.CDEB.EQ.'2'.OR.
-     *        CDEB.EQ.'3'.OR.CDEB.EQ.'4'.OR.CDEB.EQ.'5'.OR.
-     *        CDEB.EQ.'6'.OR.CDEB.EQ.'7'.OR.CDEB.EQ.'8'.OR.
-     *        CDEB.EQ.'9'.OR.CDEB.EQ.'.'.OR.CDEB.EQ.'+'.OR.
-     *        CDEB.EQ.'-'.OR.CDEB.EQ.',')
-C
-     *      .OR.
-C
-C CAS OU CELA DEPEND DU DEUXIEME CARACTERE DE LA LIGNE SUIVANTE
-C
-     *      ((CDEB.EQ.'E'.OR.CDEB.EQ.'E'.OR.CDEB.EQ.'D'.OR.
-     *        CDEB.EQ.'D')
-     *      .AND.
-     *      ( CDEB2.EQ.'0'.OR.CDEB2.EQ.'1'.OR.CDEB2.EQ.'2'.OR.
-     *        CDEB2.EQ.'3'.OR.CDEB2.EQ.'4'.OR.CDEB2.EQ.'5'.OR.
-     *        CDEB2.EQ.'6'.OR.CDEB2.EQ.'7'.OR.CDEB2.EQ.'8'.OR.
-     *        CDEB2.EQ.'9'.OR.CDEB2.EQ.'+'.OR.CDEB2.EQ.'-'    )))
-C
-     *      THEN
-C
+     &        CDEB.EQ.'3'.OR.CDEB.EQ.'4'.OR.CDEB.EQ.'5'.OR.
+     &        CDEB.EQ.'6'.OR.CDEB.EQ.'7'.OR.CDEB.EQ.'8'.OR.
+     &        CDEB.EQ.'9'.OR.CDEB.EQ.'.'.OR.CDEB.EQ.'+'.OR.
+     &        CDEB.EQ.'-'.OR.CDEB.EQ.',')
+!
+     &      .OR.
+!
+! CASE WHERE IT DEPENDS ON THE SECOND CHARACTER OF THE FOLLOWING LINE
+!
+     &      ((CDEB.EQ.'E'.OR.CDEB.EQ.'E'.OR.CDEB.EQ.'D'.OR.
+     &        CDEB.EQ.'D')
+     &      .AND.
+     &      ( CDEB2.EQ.'0'.OR.CDEB2.EQ.'1'.OR.CDEB2.EQ.'2'.OR.
+     &        CDEB2.EQ.'3'.OR.CDEB2.EQ.'4'.OR.CDEB2.EQ.'5'.OR.
+     &        CDEB2.EQ.'6'.OR.CDEB2.EQ.'7'.OR.CDEB2.EQ.'8'.OR.
+     &        CDEB2.EQ.'9'.OR.CDEB2.EQ.'+'.OR.CDEB2.EQ.'-'    )))
+!
+     &      THEN
+!
             LISUIV = .TRUE.
             I3=1
             I3=PREVAL(I3,LIGNE2 , ' ' , ';' ,TABUL)
@@ -169,17 +151,17 @@ C
          ENDIF
        ENDIF
        GOTO 910
-C
+!
  900  CONTINUE
       RETOUR = .TRUE.
  910  CONTINUE
-C
-C     ILONG : LONGUEUR DU REEL
+!
+!     ILONG: LENGTH OF THE REAL
       ILONG  = I2 - I1
       IPOINT = I2 - 1
       IFDECI = I2 - 1
       DO 100 I = I1 , I2-1
-C          ON ACCEPTE LES POINTS, LES VIRGULES
+!          ACCEPTS '.' AND ','
            IF ( LIGNE(I:I).EQ.'.' ) THEN
                 IPOINT = I
                 VUPOIN=.TRUE.
@@ -188,7 +170,7 @@ C          ON ACCEPTE LES POINTS, LES VIRGULES
                 IPOINT = I
                 VUPOIN=.TRUE.
            ELSE IF (LIGNE(I:I).EQ.'E'.OR.LIGNE(I:I).EQ.'E' ) THEN
-C          ON ACCEPTE LES FORMATS E , D
+!          ACCEPTS BOTH FORMATS E AND D
                 FORMAE = .TRUE.
                 IFDECI = I-1
            ELSE IF ( LIGNE(I:I).EQ.'D'.OR.LIGNE(I:I).EQ.'D') THEN
@@ -197,17 +179,17 @@ C          ON ACCEPTE LES FORMATS E , D
                 IFDECI = I-1
            ENDIF
   100 CONTINUE
-C
-C        //// LONGUEUR DE LA PARTIE FRACTIONNAIRE ///
-C
+!
+!     //// NUMBER OF DECIMAL POINTS ///
+!
       IF (VUPOIN) THEN
         ILDECI = IFDECI - IPOINT
       ELSE
         ILDECI = 0
       ENDIF
-C
-C        //// FORMAT DE DECODAGE ////
-C
+!
+!     //// DECODING FORMAT ////
+!
       CODE = 'F'
       IF ( FORMAE ) CODE = 'E'
       JD1 = 3 - INT(DLOG10(DBLE(ILONG)))
@@ -220,17 +202,17 @@ C
       ELSE
            WRITE ( FORMA , 1020 )  CODE,LLONG(JD1:3),LLDECI(JD2:3)
       ENDIF
-C
+!
 1010  FORMAT('(',I3,'X,',A1,A,'.',A,')' )
 1020  FORMAT('(',A1,A,'.',A,')' )
-C
-C        ////  DECODAGE ////
-C
+!
+!     ////  DECODES ////
+!
       READ  ( LIGNE , FORMA , ERR=995 ) RVAL
       REALU = RSIGNE * RVAL
-C
-C        //// MISE A JOUR DU POINTEUR ////
-C
+!
+!     //// UPDATES THE POINTER ////
+!
       IF (LUFIC) THEN
         NLIGN = NLIGN + 1
         LIGNE = LIGNE2
@@ -242,13 +224,13 @@ C
       ELSE
         ICOL = I2 - 1
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-C
-C TRAITEMENT DES ERREURS DUES AU READ INTERNE POUR LA CONVERSION
-C
+!
+! TREATS THE ERRORS DUE TO THE INTERNAL READ FOR CONVERSION
+!
 995   CONTINUE
       IF(LNG.EQ.1) WRITE(6,996) NLIGN
       IF(LNG.EQ.2) WRITE(6,1996) NLIGN
@@ -257,9 +239,9 @@ C
 1996  FORMAT(1X,'ERREUR LINE ',1I6,', REAL EXPECTED : ',/)
       ERREUR=.TRUE.
       RETURN
-C
-C TRAITEMENT DES ERREURS DE LECTURE DU FICHIER
-C
+!
+! TREATS THE ERRORS DUE TO FILE MISREADING
+!
 998   CONTINUE
       IF(LNG.EQ.1) WRITE(6,999)  NFIC,NLIGN+1
       IF(LNG.EQ.2) WRITE(6,1999) NFIC,NLIGN+1
@@ -267,5 +249,5 @@ C
 1999  FORMAT(1X,'LOGICAL UNIT ',1I2,'   ERROR LINE ',1I6)
       RETOUR = .TRUE.
       RETURN
-C
-      END 
+!
+      END

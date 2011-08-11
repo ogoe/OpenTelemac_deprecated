@@ -1,64 +1,73 @@
-C                       *****************
-                        SUBROUTINE SMTRAC
-C                       *****************
-C
-     *(NPOIN,DIMT,AT,DT,SMTR,SMH,NREJET,ISCE,TSCE2,MAXSCE,MAXTRA,ITRAC)
-C
-C***********************************************************************
-C TELEMAC 2D VERSION 5.8           INRIA
-C
-C***********************************************************************
-C
-C     FONCTION  : CALCUL DU SECOND MEMBRE DU TRACEUR
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |  NPOIN         | -->|  NOMBRE DE POINTS DU MAILLAGE                |
-C !  DIMT          ! -->!  DIMENSION DU TRACEUR                        |
-C |  AT            | -->|  TEMPS                                       |
-C |  DT            | -->|  PAS DE TEMPS HYDRO                          |
-C |  SMTR          |<-->!  TERMES SOURCES DU TRACEUR                   !
-C |  SMH           | -->|  TERMES SOURCES DE L'EQUATION DE CONTINUITE  |
-C |  NREJET        | -->|  NOMBRE DE SOURCES/PUITS                     |
-C |  ISCE          | -->|  NUMEROS GLOBAUX DES POINTS SOURCES          |
-C |  TSCE          | -->|  VALEURS DU TRACEUR AUX SOURCES              |
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C     - SOUS PROGRAMME(S) APPELANT : RESOLU                             
-C 
-C***********************************************************************
-C 
+!                    *****************
+                     SUBROUTINE SMTRAC
+!                    *****************
+!
+     &(NPOIN,DIMT,AT,DT,SMTR,SMH,NREJET,ISCE,TSCE2,MAXSCE,MAXTRA,ITRAC)
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    COMPUTES THE SECOND MEMBER FOR THE TRACER.
+!
+!history  INRIA
+!+
+!+        V5P8
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| AT             |-->| TIME
+!| DIMT           |-->| DIMENSION OF THE TRACER
+!| DT             |-->| HYDRO TIME STEP
+!| ISCE           |-->| GLOBAL INDICES OF SOURCE POINTS
+!| ITRAC          |-->| TRCER INDEX 
+!| MAXSCE         |-->| MAXIMUM NUMBER OF SOURCES
+!| MAXTRA         |-->| MAXIMUM NUMER OF TRACERS 
+!| NPOIN          |-->| TOTAL NUMBER OF NODES IN THE MESH
+!| NREJET         |-->| NUMBER OF SOURCE/SINK
+!| SMH            |-->| SOURCE TERMS FOR CONTINUITY EQUATION
+!| SMTR           |-->| SOURCE TERMS FOR TRACER
+!| TSCE2          |-->| VALUES OF TRACERS AT SOURCES
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN) :: NPOIN,NREJET,ISCE(*),DIMT,ITRAC
       INTEGER, INTENT(IN) :: MAXSCE,MAXTRA
       DOUBLE PRECISION, INTENT(IN)    :: AT,DT,SMH(NPOIN)
       DOUBLE PRECISION, INTENT(IN)    :: TSCE2(MAXSCE,MAXTRA)
       DOUBLE PRECISION, INTENT(INOUT) :: SMTR(DIMT)
-C 
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER I,IS
-C                                                          
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(NREJET.NE.0) THEN
         DO I=1,NREJET
           IS =ISCE(I)
           SMTR(IS) = SMTR(IS) + DT*SMH(IS) * TSCE2(I,ITRAC)
         ENDDO
       ENDIF
-C                                                          
-C-----------------------------------------------------------------------
-C                                                                        
-      RETURN                                                            
+!
+!-----------------------------------------------------------------------
+!
+      RETURN
       END

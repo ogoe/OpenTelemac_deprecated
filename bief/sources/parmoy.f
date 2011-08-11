@@ -1,89 +1,93 @@
-C                       *****************
-                        SUBROUTINE PARMOY
-C                       *****************
-C
-     *( X , MESH )
-C
-C***********************************************************************
-C BIEF VERSION 5.1           24/04/97    J-M HERVOUET (LNH) 30 87 80 18
-C COPYRIGHT 1997              AFTER REINHARD HINKELMANN (HANNOVER UNI.)
-C***********************************************************************
-C
-C   FONCTION : MOYENNE D'UN VECTEUR AUX INTERFACES ENTRE
-C              SOUS-DOMAINES.
-C
-C              X PEUT ETRE UN BLOC DE VECTEURS, EN CE CAS, TOUS LES
-C              VECTEURS DU BLOC SONT TRAITES.
-C
-C              ATTENTION ||||
-C
-C              SI LES VECTEURS ONT UNE DEUXIEME DIMENSION
-C              ELLE EST POUR L'INSTANT IGNOREE
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|_______________________________________________
-C |      X         |<-->| VECTEUR OU BLOC DE VECTEURS.
-C |      MESH      | -->| MAILLAGE.
-C |________________|____|_______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES   :  PLANTE
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE PARMOY
+!                    *****************
+!
+     &( X , MESH )
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    AVERAGE OF A VECTOR AT THE INTERFACES BETWEEN
+!+                SUB-DOMAINS.
+!+
+!+            X CAN BE A BLOCK OF VECTORS. IN THIS CASE, ALL THE
+!+                VECTORS IN THE BLOCK ARE TREATED.
+!
+!warning  IF THE VECTORS HAVE A SECOND DIMENSION, IT IS
+!+            IGNORED FOR THE TIME BEING
+!
+!history  J-M HERVOUET (LNH)
+!+        24/04/97
+!+        V5P1
+!+   AFTER REINHARD HINKELMANN (HANNOVER UNI.)
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| MESH           |-->| MESH STRUCTURE
+!| X              |<->| VECTOR OR BLOCK OF VECTORS.
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_PARMOY => PARMOY
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-C     STRUCTURES : MAILLAGE, VECTEURS OU BLOCS
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+!     STRUCTURES: MESH, VECTORS OR BLOCKS
+!
       TYPE(BIEF_MESH), INTENT(INOUT) :: MESH
       TYPE(BIEF_OBJ), INTENT(INOUT)  :: X
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER I,TYPX
-C
-C  COMPLEMENT AUX INTERFACES :
-C
+!
+!  COMPLEMENTS THE INTERFACES:
+!
       CALL PARCOM( X , 2 , MESH )
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       TYPX = X%TYPE
-C
-C-----------------------------------------------------------------------
-C
-C  CAS OU LES STRUCTURES SONT DES BLOCS
-C
+!
+!-----------------------------------------------------------------------
+!
+!  CASE WHERE THE STRUCTURES ARE BLOCKS
+!
       IF(TYPX.EQ.4) THEN
-C
-        DO 10 I=1,X%N
+!
+        DO I=1,X%N
           CALL OS('X=XY    ',X=X%ADR(I)%P,Y=MESH%FAC)
-10      CONTINUE
-C
-C-----------------------------------------------------------------------
-C
-C  CAS OU LA STRUCTURE EST UN VECTEUR
-C
+        ENDDO
+!
+!-----------------------------------------------------------------------
+!
+!  CASE WHERE THE STRUCTURE IS A VECTOR
+!
       ELSEIF(TYPX.EQ.2) THEN
-C
+!
         CALL OS('X=XY    ',X=X,Y=MESH%FAC)
-C
-C-----------------------------------------------------------------------
-C
-C  ERREUR SUR LA STRUCTURE
-C
+!
+!-----------------------------------------------------------------------
+!
+!  ERROR ON THE STRUCTURE
+!
       ELSE
-C
+!
          IF (LNG.EQ.1) WRITE(LU,50) X%NAME,X%TYPE
          IF (LNG.EQ.1) WRITE(LU,53)
 50       FORMAT(1X,'PARMOY (BIEF) : NOM DE X : ',A6,'  TYPE : ',1I6)
@@ -94,12 +98,10 @@ C
 54       FORMAT(1X,'                UNEXPECTED CASE')
          CALL PLANTE(1)
          STOP
-C
+!
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-      END 
- 
- 
+      END

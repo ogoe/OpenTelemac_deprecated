@@ -1,138 +1,145 @@
-C                       *****************
-                        SUBROUTINE PRECD1
-C                       *****************
-C
-     *(X,A,B,D,MESH,PRECON,PREXSM,DIADON)
-C
-C***********************************************************************
-C BIEF VERSION 6.0     06/07/2009    J-M HERVOUET (LNHE)  01 30 87 80 18
-C***********************************************************************
-C
-C    FONCTION:  PRECONDITIONNEMENT DIAGONAL D'UN SYSTEME A X = B
-C               (VOIR EXPLICATIONS DANS PRECDT).
-C
-C    ICI A EST UNE MATRICE SIMPLE.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |   X            |<-->|  VALEURS A L' ETAPE N+1.
-C |   A            | -->|  MATRICE
-C |   B            | -->|  SECONDS MEMBRES DU SYSTEME.
-C |   D            |<-- |  STOCKAGE DE MATRICES DIAGONALES
-C |   MESH         | -->|  MAILLAGE.
-C |   PRECON       | -->|  VARIANTE DE PRECONDITIONNEMENT
-C |   PREXSM       | -->|  .TRUE. : ON PRECONDITIONNE X,X2,X3 ET SM
-C |   DIADON       | -->|  .TRUE. : LES DIAGONALES SONT DONNEES.
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES : OS , OM
-C
-C**********************************************************************
-C
+!                    *****************
+                     SUBROUTINE PRECD1
+!                    *****************
+!
+     &(X,A,B,D,MESH,PRECON,PREXSM,DIADON)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    DIAGONAL PRECONDITIONING OF A SYSTEM A X = B
+!+               (SEE EXPLANATIONS IN PRECDT).
+!+
+!+            A IS A SIMPLE MATRIX HERE.
+!
+!history  J-M HERVOUET (LNHE)
+!+        06/07/2009
+!+        V6P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| A              |-->| BLOCK OF MATRICES
+!| B              |-->| BLOCK OF RIGHT-HAND SIZES
+!| D              |<--| BLOCK OF DIAGONALS
+!| DIADON         |-->| .TRUE. : DIAGONALS ARE GIVEN
+!| MESH           |-->| MESH STRUCTURE
+!| PRECON         |-->| CHOICE OF PRECONDITIONING
+!| PREXSM         |-->| .TRUE. : PRECONDITIONING X AND B
+!| X              |<->| BLOCK OF UNKNOWN VECTORS IN THE SYSTEM
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_PRECD1 => PRECD1
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN) :: PRECON
-C
+!
       LOGICAL, INTENT(IN) :: PREXSM,DIADON
-C
-C-----------------------------------------------------------------------
-C
-C  STRUCTURES DE VECTEURS
-C
+!
+!-----------------------------------------------------------------------
+!
+!  VECTOR STRUCTURES
+!
       TYPE(BIEF_OBJ), INTENT(INOUT) :: X,B,D
-C
-C-----------------------------------------------------------------------
-C
-C  STRUCTURE DE MATRICE
-C
+!
+!-----------------------------------------------------------------------
+!
+!  MATRIX STRUCTURES
+!
       TYPE(BIEF_OBJ), INTENT(INOUT) :: A
-C
-C-----------------------------------------------------------------------
-C
-C  STRUCTURE DE MAILLAGE
-C
+!
+!-----------------------------------------------------------------------
+!
+!  MESH STRUCTURE
+!
       TYPE(BIEF_MESH), INTENT(INOUT) :: MESH
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       DOUBLE PRECISION C
-C
-C-----------------------------------------------------------------------
-C
-C  PREPARATION DES DIAGONALES :
-C
+!
+!-----------------------------------------------------------------------
+!
+!  PREPARES THE DIAGONALS:
+!
       IF(.NOT.DIADON) THEN
-C
-C CALCUL DES RACINES CARREES DES VALEURS ABSOLUES OU DES VALEURS
-C
+!
+!  COMPUTES THE SQUARE ROOTS OF THE ABSOLUTE VALUES OR OF THE VALUES
+!
         IF(PRECON.EQ.5) THEN
           CALL OS( 'X=ABS(Y)' , X=D , Y=A%D )
         ELSE
           CALL OS( 'X=Y     ' , X=D , Y=A%D )
         ENDIF
-C
-C PARALLELISME : DIAGONALE COMPLETE AVANT DE FAIRE LA RACINE
-C
+!
+!  PARALLEL MODE: COMPLETE DIAGONAL BEFORE TAKING THE SQUARE ROOT
+!
         IF(NCSIZE.GT.1) THEN
           CALL PARCOM(D,2,MESH)
         ENDIF
-C
+!
         CALL OS( 'X=SQR(Y)' , X=D , Y=D )
-C
-C-----------------------------------------------------------------------
-C                                                 -1
-C  CHANGEMENT DE VARIABLE (DANS D IL Y A EN FAIT D
-C
+!
+!-----------------------------------------------------------------------
+!                                         -1
+!  CHANGE OF VARIABLES (D ACTUALLY HOLDS D  )
+!
         IF(PREXSM) CALL OS( 'X=XY    ' , X , D , D , C )
-C
-C-----------------------------------------------------------------------
-C
-C CALCUL DES INVERSES DES RACINES CARREES DES DIAGONALES
-C ON AURA AINSI LA VRAIE D ET NON PLUS SON INVERSE
-C
+!
+!-----------------------------------------------------------------------
+!
+!  COMPUTES THE INVERSE OF THE SQUARE ROOTS OF THE DIAGONALS
+!  THIS GIVES BACK TRUE D AND NOT D INVERTED
+!
         CALL OS( 'X=1/Y   ' , D , D , D , C , 2 , 1.D0 , 1.D-10 )
-C
+!
       ELSE
-C
-C  CAS OU D EST DONNE, CHANGEMENT DE VARIABLES
-C  CHANGEMENT DE VARIABLE (DANS D IL Y A VRAIMENT D )
-C
+!
+!  CASE WHERE D IS GIVEN, CHANGE OF VARIABLES
+!  CHANGE OF VARIABLE (D REALLY HOLDS D)
+!
         IF(PREXSM) THEN
           CALL OS( 'X=Y/Z   ' , X=X , Y=X , Z=D )
         ENDIF
-C
+!
       ENDIF
-C
-C=======================================================================
-C PRECONDITIONNEMENT DE A :
-C=======================================================================
-C
+!
+!=======================================================================
+! PRECONDITIONING OF A:
+!=======================================================================
+!
       CALL OM( 'M=DMD   ' , A , A , D , C , MESH )
-C     SI PRECON = 2 OU 3
+!     IF PRECON = 2 OR 3
       IF((2*(PRECON/2).EQ.PRECON.OR.3*(PRECON/3).EQ.PRECON).AND.
-     *                                                 .NOT.DIADON) THEN
-C       VALABLE SEULEMENT AVEC UN SEUL DOMAINE
+     &                                                 .NOT.DIADON) THEN
+!       VALID ONLY WITH ONE SINGLE DOMAIN
         IF(NCSIZE.LE.1.OR.NPTIR.EQ.0) A%TYPDIA='I'
       ENDIF
-C
-C=======================================================================
-C
-C PRECONDITIONNEMENT DU SECOND MEMBRE
-C
+!
+!=======================================================================
+!
+! PRECONDITIONING OF THE SECOND MEMBER
+!
       IF(PREXSM) CALL OS( 'X=XY    ' , X=B , Y=D )
-C
-C=======================================================================
-C
+!
+!=======================================================================
+!
       RETURN
       END

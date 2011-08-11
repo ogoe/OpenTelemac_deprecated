@@ -3,7 +3,7 @@
 #------------------------Systeme TELEMAC V5P3-------------runtel.pl----
 #
 #	Procedures de lancement simplifie d'un code
-#           du systÃ¨me TELEMAC
+#           du systeme TELEMAC
 #
 # SYNTAXE
 #	runtel.pl nom_code [-D] [-C|-F] [-s|b|n|d heure] [cas]
@@ -842,7 +842,7 @@ sub jajbanner
   #return; # ...ehm, we love banners indicating which versions WE use, don't WE?
   printf "\n";
   printf "=========================================================\n";
-  printf " Telemac System 5.6 to 5.9 - Perl scripts version 5.9    \n";
+  printf " Telemac System 5.6 to 6.1 - Perl scripts version 6.1    \n";
   printf "=========================================================\n";
   printf "$_[0]\n";
   printf "\n";
@@ -1086,7 +1086,6 @@ else
     $listJobs="at -l";
     $atFormat="echo $REPLANCE$ps"."$REP$ps"."$GENERIQUE.bat | at %s";
     $cmd_tim="";
-#    $cmd_tim="time";
     $exe_ext="";
 #recuperation du username pour tuer job actif : $LOGIN, $LOGUSER
     $user_name=$ENV{"LOGIN"};
@@ -1144,9 +1143,6 @@ if ($st == 0)
            "The steering file does not exist");
     usage();
   }
-#PLG
-# Verification et gestion des protection mise apres le traitement couplage
-# Telemac/Sisyphe
 
 ######################################################
 #   /  DEBUT DES TACHES DE GESTION DE FICHIERS
@@ -1317,7 +1313,7 @@ if (scalar(@vals) == 0)
   {  ecrire("ERREUR : Mot clef du dictionnaire 'NUMERO DE VERSION' non defini",
             "ERROR : undefined dictionary parameter 'NUMERO DE VERSION'");
      exit 1;}
-$vs=@vals[0];          #traitement spÃÂ©cifique pour accepter la forme
+$vs=@vals[0];          #traitement specifique pour accepter la forme
 if (@vals > 1)         #         V5P2;V5P2;V5P1;V5P1
   { for ($i=1;$i<@vals;$i++)  { $vs=$vs.",@vals[i]";}
   }
@@ -1340,14 +1336,14 @@ if ($ier != 0)
 #
 if ($GENERIQUE eq "telemac2d" || $GENERIQUE eq "telemac3d")
   { 
-     @vals = tm_casdico::recup_valeur_mot(\%motsEtude, "FICHIER DES PARAMETRES DE SISYPHE"); 
-     if ((scalar(@vals) != 0) && (@vals[0] ne "") )
-       { 
 #print "COUPLAGE T2D OU T3D /SISYPHE ! \n";
 #PLG
+     @vals = tm_casdico::recup_valeur_mot(\%motsEtude,"FICHIER DES PARAMETRES DE SISYPHE"); 
+     if ((scalar(@vals) != 0) && (@vals[0] ne "") )
+       { 
        if ($GENERIQUE eq "telemac2d") {$GENERIQUE1 = "TEL2DSIS"};
        if ($GENERIQUE eq "telemac3d") {$GENERIQUE1 = "TEL3DSIS"};
-#       print "COUPLAGE T2D OU T3D /SISYPHE $GENERIQUE1! \n";
+#      printf "COUPLAGE T2D OU T3D /SISYPHE $GENERIQUE1! \n";
          $sCAS ="$REPLANCE"."$ps"."@vals[0]";
          get_code_params (\%hash,"sisyphe",\$sCHEMIN,
                           \$sRACINE,\$sLNG,\$sVERSDEF);
@@ -1360,6 +1356,29 @@ if ($GENERIQUE eq "telemac2d" || $GENERIQUE eq "telemac3d")
          if ($ier != 0)
            {  ecrire("ERREUR : Probleme dans l'analyse des fichiers SISYPHE",
                      "ERROR : problem during SISYPHE files analysis");
+              exit 1;
+           }
+       }
+#print "COUPLAGE T2D /TOMAWAC ! \n";
+#PLG
+     @vals = tm_casdico::recup_valeur_mot(\%motsEtude,"FICHIER DES PARAMETRES DE TOMAWAC"); 
+     if ((scalar(@vals) != 0) && (@vals[0] ne "") )
+       { 
+       if ($GENERIQUE eq "telemac2d") {$GENERIQUE1 = "TEL2DTOM"};
+       if ($GENERIQUE eq "telemac3d") {$GENERIQUE1 = "TEL3DTOM"};
+#       printf "COUPLAGE T2D OU T3D /TOMAWAC $GENERIQUE1! \n";
+         $sCAS ="$REPLANCE"."$ps"."@vals[0]";
+         get_code_params (\%hash,"tomawac",\$sCHEMIN,
+                          \$sRACINE,\$sLNG,\$sVERSDEF);
+  
+         %smotsEtude=get_mots ("tomawac",$PROJECT,$sCHEMIN,$sVERSDEF,
+                               $sCAS,\$sDICO,\$sVERS);
+# marquer le changement de code
+         printf F "\@FDESC=(\@FDESC,\"NEWCODE;.;.;.;.;.\");\n"; 
+         $ier=desc_fichiers_acqui_resti (F, \%smotsEtude, \$i0fic, $sDICO, $sCAS);
+         if ($ier != 0)
+           {  ecrire("ERREUR : Probleme dans l'analyse des fichiers TOMAWAC",
+                     "ERROR : problem during TOMAWAC files analysis");
               exit 1;
            }
        }

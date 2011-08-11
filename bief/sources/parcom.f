@@ -1,109 +1,112 @@
-C                       *****************
-                        SUBROUTINE PARCOM
-C                       *****************
-C
-     *( X , ICOM , MESH )
-C
-C***********************************************************************
-C BIEF VERSION 5.9        24/10/08    J-M HERVOUET (LNHE) 01 30 87 80 18
-C COPYRIGHT 2008              AFTER REINHARD HINKELMANN (HANNOVER UNI.)
-C***********************************************************************
-C
-C   FONCTION : COMPLEMENT D'UN VECTEUR AUX INTERFACES ENTRE
-C              SOUS-DOMAINES.
-C
-C              X PEUT ETRE UN BLOC DE VECTEURS, EN CE CAS, TOUS LES
-C              VECTEURS DU BLOC SONT TRAITES.
-C
-C              ATTENTION ||||
-C
-C              SI LES VECTEURS ONT UNE DEUXIEME DIMENSION
-C              ELLE EST POUR L'INSTANT IGNOREE
-C
-C   IMPORTANT NOTICE :
-C
-C   FROM VERSION 5.9 ON, IDENTICAL VALUES ARE ENSURED AT INTERFACE POINTS
-C   SO THAT DIFFERENT PROCESSORS WILL ALWAYS MAKE THE SAME DECISION IN
-C   TESTS ON REAL NUMBERS
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|_______________________________________________
-C |      X         |<-->| VECTEUR OU BLOC DE VECTEURS.
-C |      ICOM      | -->| COMMUNICATION MODE
-C |                |    | = 1 : VALUE WITH MAXIMUM ABSOLUTE VALUE TAKEN 
-C |                |    | = 2 : CONTRIBUTIONS ADDED
-C |                |    | = 3 : MAXIMUM CONTRIBUTION RETAINED
-C |                |    | = 4 : MINIMUM CONTRIBUTION RETAINED
-C |      MESH      | -->| MAILLAGE.
-C |________________|____|_______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES   :  PLANTE
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE PARCOM
+!                    *****************
+!
+     &( X , ICOM , MESH )
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    COMPLEMENTS A VECTOR AT THE INTERFACES BETWEEN
+!+                SUB-DOMAINS.
+!+
+!+            X CAN BE A BLOCK OF VECTORS. IN THIS CASE, ALL THE
+!+                VECTORS IN THE BLOCK ARE TREATED.
+!
+!note     IMPORTANT : FROM RELEASE 5.9 ON, IDENTICAL VALUES ARE
+!+                     ENSURED AT INTERFACE POINTS SO THAT DIFFERENT
+!+                     PROCESSORS WILL ALWAYS MAKE THE SAME DECISION
+!+                     IN TESTS ON REAL NUMBERS.
+!
+!warning  IF THE VECTORS HAVE A SECOND DIMENSION, IT IS
+!+            IGNORED FOR THE TIME BEING
+!
+!history  J-M HERVOUET (LNHE)
+!+        24/10/08
+!+        V5P9
+!+   AFTER REINHARD HINKELMANN (HANNOVER UNI.)
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| ICOM           |-->| COMMUNICATION MODE
+!|                |   | = 1 : VALUE WITH MAXIMUM ABSOLUTE VALUE TAKEN
+!|                |   | = 2 : CONTRIBUTIONS ADDED
+!|                |   | = 3 : MAXIMUM CONTRIBUTION RETAINED
+!|                |   | = 4 : MINIMUM CONTRIBUTION RETAINED
+!| MESH           |-->| MESH STRUCTURE
+!| X              |<->| VECTOR OR BLOCK OF VECTORS
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_PARCOM => PARCOM
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       INTEGER, INTENT(IN) :: ICOM
-C
-C     STRUCTURES : VECTEURS OU BLOCS
-C
+!
+!     STRUCTURES: VECTORS OR BLOCKS
+!
       TYPE(BIEF_MESH), INTENT(INOUT)   :: MESH
       TYPE(BIEF_OBJ), INTENT(INOUT) :: X
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       TYPE(BIEF_OBJ), POINTER  :: X2,X3
       INTEGER NPOIN,NPLAN,IAN,NP11,NSEG
-C
-C***********************************************************************
-C
-C  INUTILE POUR UN SOUS-DOMAINE DECONNECTE DES AUTRES
-C
+!
+!***********************************************************************
+!
+!  OF NO USE IF A SUB-DOMAIN IS DISCONNECTED FROM THE OTHERS
+!
       IF(NPTIR.EQ.0) RETURN
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       NPOIN = MESH%NPOIN
       NPLAN = 1
       IF(MESH%DIM.EQ.3) THEN
-        NPOIN = NBPTS(11)
+        NPOIN = BIEF_NBPTS(11,MESH)
         NPLAN = MESH%NPOIN/NPOIN
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(X%TYPE.EQ.2) THEN
-C
-C     STRUCTURE DE VECTEUR
-C
+!
+!     VECTOR STRUCTURE
+!
       IAN = 1
       CALL PARCOM2(X%R,X%R,X%R,NPOIN,NPLAN,ICOM,IAN,MESH)
-C
+!
       IF(X%ELM.EQ.13) THEN
-        NP11=NBPTS(11)
+        NP11=BIEF_NBPTS(11,MESH)
         NSEG=MESH%NSEG
         CALL PARCOM2_SEG(X%R(NP11+1:NP11+NSEG),
-     *                   X%R(NP11+1:NP11+NSEG),
-     *                   X%R(NP11+1:NP11+NSEG),
-     *                   NSEG,1,ICOM,IAN,MESH,1)
+     &                   X%R(NP11+1:NP11+NSEG),
+     &                   X%R(NP11+1:NP11+NSEG),
+     &                   NSEG,1,ICOM,IAN,MESH,1)
       ENDIF
-C
+!
       ELSEIF(X%TYPE.EQ.4) THEN
-C
-C     STRUCTURE DE BLOC
-C
-C     ATTENTION : NOMBRE LIMITE A 3 |||||||||||||||||||||||||
+!
+!     BLOCK STRUCTURE
+!
+!     BEWARE: NUMBER LIMITED TO 3 |||||||||||||||||||||||||
       IAN = X%N
       IF(IAN.EQ.1) THEN
         X2 => X%ADR(1)%P
@@ -120,43 +123,43 @@ C     ATTENTION : NOMBRE LIMITE A 3 |||||||||||||||||||||||||
         CALL PLANTE(1)
         STOP
       ENDIF
-C
+!
       CALL PARCOM2(X%ADR(1)%P%R,X2%R,X3%R,NPOIN,NPLAN,ICOM,IAN,MESH)
-C
-C     PROVISIONNALY 1 BY 1, COULD BE OPTIMISED
-C
+!
+!     PROVISIONNALY 1 BY 1, COULD BE OPTIMISED
+!
       IF(X%ADR(1)%P%ELM.EQ.13) THEN
-        NP11=NBPTS(11)
+        NP11=BIEF_NBPTS(11,MESH)
         NSEG=MESH%NSEG
         CALL PARCOM2_SEG(X%ADR(1)%P%R(NP11+1:NP11+NSEG),
-     *                   X%ADR(1)%P%R(NP11+1:NP11+NSEG),
-     *                   X%ADR(1)%P%R(NP11+1:NP11+NSEG),
-C    *                   NSEG,1,ICOM,IAN,MESH)
-     *                   NSEG,1,ICOM,1  ,MESH,1)
+     &                   X%ADR(1)%P%R(NP11+1:NP11+NSEG),
+     &                   X%ADR(1)%P%R(NP11+1:NP11+NSEG),
+!    *                   NSEG,1,ICOM,IAN,MESH)
+     &                   NSEG,1,ICOM,1  ,MESH,1)
       ENDIF
       IF(IAN.GE.2.AND.X2%ELM.EQ.13) THEN
-        NP11=NBPTS(11)
+        NP11=BIEF_NBPTS(11,MESH)
         NSEG=MESH%NSEG
         CALL PARCOM2_SEG(X2%R(NP11+1:NP11+NSEG),
-     *                   X2%R(NP11+1:NP11+NSEG),
-     *                   X2%R(NP11+1:NP11+NSEG),
-C    *                   NSEG,1,ICOM,IAN,MESH)
-     *                   NSEG,1,ICOM,1  ,MESH,1)
+     &                   X2%R(NP11+1:NP11+NSEG),
+     &                   X2%R(NP11+1:NP11+NSEG),
+!    *                   NSEG,1,ICOM,IAN,MESH)
+     &                   NSEG,1,ICOM,1  ,MESH,1)
       ENDIF
       IF(IAN.EQ.3.AND.X3%ELM.EQ.13) THEN
-        NP11=NBPTS(11)
+        NP11=BIEF_NBPTS(11,MESH)
         NSEG=MESH%NSEG
         CALL PARCOM2_SEG(X3%R(NP11+1:NP11+NSEG),
-     *                   X3%R(NP11+1:NP11+NSEG),
-     *                   X3%R(NP11+1:NP11+NSEG),
-C    *                   NSEG,1,ICOM,IAN,MESH)
-     *                   NSEG,1,ICOM,1  ,MESH,1)
+     &                   X3%R(NP11+1:NP11+NSEG),
+     &                   X3%R(NP11+1:NP11+NSEG),
+!    *                   NSEG,1,ICOM,IAN,MESH)
+     &                   NSEG,1,ICOM,1  ,MESH,1)
       ENDIF
-C
+!
       ELSE
-C
-C     ERREUR SUR LA STRUCTURE
-C
+!
+!     ERROR ON THE STRUCTURE
+!
       IF (LNG.EQ.1) WRITE(LU,50) X%NAME,X%TYPE
       IF (LNG.EQ.1) WRITE(LU,53)
 50    FORMAT(1X,'PARCOM (BIEF) : NOM DE X : ',A6,'  TYPE : ',1I6)
@@ -167,10 +170,10 @@ C
 54    FORMAT(1X,'               UNEXPECTED CASE')
       CALL PLANTE(1)
       STOP
-C
+!
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

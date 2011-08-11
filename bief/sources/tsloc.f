@@ -1,94 +1,101 @@
-C                       *******************************
-                        DOUBLE PRECISION FUNCTION TSLOC
-C                       *******************************
-C
-     * (YEAR,MONTH,DAY,HOUR,MINUTE,SEC,AT)
-C
-C***********************************************************************
-C BIEF VERSION 5.9          02/06/08    E. DAVID (LHF) 76 33 42 08
-C
-C***********************************************************************
-C
-C     FONCTIONS :  CALCUL DU TEMPS SIDERAL LOCAL EN RADIAN POUR
-C                  LA DATE DONNEE COMPTEE EN TEMPS UNIVERSEL
-C
-C     ATTENTION |
-C
-C     DANS CETTE FONCTION, LE TEMPS DU CALCUL DOIT ETRE SEPARE EN :
-C
-C     - TEMPS JUSQU'A 0H DE LA MEME JOURNEE,
-C     - TEMPS RESTANT JUSQU'A LA DATE PRECISE EN SECONDES.
-C
-C     CECI NECESSITE UNE RECOMBINAISON ENTRE LA DATE DE DEPART
-C     ET LE TEMPS DE CALCUL AT :
-C
-C     CALCUL DU TEMPS EN SIECLE JULIEN A 0H DE LA MEME DATE
-C
-C     AT1 : NOMBRE DE JOURS EN SECONDES A AJOUTER A LA DATE
-C           DE REFERENCE (YEAR, MONTH, DAY) POUR ARRIVER A
-C           LA DATE DU CALCUL A L'HEURE (0H, 0MIN, 0SEC).
-C     ATR : NOMBRE DE SECONDES ENTRE LA DATE REPRESENTEE PAR AT1
-C           ET LA DATE EXACTE DU CALCUL. EN FAIT, ATR CORRESPOND
-C           A L'HEURE TU EXPRIME EN SECONDES.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C º      NOM       ºMODEº                   ROLE
-C º________________º____º______________________________________________
-C º   YEAR         º -->º ANNEE.
-C º   MONTH        º -->º MOIS.
-C º   DAY          º -->º JOUR.
-C º   HOUR         º -->º HEURE EN TEMPS UNIVERSEL.
-C º   MIN          º -->º MINUTE EN TEMPS UNIVERSEL.
-C º   SEC          º -->º SECONDE EN TEMPS UNIVERSEL.
-C º   AT           º -->º TEMPS
-C º________________º____º______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
+!                    *******************************
+                     DOUBLE PRECISION FUNCTION TSLOC
+!                    *******************************
+!
+     & (YEAR,MONTH,DAY,HOUR,MINUTE,SEC,AT)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    COMPUTES THE LOCAL SIDEREAL TIME IN RADIAN FOR
+!+                THE GIVEN DATE IN UNIVERSAL TIME.
+!code
+!+     IN THIS FUNCTION, THE COMPUTATION TIME MUST BE SPLIT IN:
+!+
+!+     - TIME UNTIL 0:00 OF THE SAME DAY,
+!+     - TIME LEFT UNTIL THE PRECISE DATE IN SECONDS.
+!+
+!+     THIS REQUIRES A COMBINATION BETWEEN THE STARTING DATE
+!+     AND THE COMPUTING TIME AT:
+!+
+!+     COMPUTES THE TIME IN JULIAN CENTURY AT 0:00 OF THE SAME DAY
+!+
+!+     AT1 : NUMBER OF DAYS IN SECONDS TO ADD TO THE REFERENCE
+!+           DATE (YEAR, MONTH, DAY) TO GET TO THE COMPUTATION
+!+           DATE AT TIME (0H, 0MIN, 0SEC).
+!+     ATR : NUMBER OF SECONDS BETWEEN THE DATE REPRESENTED BY AT1
+!+           AND THE EXACT COMPUTATION DATE. ATR ACTUALLY CORRESPONDS
+!+           TO TU EXPRESSED IN SECONDS.
+!
+!history  E. DAVID (LHF)
+!+        02/06/08
+!+        V5P9
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| AT             |-->| TIME IN SECONDS
+!| DAY            |-->| DAY
+!| HOUR           |-->| HOUR IN UNIVERSAL TIME
+!| MINUTE         |-->| MINUTE IN UNIVERSAL TIME
+!| MONTH          |-->| MONTH
+!| SEC            |-->| SECOND IN UNIVERSAL TIME
+!| YEAR           |-->| YEAR
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_TSLOC => TSLOC
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+      
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN)          :: MONTH,DAY,HOUR,MINUTE,SEC
       INTEGER, INTENT(INOUT)       :: YEAR
       DOUBLE PRECISION, INTENT(IN) :: AT
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+      
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       DOUBLE PRECISION T,TETA,TETA0,UT
       DOUBLE PRECISION AT1,ATR
-C
+!
       INTRINSIC ACOS,INT
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       ATR = AT + ( HOUR * 60.D0 + MINUTE ) * 60.D0 + SEC
       AT1 = INT ( ATR / ( 24.D0 * 3600.D0 ) ) * ( 24.D0 * 3600.D0 )
       ATR = ATR - AT1
       T = JULTIM(YEAR,MONTH,DAY,0,0,0,AT1)
-C
-C CALCUL DU TEMPS SIDERAL A GREENWICH A 0 H (EN HEURES)
-C
+!
+! COMPUTES THE SIDEREAL TIME WRT GREENWICH AT 0:00 (IN HOURS)
+!
       TETA0 = 6.6460656D0 + 2400.051262D0 * T + 0.00002581D0 * T**2
-C
-C CALCUL DU TEMPS SIDERAL A GREENWICH A L'HEURE TU
-C
+!
+! COMPUTES THE SIDEREAL TIME WRT GREENWICH AT TU
+!
       UT = ATR / 3600.D0
       TETA = TETA0 + UT*1.002737908D0
-C
-C CALCUL DU TEMPS SIDERAL LOCAL EN RADIANS SANS TENIR COMPTE DE LA
-C LONGITUDE.
-C
+!
+! COMPUTES THE LOCAL SIDEREAL TIME IN RADIANS WITHOUT TAKING LONGITUDE
+! INTO ACCOUNT
+!
       TSLOC = TETA * ACOS(-1.D0) / 12.D0
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END
- 

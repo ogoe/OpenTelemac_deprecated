@@ -1,60 +1,67 @@
-C                       ******************
-                        SUBROUTINE P_IREAD
-C                       ******************
-C
-     *(BUFFER,NBYTES,SOURCE,ITAG,IREQ)
-C
-C***********************************************************************
-C  PARA       VERSION 5.9       23/06/2008       PASCAL VEZOLLES (IBM)
-C***********************************************************************
-C
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |  BUFFER        | -->| ZONE TAMPON POUR LES DONNEES
-C |                |    | BUFFER / PUFFERFELD
-C |  NBYTES        | -->| NOMBRE DE BYTES A TRANSMETTRE
-C |                |    | LENGTH IN BYTES / LAENGE IN BYTES
-C |  SOURCE        | -->| ORIGINE DES DONNEES
-C |                |    | TID OF THE SENDER / KNOTEN-ID DES SENDER
-C |  ITAG          | -->| MESSAGE TAG
-C |                |    |
-C |  IREQ          | -->| NUMERO DE REQUEST POUR MPI_IRECV
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : PRINCI
-C
-C SOUS-PROGRAMMES APPELES : NEANT
-C
-C**********************************************************************
-C
+!                    ******************
+                     SUBROUTINE P_IREAD
+!                    ******************
+!
+     &(BUFFER,NBYTES,SOURCE,ITAG,IREQ)
+!
+!***********************************************************************
+! PARALLEL   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief
+!
+!history  PASCAL VEZOLLES (IBM)
+!+        23/06/2008
+!+        V5P9
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| BUFFER         |-->| ZONE TAMPON POUR LES DONNEES
+!|                |   | BUFFER / PUFFERFELD
+!| IREQ           |-->| NUMERO DE REQUEST POUR MPI_IRECV
+!| ITAG           |-->| MESSAGE TAG
+!| NBYTES         |-->| NOMBRE DE BYTES A TRANSMETTRE
+!|                |   | LENGTH IN BYTES / LAENGE IN BYTES
+!| SOURCE         |-->| ORIGINE DES DONNEES
+!|                |   | TID OF THE SENDER / KNOTEN-ID DES SENDER
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
+!
       INCLUDE 'mpif.h'
-C
+!
       INTEGER NBYTES,SOURCE,ITAG,IREQ,IER
       DOUBLE PRECISION BUFFER(*)
-C
-C-----------------------------------------------------------------------
-C     RECEPTION DES DONNEES / RECEIVING DATA / DATEN EMPFANGEN
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!     RECEIVES DATA
+!-----------------------------------------------------------------------
+!
       CALL MPI_IRECV(BUFFER,NBYTES,MPI_BYTE,SOURCE,ITAG,
      &               MPI_COMM_WORLD,IREQ,IER)
-C
+!
       IF(IER.NE.0) THEN
         IF(LNG.EQ.1) WRITE(LU,*) 'P_IREAD: ERREUR IN MPI_IRECV'
         IF(LNG.EQ.2) WRITE(LU,*) 'P_IREAD: ERROR IN MPI_IRECV'
         WRITE(LU,*) 'MPI ERROR ',IER
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

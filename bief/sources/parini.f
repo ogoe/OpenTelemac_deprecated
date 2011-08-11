@@ -1,73 +1,73 @@
-C                       *****************
-                        SUBROUTINE PARINI
-C                       *****************
-C
-     *(NHP,NHM,INDPU,FAC,NPOIN,NACHB,NPLAN,MESH,NB_NEIGHB,
-     * NB_NEIGHB_SEG,NELEM2,IFAPAR)
-C
-C***********************************************************************
-C BIEF VERSION 5.9      02/10/2008    J-M HERVOUET (LNHE) 01 30 87 80 18
-C COPYRIGHT 2009              AFTER REINHARD HINKELMANN (HANNOVER UNI.)
-C                                               PASCAL VEZOLLE (IBM)
-C***********************************************************************
-C
-C    FONCTION : INITIALISATIONS DE TABLEAUX UTILISES POUR LE
-C               PARALLELISME.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |    IKP         |<-- | GROESSERE NACHBARPROZESSORNR
-C |                |    | UND ANZAHL GEMEINSAME KNOTEN
-C |    IKM         |<-- | KLEINERE NACHBARPROZESSORNR
-C |                |    | UND ANZAHL GEMEINSAME KNOTEN
-C |    NHP         |<-- | GEMEINSAME KNOTENNUMMERN ZU
-C |                |    | GROESSEREN NACHBARPROZESSOREN
-C |    NHM         |<-- | GEMEINSAME KNOTENNUMMERN ZU
-C |                |    | KLEINEREN NACHBARPROZESSOREN
-C |    INDPU       |<-- | INDEXTABELLE FUER PUFFER IN KOMMUNIKATION
-C |    FAC         |<-- | FELD FUER FAKTOR QUADRATNORM
-C |                |    | (WITH QUADRATIC ELEMENTS WILL BE COMPLETED
-C |                |    | LATER IN SUBROUTINE COMP_FAC)
-C |    NPOIN       | -->| NOMBRE DE POINTS DU MAILLAGE.
-C |    NACHB       | -->| IF 'IL' IS THE LOCAL RANK OF A NEIGHBOURING 
-C |                |    | SUB-DOMAIN AND 'IP' ONE INTERFACE POINT
-C |                |    | NACHB(IL,IP) WILL BE THE REAL NUMBER OF THIS 
-C |                |    | NEIGHBOURING SUB-DOMAIN 
-C |                |    | THE LIST IN NACHB IS ORDERED WITH THE
-C |                |    | GLOBAL NUMBERS OF POINTS (HENCE THE POINTS
-C |                |    | WILL BE FOUND IN THE SAME ORDER BY ALL
-C |                |    | PROCESSORS)
-C |    NPLAN       | -->| NUMBER OF PLANES IN 3D
-C |    MESH        | -->| MESH STRUCTURE
-C |    NB_NEIGHB   |<-- | NUMBER OF NEIGHBOURING SUB-DOMAINS (FOR POINTS)
-C |   NB_NEIGHB_SEG|<-- | NUMBER OF NEIGHBOURING SUB-DOMAINS (FOR EDGES)
-C |    NELEM2      | -->| NUMBER OF ELEMENTS IN 2D
-C |    IFAPAR      | -->| IFAPAR(1:3,IELEM)=PROCESSOR NUMBERS BEHIND THE
-C |                |    | 3 ELEMENT EDGES  (NUMBERS FROM 0 TO NCSIZE-1)
-C |                |    | IFAPAR(4:6,IELEM): -LOCAL- ELEMENT NUMBERS
-C |                |    | BEHIND THE 3 EDGES
-C |________________|____|______________________________________________|
-C  MODE: -->(DONNEE NON MODIFIEE),<--(RESULTAT),<-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : PREDA2
-C
-C SOUS-PROGRAMME APPELE : NEANT
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE PARINI
+!                    *****************
+!
+     &(NHP,NHM,INDPU,FAC,NPOIN,NACHB,NPLAN,MESH,NB_NEIGHB,
+     & NB_NEIGHB_SEG,NELEM2,IFAPAR)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    INITIALISES THE ARRAYS USED IN PARALLEL MODE.
+!
+!history  REINHARD HINKELMANN (HANNOVER UNI.); PASCAL VEZOLLE (IBM)
+!+
+!+
+!+
+!
+!history  J-M HERVOUET (LNHE)
+!+        02/10/2008
+!+        V5P9
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| FAC            |<--| 1/(NUMBER OF NEIGHBOURING SUB-DOMAINS)
+!| IFAPAR         |-->| IFAPAR(1:3,IELEM)=PROCESSOR NUMBERS BEHIND THE
+!|                |   | 3 ELEMENT EDGES  (NUMBERS FROM 0 TO NCSIZE-1)
+!|                |   | IFAPAR(4:6,IELEM): -LOCAL- ELEMENT NUMBERS
+!|                |   | BEHIND THE 3 EDGES
+!| INDPU          |<--| INDEX TABLE : IF 0: NOT AN INTERFACE POINT
+!|                |   |               IF NOT 0: ADDRESS IN THE LIST
+!|                |   |               OF BOUNDARY POINTS.
+!| MESH           |-->| MESH STRUCTURE
+!| NACHB          |-->| IF 'IL' IS THE LOCAL RANK OF A NEIGHBOURING
+!|                |   | SUB-DOMAIN AND 'IP' ONE INTERFACE POINT
+!|                |   | NACHB(IL,IP) WILL BE THE REAL NUMBER OF THIS
+!|                |   | NEIGHBOURING SUB-DOMAIN
+!|                |   | THE LIST IN NACHB IS ORDERED WITH THE
+!|                |   | GLOBAL NUMBERS OF POINTS (HENCE THE POINTS
+!|                |   | WILL BE FOUND IN THE SAME ORDER BY ALL
+!|                |   | PROCESSORS)
+!| NB_NEIGHB      |<--| NUMBER OF NEIGHBOURING SUB-DOMAINS (FOR POINTS)
+!| NB_NEIGHB_SEG  |<--| NUMBER OF NEIGHBOURING SUB-DOMAINS (FOR EDGES)
+!| NELEM2         |-->| NUMBER OF ELEMENTS IN 2D
+!| NHM            |<--| NODE NUMBERS OF PROCESSORS WITH SMALLER RANK
+!| NHP            |<--| NODE NUMBERS OF PROCESSORS WITH LARGER RANK
+!| NPLAN          |-->| NUMBER OF PLANES IN 3D
+!| NPOIN          |-->| NUMBER OF POINTS
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_PARINI => PARINI
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C  
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN)            :: NPOIN,NPLAN,NELEM2
       INTEGER, INTENT(INOUT)         :: NB_NEIGHB,NB_NEIGHB_SEG
       INTEGER, INTENT(INOUT)         :: NHP(NBMAXDSHARE,NPTIR)
@@ -77,39 +77,39 @@ C
       INTEGER, INTENT(INOUT)         :: INDPU(NPOIN)
       TYPE(BIEF_OBJ), INTENT(INOUT)  :: FAC
       TYPE(BIEF_MESH), INTENT(INOUT) :: MESH
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER IKP(NBMAXDSHARE,2),IKM(NBMAXDSHARE,2)
-      INTEGER I,J,IL,IZH,II,IMAX,IMIN,ILMAX,IELEM,IFACE 
-      INTEGER ILP,ILM,IPA,IKA,IPB,IKB,NB_PT_MX,DIM1HCOM,CHECKSUM 
-      LOGICAL NEW    
-C
-C-----------------------------------------------------------------------
-C
-C     INITIALISIERUNG KNOTENANZAHL FUER MESSAGE-PASSING 2D
-C
+      INTEGER I,J,IL,IZH,II,IMAX,IMIN,ILMAX,IELEM,IFACE
+      INTEGER ILP,ILM,IPA,IKA,IPB,IKB,NB_PT_MX,DIM1HCOM,CHECKSUM
+      LOGICAL NEW
+!
+!-----------------------------------------------------------------------
+!
+!     INITIALISES THE PROCESSOR NUMBERS FOR 2D MESSAGE-PASSING
+!
       DO I=1,NBMAXDSHARE
         IKP(I,1)=-1
         IKM(I,1)=-1
         IKP(I,2)=0
         IKM(I,2)=0
       ENDDO
-C
-C     PREPARATION DES COMMUNICATIONS
-C     ON AURA DANS l'ORDRE :
-C     1) ENVOI     AUX PROCESSEURS DE NUMERO IPID + IL
-C     2) RECEPTION DES PROCESSEURS DE NUMERO IPID - IL
-C     3) ENVOI     AUX PROCESSEURS DE NUMERO IPID - IL
-C     4) RECEPTION DES PROCESSEURS DE NUMERO IPID + IL
-C
-C     LEVEL IL : SENDEN UND EMPFANGEN
-C
-C     SENDEN AN +IL GROESSEREN NACHBARN
-C     ENVOI AUX PROCESSEURS DE NUMERO SUPERIEUR A IPID
-C
+!
+!     PREPARES COMMUNICATION
+!     IN THE FOLLOWING SEQUENCE :
+!     1) SENDS     TO   PROCESSORS WITH NUMBER IPID + IL
+!     2) RECEIVES  FROM PROCESSORS WITH NUMBER IPID - IL
+!     3) SENDS     TO   PROCESSORS WITH NUMBER IPID - IL
+!     4) RECEIVES  FROM PROCESSORS WITH NUMBER IPID + IL
+!
+!     LEVEL IL : SENDS AND RECEIVES
+!
+!
+!     SENDS TO PROCESSORS WITH NUMBER GREATER THAN IPID
+!
       IMAX=IPID
-C
+!
       IF (IPID.NE.NCSIZE-1) THEN
         IZH=1
         DO 60 IL=IPID+1,NCSIZE-1
@@ -140,12 +140,12 @@ C
           ENDIF
 60      CONTINUE
       ENDIF
-C
-C     EMPFANGEN VON -IL KLEINEREM NACHBARN
-C     RECEPTION DES PROCESSEURS DE NUMERO INFERIEUR A IPID
-C
+!
+!
+!     RECEIVES FROM PROCESSORS WITH NUMBER LOWER THAN IPID
+!
       IMIN=IPID
-C
+!
       IF (IPID.NE.0) THEN
         IZH=1
         DO 90 IL=IPID-1,0,-1
@@ -176,23 +176,23 @@ C
           ENDIF
 90      CONTINUE
       ENDIF
-C
-C**   BESTIMMUNG ILMAX
-C
-      ILMAX=MAX(IMAX-IPID,IPID-IMIN)
-C
-C-----------------------------------------------------------------------
-C
-C  SECTION PROGRAMMEE PAR PASCAL VEZOLLE
-C
 !
-!====   CALCUL DU NOMBRE DE VOISINS
+!**   DETERMINES ILMAX
+!
+      ILMAX=MAX(IMAX-IPID,IPID-IMIN)
+!
+!-----------------------------------------------------------------------
+!
+!  PASCAL VEZOLLE CODE:
+!
+!
+!====   COMPUTES THE NUMBER OF NEIGHBOURS
 !
         NB_PT_MX  = 0
         NB_NEIGHB = 0
         ILP = 1
         ILM = 1
-!**     PROCESSEUR DE RANG SUPERIEUR
+!**     PROCESSOR OF HIGHER RANK
         DO IL=1,ILMAX
          IPA=IKP(ILP,1)
          IKA=IKP(ILP,2)
@@ -202,7 +202,7 @@ C
          ENDIF
          IF(IPA.EQ.IPID+IL) ILP=ILP+1
         ENDDO
-!**      PROCESSEUR DE RANG INFERIEUR
+!**      PROCESSOR OF LOWER RANK
         DO IL=1,ILMAX
          IPB=IKM(ILM,1)
          IKB=IKM(ILM,2)
@@ -213,12 +213,14 @@ C
          IF(IPB.EQ.IPID-IL) ILM=ILM+1
         ENDDO
 !
-!====   FIN CALCUL DU NOMBRE DE VOISIN
+!====   ENDS COMPUTATION OF THE NUMBER OF NEIGHBOURS
 !
-        CALL ALLVEC(2,MESH%NB_NEIGHB_PT,'NBNGPT',NB_NEIGHB,1,0)
-        CALL ALLVEC(2,MESH%LIST_SEND   ,'LSSEND',NB_NEIGHB,1,0)
+        CALL BIEF_ALLVEC(2,MESH%NB_NEIGHB_PT,'NBNGPT',
+     &                   NB_NEIGHB,1,0,MESH)
+        CALL BIEF_ALLVEC(2,MESH%LIST_SEND   ,'LSSEND',
+     &                   NB_NEIGHB,1,0,MESH)
 !
-! ALIGNEMENT SUR 16 BYTES
+! ALIGNMENT ON 16 BYTES
 !
         DIM1HCOM = NB_PT_MX/4
         IF(MOD(NB_PT_MX,4).EQ.0) THEN
@@ -226,9 +228,10 @@ C
         ELSE
           DIM1HCOM = DIM1HCOM*4 + 4
         ENDIF
-        CALL ALLVEC(2,MESH%NH_COM,'NH_COM',DIM1HCOM,NB_NEIGHB,0)
+        CALL BIEF_ALLVEC(2,MESH%NH_COM,'NH_COM',
+     &                   DIM1HCOM,NB_NEIGHB,0,MESH)
 !
-!====   CALCUL DU NOMBRE DE POINTS D'INTERFACE PAR VOISIN
+!====   COMPUTES THE NUMBER OF INTERFACE POINTS PER NEIGHBOUR
 !
         NB_NEIGHB = 0
         ILP = 1
@@ -260,144 +263,147 @@ C
          IF(IPB.EQ.IPID-IL) ILM=ILM+1
         ENDDO
 !
-!====   FIN CALCUL DU NOMBRE DE POINTS D'INTERFACE PAR VOISIN
+!====   ENDS COMPUTATION OF THE NUMBER OF INTERFACE POINTS PER NEIGHBOUR
 !
-!=== POSSIBILITE DE TRIER LIST_SEND ET RECV POUR LE TORE BG
+!=== POSSIBILITY OF SORTING LIST_SEND AND RECV FOR TORE BG
 !
-! ALIGNEMENT SUR DES FRONTIERES DE 16BYTES
+! ALIGNMENT ON 16BYTES BOUNDARIES
 !
         NB_PT_MX = NB_PT_MX * NPLAN
         IL = NB_PT_MX/2
         IF(MOD(NB_PT_MX,2).EQ.0) THEN
-          IL = IL*2 
+          IL = IL*2
         ELSE
           IL = IL*2 + 2
         ENDIF
-        CALL ALLVEC(1,MESH%BUF_SEND,'BUSEND',IL*3,NB_NEIGHB,0)
-        CALL ALLVEC(1,MESH%BUF_RECV,'BURECV',IL*3,NB_NEIGHB,0)
+        CALL BIEF_ALLVEC(1,MESH%BUF_SEND,'BUSEND',IL*3,NB_NEIGHB,0,MESH)
+        CALL BIEF_ALLVEC(1,MESH%BUF_RECV,'BURECV',IL*3,NB_NEIGHB,0,MESH)
 !
         DO I=1,IL*3*NB_NEIGHB
           MESH%BUF_SEND%R(I) = 0.D0
           MESH%BUF_RECV%R(I) = 0.D0
         ENDDO
-C
-C
-C  FIN DE LA SECTION DE PASCAL VEZOLLE
-C
-C-----------------------------------------------------------------------
-C
-C  JMH SECTION FOR SEGMENTS
-C
-C     WE ASSUME HERE THAT NB_NEIGHB.GE.NB_NEIGHB_SEG
-C
-C     NOTE: NH_COM_SEG IS FILLED WITH 4*IELEM+IFACE
-C           THIS IS FOR RETRIEVING IELEM AND IFACE ONCE ELTSEG IS KNOWN
-C           THE FINAL VALUE OF NH_COM_SEG IS ELTSEG(IELEM,IFACE)
-C
-      CALL ALLVEC(2,MESH%NB_NEIGHB_PT_SEG,'NBNGSG',NB_NEIGHB,1,0)
-      CALL ALLVEC(2,MESH%LIST_SEND_SEG   ,'LSSESG',NB_NEIGHB,1,0)
-      CALL ALLVEC(2,MESH%NH_COM_SEG      ,'NH_CSG',DIM1HCOM,NB_NEIGHB,0)
-C
+!
+!
+!  END OF PASCAL VEZOLLE CODE
+!
+!-----------------------------------------------------------------------
+!
+!  JMH: FOR SEGMENTS
+!
+!     WE ASSUME HERE THAT NB_NEIGHB.GE.NB_NEIGHB_SEG
+!
+!     NOTE: NH_COM_SEG IS FILLED WITH 4*IELEM+IFACE
+!           THIS IS TO RETRIEVE IELEM AND IFACE ONCE ELTSEG IS KNOWN
+!           THE FINAL VALUE OF NH_COM_SEG IS ELTSEG(IELEM,IFACE)
+!
+      CALL BIEF_ALLVEC(2,MESH%NB_NEIGHB_PT_SEG,'NBNGSG',
+     &                 NB_NEIGHB,1,0,MESH)
+      CALL BIEF_ALLVEC(2,MESH%LIST_SEND_SEG   ,'LSSESG',
+     &                 NB_NEIGHB,1,0,MESH)
+      CALL BIEF_ALLVEC(2,MESH%NH_COM_SEG      ,'NH_CSG',
+     &                 DIM1HCOM,NB_NEIGHB,0,MESH)
+!
       NB_NEIGHB_SEG=0
-C
-C     INITIALISING NH_COM_SEG (SEE COMP_NH_COM_SEG)
-C
+!
+!     INITIALISES NH_COM_SEG (SEE COMP_NH_COM_SEG)
+!
       DO I=1,DIM1HCOM*NB_NEIGHB
         MESH%NH_COM_SEG%I(I)=-999999
       ENDDO
-C
+!
       DO IELEM=1,NELEM2
-C
-C       LOOKING FOR A FACE WITH THE OTHER SIDE IN ANOTHER SUB-DOMAIN
-C
-C       ELEMENTS WITHOUT ANY INTERFACE SEGMENT HAVE 3 ZEROS
+!
+!       LOOKS FOR A FACE WITH THE OTHER SIDE IN ANOTHER SUB-DOMAIN
+!
+!       ELEMENTS WITHOUT ANY INTERFACE SEGMENT HAVE 3 ZEROS
         CHECKSUM=IFAPAR(1,IELEM)**2+
-     *           IFAPAR(2,IELEM)**2+
-     *           IFAPAR(3,IELEM)**2
-C
+     &           IFAPAR(2,IELEM)**2+
+     &           IFAPAR(3,IELEM)**2
+!
         IF(CHECKSUM.NE.0) THEN
         DO IFACE=1,3
-C
+!
           ILM=IFAPAR(IFACE,IELEM)
           IF(ILM.GE.0.AND.ILM.NE.IPID) THEN
-C           NEW INTERFACE SEGMENT FOUND
+!           NEW INTERFACE SEGMENT FOUND
             IF(NB_NEIGHB_SEG.EQ.0) THEN
-C             THE FIRST ONE
+!             THE FIRST ONE
               NB_NEIGHB_SEG=1
               MESH%NB_NEIGHB_PT_SEG%I(1)=1
               MESH%LIST_SEND_SEG%I(1)=ILM
               MESH%NH_COM_SEG%I(1)=4*IELEM+IFACE
             ELSE
-C             FROM THE SECOND ON
-C             IS IT A NEW PROCESSOR
+!             FROM THE SECOND ON
+!             IS IT A NEW PROCESSOR
               NEW=.TRUE.
               DO IL=1,NB_NEIGHB_SEG
                 IF(ILM.EQ.MESH%LIST_SEND_SEG%I(IL)) THEN
-C                 NEW SEGMENT, OLD PROCESSOR
+!                 NEW SEGMENT, OLD PROCESSOR
                   MESH%NB_NEIGHB_PT_SEG%I(IL)=
-     *            MESH%NB_NEIGHB_PT_SEG%I(IL)+1
+     &            MESH%NB_NEIGHB_PT_SEG%I(IL)+1
                   I=MESH%NB_NEIGHB_PT_SEG%I(IL)
-                  MESH%NH_COM_SEG%I(DIM1HCOM*(IL-1)+I)=4*IELEM+IFACE                  
+                  MESH%NH_COM_SEG%I(DIM1HCOM*(IL-1)+I)=4*IELEM+IFACE
                   NEW=.FALSE.
                   EXIT
                 ENDIF
               ENDDO
               IF(NEW) THEN
-C               NEW SEGMENT, NEW PROCESSOR
+!               NEW SEGMENT, NEW PROCESSOR
                 NB_NEIGHB_SEG=NB_NEIGHB_SEG+1
                 MESH%NB_NEIGHB_PT_SEG%I(NB_NEIGHB_SEG)=1
                 MESH%LIST_SEND_SEG%I(NB_NEIGHB_SEG)=ILM
                 MESH%NH_COM_SEG%I(DIM1HCOM*(NB_NEIGHB_SEG-1)+1)=
-     *                            4*IELEM+IFACE
+     &                            4*IELEM+IFACE
               ENDIF
             ENDIF
           ENDIF
-C
+!
         ENDDO
         ENDIF
-C
+!
       ENDDO
-C
+!
       IF(NB_NEIGHB_SEG.GT.NB_NEIGHB) THEN
         WRITE(LU,*) 'IN PARINI NB_NEIGHB    =',NB_NEIGHB
         WRITE(LU,*) '          NB_NEIGHB_SEG=',NB_NEIGHB_SEG
         CALL PLANTE(1)
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C     BERECHNUNG DER FAKTOREN FUER SPAETERE QUADRATNORMEN
-C     KENNUNG FUER INNENKNOTEN
-C     INDEXTABELLE FUER PUFFER IN KOMMUNIKATION
-C
+!
+!-----------------------------------------------------------------------
+!
+!     COMPUTES THE FACTORS FOR LATER QUADRATIC NORMS
+!     IDENTIFIES INTERNAL NODES/PROCESSORS
+!     INDEX TABLE FOR BUFFER IN COMMUNICATION
+!
       DO I=1,NPOIN
         INDPU(I)=0
       ENDDO
-C
+!
       CALL OS( 'X=C      ' ,X=FAC , C=1.D0 )
-C
-C  COEFFICIENTS POUR LE PRODUIT SCALAIRE :
-C
+!
+!  COEFFICIENTS FOR THE SCALAR PRODUCT:
+!
       IF(NPTIR.GT.0) THEN
-C
+!
         DO I=1,NPTIR
-C
-C         FAC = 1/(nombre de domaines voisins du point)
-C         SEE ALSO SUBROUTINE COMP_FAC FOR COMPLETION WITH QUADRATIC
-C         ELEMENTS
-C
+!
+!         FAC = 1/(NUMBER OF DOMAINS NEIGHBOURING A POINT)
+!         SEE ALSO SUBROUTINE COMP_FAC FOR COMPLETION WITH QUADRATIC
+!         ELEMENTS
+!
           DO J=NBMAXNSHARE,3,-1
             IF(NACHB(J,I).EQ.-1) FAC%R(NACHB(1,I))=1.D0/(DBLE(J)-1.D0)
           ENDDO
-C
+!
           INDPU(NACHB(1,I))=I
-C
+!
         ENDDO
-C
+!
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

@@ -1,84 +1,80 @@
-      ! ***************************** !
-        SUBROUTINE SUSPENSION_FREDSOE ! 
-      ! ***************************** !
-
-     &  (ACLADM, TAUP, NPOIN, GRAV, 
-     &   XMVE, XMVS, ZERO, AC,  CSTAEQ)
-
-
-C**********************************************************************C
-C SISYPHE VERSION 5.6  04/01/05  F. HUVELIN                            C
-C SISYPHE VERSION 5.5  14/04/04  C. VILLARET  01 30 87 83 28           C
-C**********************************************************************C
-
-
-         ! ==================================================== !
-         !   Reference concentration calculation at z= 2*d50    !
-         ! thanks to the formula of Zyserman and Fredsoe (1994) !
-         ! ==================================================== !
-
-C
-C
-C 13/06/2008 : JMH : OPTIMISATION FORMULE AVEC AUX
-C
-C COPYRIGHT EDF-DTMPL-SOGREAH-LHF-GRADIENT
-C**********************************************************************C
-C                                                                      C
-C                 SSSS I   SSSS Y   Y PPPP  H   H EEEEE                C
-C                S     I  S      Y Y  P   P H   H E                    C
-C                 SSS  I   SSS    Y   PPPP  HHHHH EEEE                 C
-C                    S I      S   Y   P     H   H E                    C
-C                SSSS  I  SSSS    Y   P     H   H EEEEE                C
-C                                                                      C
-C----------------------------------------------------------------------C
-C                             ARGUMENTS                                C
-C .________________.____.______________________________________________C
-C |      NOM       |MODE|                   ROLE                       C
-C |________________|____|______________________________________________C
-C |   ACLADM       | => |
-C |   CF           | => |
-C |   TOB          | => |
-C |   HCLIP        | => |
-C |   AVA          | => |
-C |   NPOIN        | => |
-C |   CHARR        | => |
-C |   KSPRATIO     | => |
-C |   HMIN         | => |
-C |   GRAV         | => |
-C |   XMVE         | => |
-C |   XMVS         | => |
-C |   AC           | <=>|
-C |   FLUER        | <= |
-C !________________|____|______________________________________________C
-C                    <=  Can't be change by the user                   C
-C                    =>  Can be changed by the user                    C 
-C ---------------------------------------------------------------------C
-!                                                                      !
-! CALLED BY SUSPENSION_FLUX                                            !
-!                                                                      !
-! CALL      ------                                                     !
-!                                                                      !
-!======================================================================!
-!======================================================================!
-!                    DECLARATION DES TYPES ET DIMENSIONS               !
-!======================================================================!
-!======================================================================!
-
-      ! 1/ MODULES
-      ! ----------
+!                    *****************************
+                     SUBROUTINE SUSPENSION_FREDSOE
+!                    *****************************
+!
+     &(DM,TAUP,NPOIN,GRAV,XMVE,XMVS,ZERO,AC,CSTAEQ)
+!
+!***********************************************************************
+! SISYPHE   V6P1                                   21/07/2011
+!***********************************************************************
+!
+!brief    COMPUTES THE REFERENCE CONCENTRATION AT Z= 2*D50
+!+                ACCORDING TO ZYSERMAN AND FREDSOE FORMULATION (1994).
+!
+!history  C. VILLARET
+!+        14/04/2004
+!+        V5P5
+!+
+!
+!history  F. HUVELIN
+!+        04/01/2005
+!+        V5P6
+!+
+!
+!history  JMH
+!+        13/06/2008
+!+
+!+   FORMULATION OPTIMISED WITH AUX
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!+
+!+ 
+!history  C. VILLARET
+!+        20/03/2011
+!+        V6P1
+!+   Send DM instead of array ACLADM
+!
+!history  C.VILLARET (EDF-LNHE), P.TASSI (EDF-LNHE)
+!+        19/07/2011
+!+        V6P1
+!+   Name of variables   
+!+   
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| AC             |<->| CRITICAL SHIELDS PARAMETER
+!| DM             |-->| SEDIMENT GRAIN DIAMETER
+!| CSTAEQ         |<->| EQUILIBRIUM CONCENTRATION
+!| GRAV           |-->| ACCELERATION OF GRAVITY
+!| NPOIN          |-->| NUMBER OF POINTS
+!| TAUP           |-->| CRITICAL SHEAR STRESS
+!| XMVE           |-->| FLUID DENSITY 
+!| XMVS           |-->| WATER DENSITY
+!| ZERO           |-->| ZERO
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE INTERFACE_SISYPHE,EX_SUSPENSION_FREDSOE => SUSPENSION_FREDSOE
       USE BIEF
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-
-
+!
+!
       ! 2/ GLOBAL VARIABLES
       ! -------------------
-      TYPE(BIEF_OBJ),   INTENT(IN)    :: ACLADM, TAUP
+      TYPE(BIEF_OBJ),   INTENT(IN)    ::  TAUP
       INTEGER,          INTENT(IN)    :: NPOIN
       DOUBLE PRECISION, INTENT(IN)    :: GRAV, XMVE, XMVS
-      DOUBLE PRECISION, INTENT(IN)    :: ZERO,AC
+      DOUBLE PRECISION, INTENT(IN)    :: ZERO,AC,DM
       TYPE(BIEF_OBJ),   INTENT(INOUT) :: CSTAEQ
 
 
@@ -86,38 +82,38 @@ C ---------------------------------------------------------------------C
       ! ------------------
       INTEGER            :: I
       DOUBLE PRECISION   ::  TETAP,AUX
-C 
+!
       DOUBLE PRECISION   :: CMAX
-C
-C     MAXIMUM CONCENTRATION CORRESPONDING TO DENSE PACKING
-C
+!
+!     MAXIMUM CONCENTRATION CORRESPONDING TO DENSE PACKING
+!
       DATA CMAX/0.6D0/
       INTRINSIC MAX
-
+!
 !======================================================================!
 !======================================================================!
-!                               PROGRAMME                              !
+!                               PROGRAM                                !
 !======================================================================!
 !======================================================================!
-
+!
       ! ******************************** !
-      !    I - CRITICAL SHIELD PARAMETER ! 
-      ! ******************************** !    
-
+      !    I - CRITICAL SHIELDS PARAMETER!
+      ! ******************************** !
+!
       DO I=1,NPOIN
-
+!
          ! ****************** !
-         ! II - SKIN FRICTION ! 
-         ! ****************** !                
-         
-         TETAP = TAUP%R(I) / (GRAV*(XMVS-XMVE)*ACLADM%R(I))
-
+         ! II - SKIN FRICTION !
+         ! ****************** !
+!
+         TETAP = TAUP%R(I) / (GRAV*(XMVS-XMVE)*DM)
+!
          ! ***************** !
          ! IV - EROSION FLUX ! (_IMP_)
          ! ***************** !
-         ! Concentration increased by AVA because it is assumed 
-         ! that it is computed only with one class of sediment
-         
+         ! CONCENTRATION INCREASED BY AVA BECAUSE IT IS COMPUTED
+         ! ONLY WITH ONE CLASS OF SEDIMENT (ASSUMPTION)
+!
          IF(TETAP.GT.AC) THEN
            AUX=(TETAP-AC)**1.75D0
            CSTAEQ%R(I) = 0.331D0*AUX/(1.D0+0.72D0*AUX)
@@ -125,11 +121,11 @@ C
          ELSE
            CSTAEQ%R(I) = 0.D0
          ENDIF
-
+!
       ENDDO
-
+!
 !======================================================================!
 !======================================================================!
-
-      RETURN      
-      END SUBROUTINE SUSPENSION_FREDSOE
+!
+      RETURN
+      END

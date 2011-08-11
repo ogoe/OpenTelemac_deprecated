@@ -1,79 +1,77 @@
-C                         ********************
-                          SUBROUTINE INIT_AVAI 
-C                         ********************
-C
-C
-C***********************************************************************
-C SISYPHE VERSION 6.0              
-C
-C                            BUI MINH DUC  2002  
-C                            initial fraction distribution
-C                            for non uniform bed materials 
-C
-C                            Matthieu GONZALES DE LINARES 2002/2003
-C
-C                                                
-C COPYRIGHT EDF-BAW-IFH   
-C***********************************************************************
-C
-C     FONCTION  : INITIAL FRACTION DISTRIBUTION AND LAYER THICKNESS
-C
-C     PHILOSOPHIE : INIT_COMPO PERMET DE DEFINIR LA STRATIFICATION
-C     CORRESPONDANT A LA VARIATION DE COMPOSITION INITIALE DU FOND,
-C     AINSI NCOUCHES CORRESPOND AU NOMBRE DE COUCHES INITIALES REELLES
-C                   INIT_AVAI CORRIGE ET COMPLETE CETTE STRATIFICATION
-C     EN CAS DE PROBLEMES, ET RAJOUTE LA COUCHE ACTIVE, AINSI NLAYER
-C     CORRESPOND AU NOMBRE DE COUCHES UTILISEES DANS LE CALCUL
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |    ZF          | -->|  BOTTOM
-C |    ZR          | -->|  RIGID BOTTOM
-C |    ELAY0       | -->|  WANTED ACTIVE LAYER THICKNESS
-C |    NLAYER      |<-- |  NUMBER OF LAYER FOR EACH POINT
-C |    ELAY        |<-- |  ACTIVE LAYER THICKNESS FOR EACH POINT
-C |    ESTRAT      |<-- |  ACTIVE STRATUM THICKNESS FOR EACH POINT
-C |    AVAIL       |<-- |  SEDIMENT FRACTION FOR EACH LAYER, CLASS, NODE
-C |    ES          |<-- |  THICKNESS FOR EACH LAYER AND NODE
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C PROGRAMME APPELANT : SISYPHE
-C PROGRAMMES APPELES : INIT_COMPO
-C***********************************************************************
-C
+!                    ********************
+                     SUBROUTINE INIT_AVAI
+!                    ********************
+!
+!
+!***********************************************************************
+! SISYPHE   V6P1                                   21/07/2011
+!***********************************************************************
+!
+!brief    INITIAL FRACTION DISTRIBUTION AND LAYER THICKNESS.
+!
+!note     PHILOSOPHY: INIT_COMPO DEFINES THE STRATIFICATION CORRESPONDING
+!+                TO THE BOTTOM INITIAL COMPOSITION; NCOUCHES CORRESPONDS
+!+                TO THE NUMBER OF REAL INITIAL LAYERS.
+!note         INIT_AVAI CORRECTS AND SUPPLEMENTS THIS STRATIFICATION
+!+                IF PROBLEMS, AND ADDS THE ACTIVE LAYER; NLAYER CORRESPONDS
+!+                TO THE NUMBER OF LAYERS USED IN THE COMPUTATION.
+!
+!history  BUI MINH DUC
+!+        2002
+!+
+!+   INITIAL FRACTION DISTRIBUTION FOR NON-UNIFORM BED MATERIALS
+!
+!history  MATTHIEU GONZALES DE LINARES
+!+        2002/2003
+!+
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
       USE DECLARATIONS_TELEMAC
       USE DECLARATIONS_SISYPHE
       USE INTERFACE_SISYPHE,EX_INIT_AVAI=> INIT_AVAI
-C
+!
       IMPLICIT NONE
-C      
+!
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       DOUBLE PRECISION P_DSUM
       EXTERNAL         P_DSUM
-C
+!
       INTEGER I,J,K,NMAXI
-C     
+!
       DOUBLE PRECISION HAUTSED,TEST1
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       NMAXI = 0
-C
-C     USER SET THE INITIAL NUMBER OF LAYERS, THEIR THICKNESS 
-C     AND THEIR COMPOSITION
-C
-C     NOTE: WHEN COMPUTATION CONTINUED INIT_COMPO MUST NOT
-C           CHANGE ES AND AVAIL
-C
+!
+!     THE INITIAL NUMBER OF LAYERS, THEIR THICKNESS AND THEIR COMPOSITION
+!     ARE SET BY THE USER
+!
+!     NOTE: WHEN COMPUTATION CONTINUED INIT_COMPO MUST NOT
+!           CHANGE ES AND AVAIL
+!
       IF(DEBU) THEN
+!       TENTATIVE VALUE, THIS IS TO CHECK
 !       ADDED BY JMH 30/06/2010
         DO J=1,NPOIN
           I=1
@@ -92,48 +90,52 @@ C
               DO I=1,NSICLA
                 AVAIL(J,K,I)=AVAIL(J,K,I)/TEST1
               ENDDO
-            ENDIF 
-          ENDDO          
+            ENDIF
+          ENDDO
         ENDDO
       ELSE
-        CALL INIT_COMPO(IT1%I)     
-C
+        CALL INIT_COMPO(IT1%I)
+!
         DO 45 J=1,NPOIN
-C  
-C       10 IS THE MAXIMUM NUMBER OF LAYERS ALLOWED
+!
+!       10 IS THE MAXIMUM NUMBER OF LAYERS ALLOWED
         NLAYER%I(J) = IT1%I(J)
         IF(NLAYER%I(J).GT.10) THEN
-          IF(LNG.EQ.1) WRITE(LU,1800)         
+          IF(LNG.EQ.1) WRITE(LU,1800)
           IF(LNG.EQ.2) WRITE(LU,1815)
           CALL PLANTE(1)
           STOP
         ENDIF
-C         
-C       THE HEIGHT OF SEDIMENT (SUM OF ES) MUST NOT BE MORE THAN ZF-ZR
-C       IF SO, THE HEIGHT OF THE LAST LAYER IS REDUCED
-C       IF THERE ARE LAYERS UNDER ZR, THEY ARE NOT TAKEN INTO ACCOUNT
+!
+!       THE HEIGHT OF SEDIMENT (SUM OF ES) MUST NOT BE MORE THAN ZF-ZR
+!       IF SO, THE HEIGHT OF THE LAST LAYER IS REDUCED
+!       IF THERE ARE LAYERS UNDER ZR, THEY ARE NOT TAKEN INTO ACCOUNT
         HAUTSED = 0.D0
         DO K=1,IT1%I(J)
-        IF(HAUTSED + ES(J,K) .GE. ZF%R(J) - ZR%R(J)) THEN
-          ES(J,K) = ZF%R(J) - ZR%R(J) -  HAUTSED 
-          NLAYER%I(J) = K
+          IF(HAUTSED + ES(J,K) .GE. ZF%R(J) - ZR%R(J)) THEN
+            ES(J,K) = ZF%R(J) - ZR%R(J) -  HAUTSED
+            NLAYER%I(J) = K
+            HAUTSED = HAUTSED + ES(J,K)
+            GOTO 144
+          ENDIF
           HAUTSED = HAUTSED + ES(J,K)
-          GOTO 144
-        ENDIF
-        HAUTSED = HAUTSED + ES(J,K)
         ENDDO
-C
 144     CONTINUE
-C
-C       THE THICKNESS OF THE LAST LAYER IS ENLARGED SO THAT
-C       THE HEIGHT OF SEDIMENT (SUM OF ES) IS EQUAL TO ZF-ZR
+!V pour eviter confusion affichage
+         DO K=NLAYER%I(J)+1, NOMBLAY
+            ES(J,K) = 0.D0
+         ENDDO
+!
+!
+!       THE THICKNESS OF THE LAST LAYER IS ENLARGED SO THAT
+!       THE HEIGHT OF SEDIMENT (SUM OF ES) IS EQUAL TO ZF-ZR
         IF(HAUTSED.LT.ZF%R(J)-ZR%R(J)) THEN
           ES(J,NLAYER%I(J))=ES(J,NLAYER%I(J))+ZF%R(J)-ZR%R(J)-HAUTSED
         ENDIF
-C
+!
         IF(NLAYER%I(J).GT.1) THEN
-C         On suppose que ELAY0 est plus petit que la premiere strate.
-C         A rajouter : le cas ou ELAY0 est plus grand
+!         IT IS ASSUMED THAT ELAY0 IS SMALLER THAN THE FIRST STRATUM
+!         NEED TO ADD THE CASE WHERE ELAY0 IS LARGER
           IF(ELAY0.GT.ES(J,1)) THEN
             IF(LNG.EQ.1) THEN
               WRITE(LU,*) 'COUCHE ACTIVE TROP GROSSE/STRATIFICATION'
@@ -145,17 +147,17 @@ C         A rajouter : le cas ou ELAY0 est plus grand
             STOP
           ENDIF
         ENDIF
-C       ON SEPARE LA PREMIERE STRATE EN ACTIVE LAYER + ACTIVE STRATUM   
-        IF(ELAY0.LT.ES(J,1)) THEN 
+!       THE FIRST STRATUM IS SEPARATED BETWEEN ACTIVE LAYER + ACTIVE STRATUM
+        IF(ELAY0.LT.ES(J,1)) THEN
           NLAYER%I(J) = NLAYER%I(J) + 1
           IF(NLAYER%I(J).GT.10) THEN
-            IF(LNG.EQ.1) WRITE(LU,1800)         
+            IF(LNG.EQ.1) WRITE(LU,1800)
             IF(LNG.EQ.2) WRITE(LU,1815)
             CALL PLANTE(1)
             STOP
           ENDIF
-C         IL FAUT DECALER LES INDICES POUR ES ET AVAIL           
-          IF(NLAYER%I(J).GT.2) THEN 
+!         INDICES FOR ES AND AVAIL NEED TO BE OFFSET
+          IF(NLAYER%I(J).GT.2) THEN
             DO K=NLAYER%I(J),3,-1
               ES(J,K) = ES(J,K-1)
             ENDDO
@@ -168,19 +170,19 @@ C         IL FAUT DECALER LES INDICES POUR ES ET AVAIL
             ENDDO
           ENDDO
         ENDIF
-C
+!
 45      CONTINUE
-C
+!
       ENDIF
-C
+!
       NMAXI=0
       DO J=1,NPOIN
         ELAY%R(J) = ES(J,1)
         IF(NLAYER%I(J).GT.1) THEN
-          ESTRAT%R(J) = ES(J,2)           
+          ESTRAT%R(J) = ES(J,2)
         ENDIF
-C       A REVOIR :
-C       ON REMPLIT DE ZERO LES AVAIL INUTILES, CA VAUT MIEUX !!!???
+!       TO RE-EXAMINE :
+!       UNUSED AVAIL ARE FILLED WITH ZEROS, IS IT BETTER !!!???
         IF(NLAYER%I(J).LT.10) THEN
           DO I = 1, NSICLA
             DO K = NLAYER%I(J)+1,10
@@ -190,9 +192,9 @@ C       ON REMPLIT DE ZERO LES AVAIL INUTILES, CA VAUT MIEUX !!!???
         ENDIF
         IF(NLAYER%I(J).GT.NMAXI) NMAXI = NLAYER%I(J)
       ENDDO
-C 
-C     CALCUL DU VOLUME TOTAL DE SEDIMENTS DE CHAQUE CLASSE
-C
+!
+!     COMPUTES THE TOTAL VOLUME OF SEDIMENTS IN EACH CLASS
+!
       DO I=1,NSICLA
         VOLTOT(I)=0.D0
         DO J=1,NPOIN
@@ -201,13 +203,13 @@ C
           ENDDO
         ENDDO
       ENDDO
-C
+!
       IF(NCSIZE.GT.1) THEN
         DO I=1,NSICLA
           VOLTOT(I) = P_DSUM(VOLTOT(I))
         ENDDO
       ENDIF
-C
+!
       WRITE(LU,*) 'MAXIMUM INITIAL NUMBER OF LAYERS :',NMAXI
       DO I=1,NSICLA
         IF(LNG.EQ.1) THEN
@@ -217,13 +219,13 @@ C
           WRITE(LU,*)'TOTAL VOLUME OF CLASS ',I ,' :',VOLTOT(I)
         ENDIF
       ENDDO
-C
-C-----------------------------------------------------------------------
-C      
+!
+!-----------------------------------------------------------------------
+!
 1800  FORMAT(1X,'IL Y A PLUS DE 10 COUCHES DANS LA STRATIFICATION')
 1815  FORMAT(1X,'THERE ARE MORE THAN 10 LAYERS IN THE STRATIFICATION')
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

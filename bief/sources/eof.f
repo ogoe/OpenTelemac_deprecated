@@ -1,51 +1,61 @@
-C                       ********************
-                        LOGICAL FUNCTION EOF
-C                       ********************
-C
-     *(LUNIT)
-C
-C***********************************************************************
-C BIEF VERSION 5.1             17/08/94
-C                              ORIGINE : ANTOINE YESSAYAN (MERCI TONIO)
-C***********************************************************************
-C
-C     FONCTION  : DETECTION D'UNE FIN DE FICHIER
-C
-C                 SI EOF = .TRUE.  : FIN DE FICHIER
-C                 SI EOF = .FALSE. : ON PEUT CONTINUER
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |      LUNIT     | -->| UNITE LOGIQUE DU FICHIER QUE L'ON LIT
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C***********************************************************************
-C
+!                    ********************
+                     LOGICAL FUNCTION EOF
+!                    ********************
+!
+     &(LUNIT)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    DETECTS THE END OF A FILE:
+!+
+!+            IF EOF = .TRUE.  : HAS REACHED END OF FILE,
+!+
+!+            IF EOF = .FALSE. : CAN CARRY ON.
+!
+!history
+!+        17/08/94
+!+        V5P1
+!+   ORIGINAL IDEA : ANTOINE YESSAYAN (THANK YOU TONIO)
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| LUNIT          |-->| LOGICAL INUT OF FILE TO BE READ
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN) :: LUNIT
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       EOF = .TRUE.
-C
+!
       READ ( UNIT=LUNIT , ERR=100 , END=100 )
-C
+!
       EOF = .FALSE.
-C
+!
 100   CONTINUE
-C
+!
       BACKSPACE ( UNIT = LUNIT )
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END
- 

@@ -7,7 +7,7 @@
 #
 # Lanceur generique de niveau 2 des codes sur Systeme TELEMAC.
 #
-# Ce script est exploité par le lanceur de niveau 1 "runtel.pl"
+# Ce script est exploite par le lanceur de niveau 1 "runtel.pl"
 # pour construire le script de conduite d'une execution d'un code.
 #
 # AUTEUR : DeltaCAD - 1999
@@ -40,7 +40,7 @@
 #
 #          date    : 26/06/2000
 #          objet   : On utilise les chemins complets pour le fichier
-#                    de paramÉtres
+#                    de parametres
 #
 #          date    : 22/06/2000
 #          objet   : On renomme les anciens fichiers de resultats : *.old
@@ -53,7 +53,7 @@
 #          objet   : Remplacement de PVM par MPI
 #
 #          date    : Septembre 2001 - DeltaCAD
-#          objet   : Amélioration de la gestion des versions
+#          objet   : Amelioration de la gestion des versions
 #                    Localisation des modules fortran90 dans les branches des codes
 #
 #          date    : Mai 2008- Pascal Vezolle (IBM)
@@ -64,7 +64,7 @@
 #          object  : modifications for coupling with Delwaq in parallel mode.
 #
 #          date    : Avril 2010 - BAW Karlsruhe (jaj) et Sinetics (C. Denis)
-#          objet   : Prise en compte des sections de contrôles en // (jaj)
+#          objet   : Prise en compte des sections de controles en // (jaj)
 #                  : Ajout des cibles pour Mumps (C. Denis)
 #
 #------------------------Systeme TELEMAC V5P2--------------------------
@@ -1409,7 +1409,7 @@ print "\n";
 #sa7   acquihp($DICO, "FORT.2");
 #sa7 
 
-# les fichiers CONDITIONS LIMITES pour le parallélisme doivent être "acqui" par
+# les fichiers CONDITIONS LIMITES pour le parallelisme doivent etre "acqui" par
 # avance pour pouvoir utiliser PARTEL
   if ( ( $NCSIZE > 1) && (scalar(@conlimDSC) >=1 )  )
     {

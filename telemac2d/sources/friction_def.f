@@ -1,29 +1,48 @@
-C     *******************
-      MODULE FRICTION_DEF
-C     ******************* 
-C
-C***********************************************************************
-C TELEMAC 2D VERSION 5.6
-C***********************************************************************
-C
+!                    *******************
+                     MODULE FRICTION_DEF
+!                    *******************
+!
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!history
+!+
+!+        V5P6
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       TYPE POINTER_TO_FRICTION
-C         SEQUENCE
+!         SEQUENCE
          TYPE(FRICTION_OBJ), POINTER :: P
       END TYPE POINTER_TO_FRICTION
-C
+!
       TYPE FRICTION_OBJ
-C         SEQUENCE
-         INTEGER          :: gnumb(2) ! Global number of the zone
-         INTEGER          :: rtype(2) ! Type of law used
-
-         ! Use REAL because CHESTR IS saved as simple precision in selafin data
+!         SEQUENCE
+         INTEGER          :: GNUMB(2) ! GLOBAL NUMBER OF THE ZONE
+         INTEGER          :: RTYPE(2) ! TYPE OF LAW USED
+         ! USE REAL BECAUSE CHESTR IS SAVED AS SIMPLE PRECISION IN SELAFIN DATA
          ! --------------------------------------------------------------------
-         DOUBLE PRECISION :: rcoef(2) ! Friction parameter
-         DOUBLE PRECISION :: nDef(2)  ! Default Manning (for C-W law)
-         DOUBLE PRECISION :: dp       ! Diameter of roughness element
-         DOUBLE PRECISION :: sp       ! Spacing of roughness element
+         DOUBLE PRECISION :: RCOEF(2) ! FRICTION PARAMETER
+         DOUBLE PRECISION :: NDEF(2)  ! DEFAULT MANNING (FOR C-W LAW)
+         DOUBLE PRECISION :: DP       ! DIAMETER OF ROUGHNESS ELEMENT
+         DOUBLE PRECISION :: SP       ! SPACING OF ROUGHNESS ELEMENT
          TYPE(POINTER_TO_FRICTION), POINTER, DIMENSION(:) :: ADR
       END TYPE FRICTION_OBJ
-C
+!
       END MODULE FRICTION_DEF
-

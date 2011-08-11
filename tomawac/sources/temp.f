@@ -1,48 +1,57 @@
-C                       ***************
-                        SUBROUTINE TEMP
-C                       ***************
-C
-     *(TV ,DAT,DDC)
-C
-C***********************************************************************
-C  TOMAWAC VERSION 1.0    01/02/95        F.MARCOS     (LNH) 30 87 72 66
-C***********************************************************************
-C
-C   FONCTION : CE SOUS-PROGRAMME CALCULE LE TEMPS EN SECONDE
-C              ENTRE LES DATES DAT ET DDC
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C !      NOM       !MODE!                   ROLE                       !
-C !________________!____!______________________________________________!
-C !    TV          !<-- !  ECART DE TEMPS EN SECONDES                  !
-C !    DAT         ! -->!  DATE D'UN ENREGISTREMENT DES VENTS          !
-C !    DDC         ! -->!  DATE DU DEBUT DU CALCUL                     !
-C !________________!____!______________________________________________!
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : LECVEN
-C
-C SOUS-PROGRAMME APPELE : AUCUN
-C
-C***********************************************************************
-C
+!                    ***************
+                     SUBROUTINE TEMP
+!                    ***************
+!
+     &(TV ,DAT,DDC)
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   28/06/2011
+!***********************************************************************
+!
+!brief    COMPUTES THE TIME IN SECOND BETWEEN THE DATES
+!+                DAT AND DDC.
+!
+!history  F.MARCOS (LNH)
+!+        01/02/95
+!+        V1P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        28/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| DAT            |-->| TIME T IN THE WIND FILE
+!| DDC            |-->| DATE OF COMPUTATION BEGINNING
+!| TV             |<--| TIME DIFFERENCE (SECONDS)
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
+!
       INTEGER ADC,MDC,JDC,HDC,MNDC,ADT,MDT,JDT,HDT,MNDT
       INTEGER NJDM(12)
       DOUBLE PRECISION TV,DDC,DAT
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       DATA NJDM /0,31,59,90,120,151,181,212,243,273,304,334/
-C       ON NE TRAITE PAS LES ANNEES BISSEXTILES !!
-C
-C  DECODAGE DE LA DATE DU DEBUT DU CALCUL
-C
+!       LEAP YEARS ARE NOT TREATED !!
+!
+!  DECODES THE DATE OF THE BEGINNING OF COMPUTATION
+!
       ADC=INT(DDC*1.D-8)
       MDC=INT(DDC*1.D-6)
       JDC=INT(DDC*1.D-4)
@@ -51,9 +60,9 @@ C
       HDC =HDC-100*JDC
       JDC =JDC-100*MDC
       MDC =MDC-100*ADC
-C
-C  DECODAGE DE LA DATE DE L'ENREGISTREMENT DU VENT
-C
+!
+!  DECODES THE DATE OF THE WIND RECORD
+!
       ADT=INT(DAT*1.D-8)
       MDT=INT(DAT*1.D-6)
       JDT=INT(DAT*1.D-4)
@@ -62,9 +71,9 @@ C
       HDT =HDT-100*JDT
       JDT =JDT-100*MDT
       MDT =MDT-100*ADT
-C
+!
       TV=((((ADT-ADC)*365+(JDT+NJDM(MDT)-JDC-NJDM(MDC)))*24 +
-     *     HDT-HDC)*60 + MNDT-MNDC)*60
-C
+     &     HDT-HDC)*60 + MNDT-MNDC)*60
+!
       RETURN
       END

@@ -1,61 +1,66 @@
-C                       ******************                                                       
-                        SUBROUTINE INITSTR                                    
-C                       ******************                                    
-C     
-     *(CHESTR,SETSTR,PZONE,NZONE,NPOIN,T1)
-C
-C***********************************************************************
-C TELEMAC-2D VERSION 5.2         22/10/01  J-M HERVOUET TEL: 30 87 80 18                                                                  
-C***********************************************************************
-C     
-C     FUNCTION : ASSIGN INITIAL VALUES OF STRICKLERS PER ZONE
-C     
-C     
-C-----------------------------------------------------------------------
-C     ARGUMENTS                                         
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |      CHESTR    | <--|  STRICKLERS PER POINTS
-C |      SETSTR    | -->|  SET OF STRICKLERS' (ZONES)
-C |      PZONE     | -->|  TABLE OF ZONES
-C |      NZONE     | -->|  NUMBER OF ZONES
-C |      NPOIN     | -->|  NUMBER OF POINTS
-C |________________|____|_______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C     
-C     APPELE PAR :            HOMERE_PIT
-C     
-C     SOUS-PROGRAMME APPELE : OS
-C     
-C**********************************************************************
-C
+!                    ******************
+                     SUBROUTINE INITSTR
+!                    ******************
+!
+     &(CHESTR,SETSTR,PZONE,NZONE,NPOIN,T1)
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    ASSIGNS INITIAL VALUES OF STRICKLERS PER ZONE.
+!
+!history  J-M HERVOUET (LNHE)
+!+        22/10/2001
+!+        V5P2
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CHESTR         |-->| FRICTION COEFFICIENTS
+!| NPOIN          |-->| NUMBER OF POINTS
+!| NZONE          |-->| NUMBER OF ZONES
+!| PZONE          |-->| TABLE OF ZONES
+!| SETSTR         |-->| SET OF STRICKLERS (ZONES)
+!| T1             |<->| WORK BIEF_OBJ STRUCTURE
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       TYPE(BIEF_OBJ), INTENT(IN)      :: CHESTR
       TYPE(BIEF_OBJ), INTENT(INOUT)   :: SETSTR,T1
       INTEGER, INTENT(IN)             :: PZONE(*)
       INTEGER, INTENT(IN)             :: NZONE
       INTEGER, INTENT(IN)             :: NPOIN
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER I,J
-C        
-C----------------------------------------------------------------------
-C
+!
+!----------------------------------------------------------------------
+!
       IF(NZONE.GT.0) THEN
-C
-C       ZONATION : SETSTR=AVERAGE PER ZONE OF CHESTR
-C
-        CALL OS('X=C     ',X=SETSTR,C=0.D0)
+!
+!       ZONATION : SETSTR=AVERAGE PER ZONE OF CHESTR
+!
+        CALL OS('X=0     ',X=SETSTR)
         CALL OS('X=Y     ',X=T1    ,Y=SETSTR)
         DO J=1,NZONE
           DO I=1,NPOIN
@@ -66,16 +71,16 @@ C
           ENDDO
           SETSTR%R(J)=SETSTR%R(J)/T1%R(J)
         ENDDO
-C
+!
       ELSE
-C
-C       NO ZONATION : SETSTR=CHESTR
-C
+!
+!       NO ZONATION : SETSTR=CHESTR
+!
         CALL OS('X=Y     ',X=SETSTR,Y=CHESTR)
-C
+!
       ENDIF
-C        
-C----------------------------------------------------------------------
-C            
+!
+!----------------------------------------------------------------------
+!
       RETURN
       END

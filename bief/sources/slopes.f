@@ -1,83 +1,83 @@
-C                       *****************
-                        SUBROUTINE SLOPES
-C                       *****************
-C
-     *(COEF,Z,MESH)
-C
-C***********************************************************************
-C  BIEF VERSION 5.5          17/08/94    J-M HERVOUET (LNH) 30 87 80 18
-C
-C***********************************************************************
-C
-C FONCTION : CALCUL DU COEFFICIENT 1 / COS(ALFA)
-C
-C            OU ALFA EST LA PENTE D'UN ELEMENT TRIANGULAIRE.
-C
-C            CE COEFFICIENT EST UTILISE POUR LES TERMES DE FROTTEMENT
-C            SUR LE FOND.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |      COEF      |<-- |  RESULTAT
-C |      Z         | -->|  COTE DU FOND
-C |      MESH      | -->|  MAILLAGE
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C  APPELE PAR : PROPAG
-C
-C  SOUS-PROGRAMME APPELE : NEANT
-C
-C-----------------------------------------------------------------------
-C     -------------
-C     | ATTENTION | : LE JACOBIEN DOIT ETRE POSITIF .
-C     -------------
-C**********************************************************************
-C
+!                    *****************
+                     SUBROUTINE SLOPES
+!                    *****************
+!
+     &(COEF,Z,MESH)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    COMPUTES THE COEFFICIENT 1 / COS(ALFA)
+!+                WHERE ALFA IS THE SLOPE OF A TRIANGULAR ELEMENT.
+!+
+!+            THIS COEFFICIENT IS USED IN THE BOTTOM FRICTION
+!+                TERM.
+!
+!warning  THE JACOBIAN MUST BE POSITIVE
+!
+!history  J-M HERVOUET (LNH)
+!+        17/08/94
+!+        V5P5
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| COEF           |<--| RESULT
+!| MESH           |-->| MESH STRUCTURE
+!| Z              |-->| BOTTOM ELEVATIONS
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_SLOPES => SLOPES
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-C
-C  STRUCTURES DE VECTEUR
-C
+!
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+!
+!  STRUCTURES OF VECTOR
+!
       TYPE(BIEF_OBJ), INTENT(INOUT) :: COEF
       TYPE(BIEF_OBJ), INTENT(IN)    :: Z
-C
-C-----------------------------------------------------------------------
-C
-C  STRUCTURE DE MAILLAGE
-C
+!
+!-----------------------------------------------------------------------
+!
+!  MESH STRUCTURE
+!
       TYPE(BIEF_MESH), INTENT(IN)   :: MESH
-C
-C+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-C
+!
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+!
       INTEGER NELEM,NELMAX,IELM
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IELM   = MESH%TYPELM
       NELEM  = MESH%NELEM
       NELMAX = MESH%NELMAX
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       COEF%ELM = IELM
-      COEF%DIM1= NBPTS(IELM)
-C
-C-----------------------------------------------------------------------
-C
+      COEF%DIM1= BIEF_NBPTS(IELM,MESH)
+!
+!-----------------------------------------------------------------------
+!
       IF(IELM.EQ.10) THEN
         CALL SLOP10(COEF%R,MESH%XEL%R,MESH%YEL%R,
-     *              Z%R,MESH%IKLE%I,NELEM,NELMAX)
+     &              Z%R,MESH%IKLE%I,NELEM,NELMAX)
       ELSE
         IF(LNG.EQ.1) WRITE(LU,300) MESH%TYPELM
         IF(LNG.EQ.2) WRITE(LU,301) MESH%TYPELM
@@ -86,9 +86,8 @@ C
         CALL PLANTE(0)
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-      END 
- 
+      END

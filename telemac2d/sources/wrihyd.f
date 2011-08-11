@@ -1,230 +1,259 @@
-C                          *****************
-                           SUBROUTINE WRIHYD
-C                          *****************
-C
-     *(TITRE , ITSTRT , ITSTOP , ITSTEP , NPOIN2 , MBND   ,
-     * NSEG  , NOLAY  , NOMGEO , NOMLIM ,
-     * F     , NSTEPA , NOMSOU , NOSUIS , NOMCOU ,
-     * NOMINI, NOMVEB , NORSED , NOMSAL , NOMTEM , NOMVEL , NOMVIS ,
-     * NHYD,
-     * SALI_DEL,TEMP_DEL,VELO_DEL,DIFF_DEL,MARDAT,MARTIM)
-C
-C***********************************************************************
-C  TELEMAC 2D VERSION 6.0    20/03/07                  CHARLES MOULINEC
-C
-C***********************************************************************
-C
-C      FONCTION:  ECRITURE DU FICHIER DE COMMANDES DE DELWAQ
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |                | -->|
-C |                | -->|
-C |                | -->|
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : TELMAC
-C
-C SOUS-PROGRAMME APPELE : OV
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE WRIHYD
+!                    *****************
+!
+     &(TITRE , ITSTRT , ITSTOP , ITSTEP , NPOIN2 , MBND   ,
+     & NSEG  , NOLAY  , NOMGEO , NOMLIM ,
+     & F     , NSTEPA , NOMSOU , NOMMAB , NOMCOU ,
+     & NOMINI, NOMVEB , NOMMAF , NOMSAL , NOMTEM , NOMVEL , NOMVIS ,
+     & NHYD,
+     & SALI_DEL,TEMP_DEL,VELO_DEL,DIFF_DEL,MARDAT,MARTIM)
+!
+!***********************************************************************
+! TELEMAC2D   V6P0                                   21/08/2010
+!***********************************************************************
+!
+!brief    WRITES OUT THE HYDRODYNAMIC FILE FOR DELWAQ (.HYD).
+!
+!history  CHARLES MOULINEC
+!+        20/03/2007
+!+        V6P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| DIFF_DEL       |-->| IF YES, WRITES DIFFUSION FILE FOR DELWAQ
+!| F              |-->| ARRAY TO STORE FRACTION OF DEPTH PER LAYER
+!| ITSTEP         |-->| TIME STEP
+!| ITSTOP         |-->| STOP TIME
+!| ITSTRT         |-->| START TIME
+!| MARDAT         |-->| DATE (YEAR, MONTH,DAY)
+!| MARTIM         |-->| TIME (HOUR, MINUTE,SECOND)
+!| MBND           |-->| SEQUENTIAL COUNTER OPEN BOUNDARIES
+!| NHYD           |-->| DELWAQ STEERING FILE CANAL
+!| NOLAY          |-->| NUMBER OF PLANES
+!| NOMCOU         |-->| FLUX FILE
+!| NOMGEO         |-->| RESULT FILE OF THE SIMULATION
+!| NOMINI         |-->| HORIZONTAL SURFACE FILE
+!| NOMLIM         |-->| BOUNDARY FILE OF THE SIMULATION
+!| NOMMAB         |-->| AREA FILE
+!| NOMMAF         |-->| NODE DISTANCE FILE
+!| NOMSAL         |-->| SALINITY FOR DELWAQ FILE
+!| NOMSOU         |-->| VOLUME FILE
+!| NOMTEM         |-->| TEMPERATURE FOR DELWAQ FILE
+!| NOMVEB         |-->| NODE EXCHANGE FILE
+!| NOMVEL         |-->| VELOCITY FILE
+!| NOMVIS         |-->| DIFFUSION FILE
+!| NPOIN2         |-->| NUMBER OF 2D POINTS IN THE MESH
+!| NSEG           |-->| NUMBER OF 2D SEGMENTS IN THE MESH
+!| NSTEPA         |-->| NUMBER OF TIME-STEPS FOR TIME AGGREGATION
+!| SALI_DEL       |-->| IF YES, THERE IS SALINITY
+!| TEMP_DEL       |-->| IF YES, THERE IS TEMPERATURE
+!| TITRE          |-->| TITLE OF STUDY
+!| VELO_DEL       |-->| IF YES, WRITES VELOCITY FILE FOR DELWAQ
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER,          INTENT(IN) :: NHYD,ITSTRT,ITSTOP,ITSTEP,NPOIN2
       INTEGER,          INTENT(IN) :: NSEG,NOLAY,NSTEPA,MBND
       INTEGER,          INTENT(IN) :: MARDAT(3),MARTIM(3)
       CHARACTER(*),     INTENT(IN) :: TITRE,NOMGEO,NOMLIM
-      CHARACTER(*),     INTENT(IN) :: NOMSOU,NOSUIS,NOMCOU,NOMSAL,NOMTEM
-      CHARACTER(*),     INTENT(IN) :: NOMINI,NOMVEB,NORSED,NOMVEL,NOMVIS
+      CHARACTER(*),     INTENT(IN) :: NOMSOU,NOMMAB,NOMCOU,NOMSAL,NOMTEM
+      CHARACTER(*),     INTENT(IN) :: NOMINI,NOMVEB,NOMMAF,NOMVEL,NOMVIS
       DOUBLE PRECISION, INTENT(IN) :: F(NPOIN2,NOLAY)
       LOGICAL,          INTENT(IN) :: SALI_DEL,TEMP_DEL
       LOGICAL,          INTENT(IN) :: VELO_DEL,DIFF_DEL
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER ILAY,IWAQ
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       WRITE ( NHYD, '(A)' )
-     *    "task      full-coupling                              "
+     &    "task      full-coupling                              "
       WRITE ( NHYD, '(A)' )
-     *    "                                                     "
+     &    "                                                     "
       WRITE ( NHYD, '(A)' )
-     *    "#                                                    "
+     &    "#                                                    "
       WRITE ( NHYD, '(A)' )
-     *    "# Telemac data                                       "
+     &    "# telemac data                                       "
       WRITE ( NHYD, '(A)' )
-     *    "#                                                    "
+     &    "#                                                    "
       WRITE ( NHYD, '(A)' )
-     *    "                                                     "
+     &    "                                                     "
       WRITE ( NHYD, '(A)' )
-     *    "geometry  finite-elements                            "
+     &    "geometry  finite-elements                            "
       WRITE ( NHYD, '(A)' )
-     *    "                                                     "
+     &    "                                                     "
       WRITE ( NHYD, '(A)' )
-     *    "horizontal-aggregation       no                      "
+     &    "horizontal-aggregation       no                      "
       WRITE ( NHYD, '(A)' )
-     *    "minimum-vert-diffusion-used  no                      "
+     &    "minimum-vert-diffusion-used  no                      "
       WRITE ( NHYD, '(A)' )
-     *    "vertical-diffusion           calculated              "
+     &    "vertical-diffusion           calculated              "
       WRITE ( NHYD, '(A)' )
-     *    "description                                          "
-      iwaq = len_trim(TITRE)
+     &    "description                                          "
+      IWAQ = LEN_TRIM(TITRE)
       WRITE ( NHYD, '(A,A,A)' )
-     *    "   '",TITRE(1:iwaq),"'"
+     &    "   '",TITRE(1:IWAQ),"'"
       WRITE ( NHYD, '(A)' )
-     *    "   '                                    '            "
+     &    "   '                                    '            "
       WRITE ( NHYD, '(A)' )
-     *    "   '                                    '            "
+     &    "   '                                    '            "
       WRITE ( NHYD, '(A)' )
-     *    "end-description                                      "
+     &    "end-description                                      "
       WRITE ( NHYD, '(A,I4,I2,I2,I2,I2,I2,A)' )
-     *"reference-time           '",MARDAT(1),MARDAT(2),MARDAT(3),
-     *                             MARTIM(1),MARTIM(2),MARTIM(3),"'"
+     &"reference-time           '",MARDAT(1),MARDAT(2),MARDAT(3),
+     &                             MARTIM(1),MARTIM(2),MARTIM(3),"'"
       WRITE ( NHYD, '(A,I14,A)' )
-     *    "hydrodynamic-start-time  '",ITSTRT,"'"
+     &    "hydrodynamic-start-time  '",ITSTRT,"'"
       WRITE ( NHYD, '(A,I14,A)' )
-     *    "hydrodynamic-stop-time   '",ITSTOP,"'"
+     &    "hydrodynamic-stop-time   '",ITSTOP,"'"
       WRITE ( NHYD, '(A,I14,A)' )
-     *    "hydrodynamic-timestep    '",NSTEPA,"'"
+     &    "hydrodynamic-timestep    '",NSTEPA,"'"
       WRITE ( NHYD, '(A,I14,A)' )
-     *    "conversion-ref-time      '",ITSTRT,"'"
+     &    "conversion-ref-time      '",ITSTRT,"'"
       WRITE ( NHYD, '(A,I14,A)' )
-     *    "conversion-start-time    '",ITSTRT,"'"
+     &    "conversion-start-time    '",ITSTRT,"'"
       WRITE ( NHYD, '(A,I14,A)' )
-     *    "conversion-stop-time     '",ITSTOP,"'"
+     &    "conversion-stop-time     '",ITSTOP,"'"
       WRITE ( NHYD, '(A,I14,A)' )
-     *    "conversion-timestep      '",NSTEPA,"'"
+     &    "conversion-timestep      '",NSTEPA,"'"
       WRITE ( NHYD, '(A,I6)'  )
-     *    "grid-cells-first-direction ",NPOIN2
+     &    "grid-cells-first-direction ",NPOIN2
       WRITE ( NHYD, '(A,I6,A)')
-     *    "grid-cells-second-direction",NSEG+MBND," # nr of exchanges!"
+     &    "grid-cells-second-direction",NSEG+MBND," # nr of exchanges!"
       WRITE ( NHYD, '(A,I6)' )
-     *    "number-hydrodynamic-layers ",NOLAY
+     &    "number-hydrodynamic-layers ",NOLAY
       WRITE ( NHYD, '(A,I6)' )
-     *    "number-water-quality-layers",NOLAY
-      iwaq = len_trim(NOMGEO)
+     &    "number-water-quality-layers",NOLAY
+      IWAQ = LEN_TRIM(NOMGEO)
       WRITE ( NHYD, '(A,A,A)' )
-     *    "hydrodynamic-file        '",NOMGEO(1:iwaq),"'"
+     &    "hydrodynamic-file        '",NOMGEO(1:IWAQ),"'"
       WRITE ( NHYD, '(A)' )
-     *    "aggregation-file         none                        "
+     &    "aggregation-file         none                        "
       WRITE ( NHYD, '(A,A,A)' )
-     *    "grid-indices-file        '",NOMGEO(1:iwaq),"'"
-      iwaq = len_trim(NOMLIM)
+     &    "grid-indices-file        '",NOMGEO(1:IWAQ),"'"
+      IWAQ = LEN_TRIM(NOMLIM)
       WRITE ( NHYD, '(A,A,A)' )
-     *    "grid-coordinates-file    '",NOMLIM(1:iwaq),"'"
-      iwaq = len_trim(nomsou)
+     &    "grid-coordinates-file    '",NOMLIM(1:IWAQ),"'"
+      IWAQ = LEN_TRIM(NOMSOU)
       WRITE ( NHYD, '(A,A,A)' )
-     *    "volumes-file             '",NOMSOU(1:iwaq),"'"
-      iwaq = len_trim(nosuis)
+     &    "volumes-file             '",NOMSOU(1:IWAQ),"'"
+      IWAQ = LEN_TRIM(NOMMAB)
       WRITE ( NHYD, '(A,A,A)' )
-     *    "areas-file               '",NOSUIS(1:iwaq),"'"
-      iwaq = len_trim(nomcou)
+     &    "areas-file               '",NOMMAB(1:IWAQ),"'"
+      IWAQ = LEN_TRIM(NOMCOU)
       WRITE ( NHYD, '(A,A,A)' )
-     *    "flows-file               '",NOMCOU(1:iwaq),"'"
-      iwaq = len_trim(nomveb)
+     &    "flows-file               '",NOMCOU(1:IWAQ),"'"
+      IWAQ = LEN_TRIM(NOMVEB)
       WRITE ( NHYD, '(A,A,A)' )
-     *    "pointers-file            '",NOMVEB(1:iwaq),"'"
-      iwaq = len_trim(norsed)
+     &    "pointers-file            '",NOMVEB(1:IWAQ),"'"
+      IWAQ = LEN_TRIM(NOMMAF)
       WRITE ( NHYD, '(A,A,A)' )
-     *    "lengths-file             '",NORSED(1:iwaq),"'"
+     &    "lengths-file             '",NOMMAF(1:IWAQ),"'"
       IF(SALI_DEL) THEN
-        iwaq = len_trim(nomsal)
+        IWAQ = LEN_TRIM(NOMSAL)
         WRITE ( NHYD, '(A,A,A)' )
-     *    "salinity-file            '",NOMSAL(1:iwaq),"'"
+     &    "salinity-file            '",NOMSAL(1:IWAQ),"'"
       ELSE
       WRITE ( NHYD, '(A)' )
-     *    "salinity-file            none                        "
+     &    "salinity-file            none                        "
       ENDIF
       IF(TEMP_DEL) THEN
-        iwaq = len_trim(nomtem)
+        IWAQ = LEN_TRIM(NOMTEM)
         WRITE ( NHYD, '(A,A,A)' )
-     *    "temperature-file         '",NOMTEM(1:iwaq),"'"
+     &    "temperature-file         '",NOMTEM(1:IWAQ),"'"
       ELSE
       WRITE ( NHYD, '(A)' )
-     *    "temperature-file         none                        "
+     &    "temperature-file         none                        "
       ENDIF
       IF(DIFF_DEL) THEN
-        iwaq = len_trim(nomvis)
+        IWAQ = LEN_TRIM(NOMVIS)
         WRITE ( NHYD, '(A,A,A)' )
-     *    "vert-diffusion-file      '",NOMVIS(1:iwaq),"'"
+     &    "vert-diffusion-file      '",NOMVIS(1:IWAQ),"'"
       ELSE
       WRITE ( NHYD, '(A)' )
-     *    "vert-diffusion-file      none                        "
+     &    "vert-diffusion-file      none                        "
       ENDIF
       IF(VELO_DEL) THEN
-        iwaq = len_trim(nomvel)
+        IWAQ = LEN_TRIM(NOMVEL)
         WRITE ( NHYD, '(A,A,A)' )
-     *    "velocity-file            '",NOMVEL(1:iwaq),"'"
+     &    "velocity-file            '",NOMVEL(1:IWAQ),"'"
       ELSE
       WRITE ( NHYD, '(A)' )
-     *    "velocity-file            none                        "
+     &    "velocity-file            none                        "
       ENDIF
-      iwaq = len_trim(nomini)
+      IWAQ = LEN_TRIM(NOMINI)
       WRITE ( NHYD, '(A,A,A)' )
-     *    "surfaces-file            '",NOMINI(1:iwaq),"'"
+     &    "surfaces-file            '",NOMINI(1:IWAQ),"'"
       WRITE ( NHYD, '(A)' )
-     *    "total-grid-file          none                        "
+     &    "total-grid-file          none                        "
       WRITE ( NHYD, '(A)' )
-     *    "discharges-file          none                        "
+     &    "discharges-file          none                        "
       WRITE ( NHYD, '(A)' )
-     *    "chezy-coefficients-file  none                        "
+     &    "chezy-coefficients-file  none                        "
       WRITE ( NHYD, '(A)' )
-     *    "shear-stresses-file      none                        "
+     &    "shear-stresses-file      none                        "
       WRITE ( NHYD, '(A)' )
-     *    "walking-discharges-file  none                        "
-      if ( nolay .gt. 1 ) then
+     &    "walking-discharges-file  none                        "
+      IF ( NOLAY .GT. 1 ) THEN
          WRITE ( NHYD, '(A)' )
-     *       "minimum-vert-diffusion                            "
+     &       "minimum-vert-diffusion                            "
          WRITE ( NHYD, '(A)' )
-     *       "   upper-layer       0.0000E+00                   "
+     &       "   upper-layer       0.0000E+00                   "
          WRITE ( NHYD, '(A)' )
-     *       "   lower-layer       0.0000E+00                   "
+     &       "   lower-layer       0.0000E+00                   "
          WRITE ( NHYD, '(A)' )
-     *       "   interface-depth   0.0000E+00                   "
+     &       "   interface-depth   0.0000E+00                   "
          WRITE ( NHYD, '(A)' )
-     *       "end-minimum-vert-diffusion                        "
-      endif
+     &       "end-minimum-vert-diffusion                        "
+      ENDIF
       WRITE ( NHYD, '(A)' )
-     *    "constant-dispersion                                  "
+     &    "constant-dispersion                                  "
       WRITE ( NHYD, '(A)' )
-     *    "   first-direction    0.0000                         "
+     &    "   first-direction    0.0000                         "
       WRITE ( NHYD, '(A)' )
-     *    "   second-direction   0.0000                         "
+     &    "   second-direction   0.0000                         "
       WRITE ( NHYD, '(A)' )
-     *    "   third-direction    0.0000                         "
+     &    "   third-direction    0.0000                         "
       WRITE ( NHYD, '(A)' )
-     *    "end-constant-dispersion                              "
+     &    "end-constant-dispersion                              "
       WRITE ( NHYD, '(A)' )
-     *    "hydrodynamic-layers                               "
-      do ilay=1,nolay
-         WRITE ( NHYD, '(F10.4)' ) F(1,ilay)
-      enddo
+     &    "hydrodynamic-layers                               "
+      DO ILAY=1,NOLAY
+         WRITE ( NHYD, '(F10.4)' ) F(1,ILAY)
+      ENDDO
       WRITE ( NHYD, '(A)' )
-     *    "end-hydrodynamic-layers                           "
+     &    "end-hydrodynamic-layers                           "
       WRITE ( NHYD, '(A)' )
-     *    "water-quality-layers                              "
-      do ilay=1,nolay
+     &    "water-quality-layers                              "
+      DO ILAY=1,NOLAY
          WRITE ( NHYD, '(F10.4)' ) 1.0
-      enddo
+      ENDDO
       WRITE ( NHYD, '(A)' )
-     *    "end-water-quality-layers                          "
+     &    "end-water-quality-layers                          "
       WRITE ( NHYD, '(A)' )
-     *    "discharges                                           "
+     &    "discharges                                           "
       WRITE ( NHYD, '(A)' )
-     *    "end-discharges                                       "
-C
-C-----------------------------------------------------------------------
-C
+     &    "end-discharges                                       "
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

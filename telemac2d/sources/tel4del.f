@@ -1,122 +1,200 @@
-!                       ******************
-                        SUBROUTINE TEL4DEL                        
-!                       ******************
+!                    ******************
+                     SUBROUTINE TEL4DEL
+!                    ******************
 !
-     *(NPOIN,NPOIN2,NELEM,NSEG,IKLE,ELTSEG,GLOSEG,ORISEG,MAXSEG,
-     * X,Y,NPTFR,LIHBOR,NBOR,NOLAY,AAT,DDT,LLT,NNIT,HNEW,HPROP,ZNEW,
-     * U,V,SALI,TEMP,VISC,TITRE,NOMGEO,NOMLIM,NSTEPA,
-     * NSOU,NOMSOU,NMAB,NOMMAB,NCOU,NOMCOU,NINI,NOMINI,NVEB,NOMVEB,
-     * NMAF,NOMMAF,NCOB,NOMCOB,NSAL,NOMSAL,NTEM,NOMTEM,NVEL,NOMVEL,
-     * NVIS,NOMVIS,INFOGR,NELEM2,SALI_DEL,TEMP_DEL,VELO_DEL,DIFF_DEL,
-     * MARDAT,MARTIM,FLOW,INIFLOW,W,YAFLULIM,FLULIM,V2DPAR,KNOLG,
-     * MESH2D,MESH3D)
-!
-!***********************************************************************
-! TELEMAC 3D VERSION 6.0    25/11/2009     LEO POSTMA (DELFT HYDRAULICS)
-! FORTRAN 95 VERSION                             CHARLES MOULINEC (LNHE)
-!
-!
-! 11/09/2007 : SALINITY AND TEMPERATURE ADDED (JMH)
-! 20/12/2007 : RESFIL CHANGED INTO NOMGEO, CLIFIL INTO NOMLIM (JMH)
-! 20/12/2007 : FIRST DIMENSION OF STOSEG (MAXSEG) ADDED (JMH)
-! 20/12/2007 : MARDAT AND MARTIM ADDED (JMH)
-! 20/05/2008 : FLOW IS NOW AN ARGUMENT AND IS INITIALIZED ONLY IF INIFLOW
-!              IT MAY CONTAIN FLUXES DUE TO TIDAL FLATS TREATMENT
-! 24/09/2008 : F AND G VARIABLE IN TIME AND SPACE FOR GENERALISED
-!              SIGMA TRANSFORMATION (JMH)
-! 25/09/2008 : FLUXES NOW RECEIVED IN ARRAY W(NELEM,*) AND COMPUTED
-!              BEFORE BY TELEMAC-2D OR 3D
-! 27/03/2009 : EXCHANGE AREAS, BUG CORRECTED,  LOOK FOR 'JMH 27/03/2009'
-! 05/04/2009 : BOUNDARY CELLS IN MODEL GRID  , LOOK FOR 'LP  05/04/2009'
-!
-! NOTE JMH 12/06/2009 : THE COMPUTATION OF VERTICAL FLUXES IS EXACTLY
-!                       WHAT IS DONE IN TRIDW2. WE HAVE:
-!                       VERTICAL FLOW HERE = -WSS/UNSV2D IN TRIDW2
-!                       CALLING TRIDW2 BEFORE AND USING WSS
-!                       WOULD PROBABLY SIMPLIFY A LOT HERE.
-!
-! OTHER NOTE JMH : FLUXES OF SEGMENTS ARE POSITIVE IF THEY GO FROM
-!                  POINT 1 TO POINT 2. THE VERTICAL SEGMENTS HERE
-!                  ARE ORIENTED FROM TOP TO BOTTOM, SO A POSITIVE
-!                  VALUE MEANS A FLUX GOING DOWN
-!
-!
-! 15/06/2009 : V2DPAR AND KNOLG ADDED, ADAPTATION TO PARALLELISM
-!              DONE BY CHI-TUAN PHAM
-!
-! 03/09/2009 : CALL FLUX_EF_VF FOR COMPUTING FLUXES
+     &(NPOIN,NPOIN2,NELEM,NSEG,IKLE,ELTSEG,GLOSEG,ORISEG,MAXSEG,
+     & X,Y,NPTFR,LIHBOR,NBOR,NOLAY,AAT,DDT,LLT,NNIT,HNEW,HPROP,ZNEW,
+     & U,V,SALI,TEMP,VISC,TITRE,NOMGEO,NOMLIM,NSTEPA,
+     & NSOU,NOMSOU,NMAB,NOMMAB,NCOU,NOMCOU,NINI,NOMINI,NVEB,NOMVEB,
+     & NMAF,NOMMAF,NCOB,NOMCOB,NSAL,NOMSAL,NTEM,NOMTEM,NVEL,NOMVEL,
+     & NVIS,NOMVIS,INFOGR,NELEM2,SALI_DEL,TEMP_DEL,VELO_DEL,DIFF_DEL,
+     & MARDAT,MARTIM,FLOW,INIFLOW,W,YAFLULIM,FLULIM,V2DPAR,KNOLG,
+     & MESH2D,MESH3D)
 !
 !***********************************************************************
-!
-!      FONCTION:
-!      =========
-!
-!     COUPLES LNH-TELEMAC-3D TO DELFT-WAQ ONLINE
-!
-!     ORIGINAL VERSION NOVEMBER 2004
-!     MODIFICATION  07 MARCH    2005 BY LEO POSTMA
-!     MODIFICATION  14 NOVEMBER 2005 BY LEO POSTMA, MAKING IT ON LINE
-!     MODIFICATION  22 FEBRUARY 2007 (LEO'S VISIT IN LNHE)
-!     MODIFICATION  18 MAY      2007 (LAST VERTICAL FLOWS LOOP)
-!
-!-----------------------------------------------------------------------
-!                             ARGUMENTS
-! .________________.____.______________________________________________.
-! !  NOM           !MODE!                  ROLE                        !
-! !________________!____!______________________________________________!
-! !  NPOIN         ! -->! NUMBER OF 3D POINTS IN THE MESH
-! !  NPOIN2        ! -->! NUMBER OF 2D POINTS IN THE MESH
-! !  NELEM         ! -->! NUMBER OF ELEMENTS IN THE MESH
-! !  NSEG          ! -->! NUMBER OF 2D SEGMENTS IN THE MESH
-! !  IKLE          ! -->! CONNECTIVITY TABLE
-! !  ELTSEG        ! -->! SEGMENTS COMPOSING AN ELEMENT
-! !  GLOSEG        ! -->! GLOBAL NUMBERS OF POINTS OF A SEGMENT
-! !  X,Y           ! -->! COORDINATES OF HORIZONTAL MESH
-! !  NPTFR         ! -->! NUMBER OF 3D BOUNDARY POINTS
-! !  LIHBOR        ! -->! TYPE OF 2D BOUNDARIES FOR DEPTH
-! !  NBOR          ! -->! GLOBAL NUMBERS OF BOUNDARY NODES
-! !  NOLAY         ! -->! NUMBER OF PLANES
-! !  AAT,DDT       ! -->! CURRENT TIME, TIME STEP
-! !  LLT,NNIT      ! -->! ITERATION NUMBER,NUMBER OF ITERATIONS
-! !  HNEW          ! -->! DEPTH AT NEW TIME (2D) ELEVATION Z (3D)
-! !  HPROP         ! -->! DEPTH IN THE DIV(HU) TERM
-! !  U,V           ! -->! COMPONENTS OF HORIZONTAL VELOCITY
-! !  SALI,TEMP     ! -->! SALINITY, TEMPERATURE (IF SALI_DEL, IF TEMP_DEL)
-! !  TITRE         ! -->! TITLE OF STUDY
-! !  NOMGEO        ! -->! RESULT FILE OF THE SIMULATION
-! !  NOMLIM        ! -->! BOUNDARY FILE OF THE SIMULATION
-! !  NSTEPA        ! -->! NUMBER OF TIME-STEPS FOR TIME AGGREGATION
-! !  NSOU,NOMSOU   ! -->! VOLUME CANAL AND FILE
-! !  NMAB,NOMMAB   ! -->! AREA CANAL AND FILE
-! !  NCOU,NOMCOU   ! -->! FLUX CANAL AND FILE
-! !  NINI,NOMINI   ! -->! HORIZONTAL SURFACE CANAL AND FILE
-! !  NVEB,NOMVEB   ! -->! NODE EXCHANGE CANAL AND FILE
-! !  NMAF,NOMMAF   ! -->! NODE DISTANCE CANAL AND FILE
-! !  NCOB,NOMCOB   ! -->! DELWAQ STEERING FILE CANAL AND FILE
-! !  NSAL,NOMSAL   ! -->! SALINITY FOR DELWAQ, CANAL AND FILE
-! !  NTEM,NOMTEM   ! -->! TEMPERATURE FOR DELWAQ, CANAL AND FILE
-! !  INFOGR        ! -->! IF YES, INFORMATION PRINTED ON LISTING
-! !  NELEM2        ! -->! NUMBER OF ELEMENTS IN 2D
-! !  SALI_DEL      ! -->! IF YES, THERE IS SALINITY
-! !  TEMP_DEL      ! -->! IF YES, THERE IS TEMPERATURE
-! !  KNOLG         ! -->! GLOBAL NUMBERS OF LOCAL POINTS IN PARALLEL
-! !________________!____!_______________________________________________
-! MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-!
-!-----------------------------------------------------------------------
-!
-! SOUS-PROGRAMME APPELE PAR : MITRID
-!
+! TELEMAC2D   V6P1                                  21/08/2010
 !***********************************************************************
+!
+!brief    COUPLES LNH-TELEMAC-3D TO DELFT-WAQ ONLINE.
+!
+!note     JMH 12/06/2009 : THE COMPUTATION OF VERTICAL FLUXES IS EXACTLY
+!+                       WHAT IS DONE IN TRIDW2. WE HAVE:
+!+                       VERTICAL FLOW HERE = -WSS/UNSV2D IN TRIDW2.
+!+                       CALLING TRIDW2 BEFORE AND USING WSS
+!+                       WOULD PROBABLY SIMPLIFY A LOT HERE.
+!note  JMH : FLUXES OF SEGMENTS ARE POSITIVE IF THEY GO FROM
+!+               POINT 1 TO POINT 2. THE VERTICAL SEGMENTS HERE
+!+               ARE ORIENTED FROM TOP TO BOTTOM, SO A POSITIVE
+!+               VALUE REPRESENTS A FLUX GOING DOWNWARD.
+!
+!history
+!+        **/11/2004
+!+
+!+   ORIGINAL VERSION
+!
+!history  LEO POSTMA
+!+        07/03/2005
+!+
+!+   MODIFIED
+!
+!history  LEO POSTMA
+!+        14/11/2005
+!+
+!+   MODIFIED, MAKING IT ONLINE
+!
+!history
+!+        22/02/2007
+!+
+!+   MODIFIED DURING LEO'S VISIT IN LNHE
+!
+!history
+!+        18/05/2007
+!+
+!+   LAST VERTICAL FLOWS LOOP
+!
+!history  JMH
+!+        11/09/2007
+!+
+!+   SALINITY AND TEMPERATURE ADDED
+!
+!history  JMH
+!+        20/12/2007
+!+
+!+   RESFIL CHANGED TO NOMGEO, CLIFIL TO NOMLIM
+!
+!history
+!+        20/05/2008
+!+
+!+   FLOW IS NOW AN ARGUMENT AND IS INITIALISED ONLY IF INIFLOW
+!
+!history  JMH
+!+        24/09/2008
+!+
+!+   F AND G VARIABLE IN TIME AND SPACE FOR GENERALISED SIGMA TRANSFORMATION
+!
+!history
+!+        25/09/2008
+!+
+!+   FLUXES NOW RECEIVED IN ARRAY W(NELEM,*) AND COMPUTED BEFORE BY
+!+   TELEMAC-2D OR 3D
+!
+!history  JMH
+!+        27/03/2009
+!+
+!+   EXCHANGE AREAS, BUG CORRECTED, LOOK FOR 'JMH 27/03/2009'
+!
+!history  LEO POSTMA
+!+        05/04/2009
+!+
+!+   BOUNDARY CELLS IN MODEL GRID , LOOK FOR 'LP 05/04/2009'
+!
+!history  CHI-TUAN PHAM
+!+        15/06/2009
+!+
+!+   V2DPAR AND KNOLG ADDED, ADAPTED FOR PARALLELISM
+!
+!history
+!+        03/09/2009
+!+
+!+   CALLS FLUX_EF_VF TO COMPUTE THE FLUXES
+!
+!history  LEO POSTMA (DELFT HYDRAULICS); CHARLES MOULINEC (LNHE)
+!+        25/11/2009
+!+        V6P0
+!+   WRITTEN IN FORTRAN 95 (CM)
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| AAT            |-->| CURRENT TIME
+!| DDT            |-->| TIME STEP
+!| DIFF_DEL       |-->| IF YES, WRITES DIFFUSION FILE FOR DELWAQ
+!| ELTSEG         |-->| SEGMENTS COMPOSING AN ELEMENT
+!| FLOW           |<->| FLOW
+!| FLULIM         |-->| FLUX LIMITATION
+!| GLOSEG         |-->| GLOBAL NUMBERS OF POINTS OF A SEGMENT
+!| HNEW           |-->| DEPTH AT NEW TIME (2D) ELEVATION Z (3D)
+!| HPROP          |-->| DEPTH IN THE DIV(HU) TERM
+!| IKLE           |-->| CONNECTIVITY TABLE
+!| INFOGR         |-->| IF YES, INFORMATION PRINTED ON LISTING
+!| INIFLOW        |-->| IF YES, INITIALISES FLOWS
+!| KNOLG          |-->| GLOBAL NUMBERS OF LOCAL POINTS IN PARALLEL
+!| LIHBOR         |-->| TYPE OF 2D BOUNDARIES FOR DEPTH
+!| LLT,NNIT       |-->| ITERATION NUMBER,NUMBER OF ITERATIONS
+!| MARDAT         |-->| DATE (YEAR, MONTH,DAY)
+!| MARTIM         |-->| TIME (HOUR, MINUTE,SECOND)
+!| MAXSEG         |-->| DIMENSION OF GLOSEG
+!| MESH2D         |<->| 2D MESH
+!| MESH3D         |<->| 3D MESH
+!| NBOR           |-->| GLOBAL NUMBERS OF BOUNDARY NODES
+!| NCOB           |-->| DELWAQ STEERING FILE CANAL
+!| NCOU           |-->| FLUX CANAL
+!| NELEM          |-->| NUMBER OF ELEMENTS IN THE MESH
+!| NELEM2         |-->| NUMBER OF ELEMENTS IN 2D
+!| NINI           |-->| HORIZONTAL SURFACE CANAL
+!| NMAB           |-->| AREA CANAL
+!| NMAF           |-->| NODE DISTANCE CANAL
+!| NOLAY          |-->| NUMBER OF PLANES
+!| NOMCOB         |-->| DELWAQ STEERING FILE
+!| NOMCOU         |-->| FLUX FILE
+!| NOMGEO         |-->| RESULT FILE OF THE SIMULATION
+!| NOMLIM         |-->| BOUNDARY FILE OF THE SIMULATION
+!| NOMINI         |-->| HORIZONTAL SURFACE FILE
+!| NOMMAB         |-->| AREA FILE
+!| NOMMAF         |-->| NODE DISTANCE FILE
+!| NOMSAL         |-->| SALINITY FOR DELWAQ FILE
+!| NOMSOU         |-->| VOLUME FILE
+!| NOMTEM         |-->| TEMPERATURE FOR DELWAQ FILE
+!| NOMVEB         |-->| NODE EXCHANGE FILE
+!| NOMVEL         |-->| VELOCITY FILE
+!| NOMVIS         |-->| DIFFUSION FILE
+!| NPOIN          |-->| NUMBER OF 3D POINTS IN THE MESH
+!| NPOIN2         |-->| NUMBER OF 2D POINTS IN THE MESH
+!| NPTFR          |-->| NUMBER OF 3D BOUNDARY POINTS
+!| NSAL           |-->| SALINITY FOR DELWAQ CANAL
+!| NSEG           |-->| NUMBER OF 2D SEGMENTS IN THE MESH
+!| NSOU           |-->| VOLUME CANAL
+!| NSTEPA         |<->| NUMBER OF TIME-STEPS FOR TIME AGGREGATION
+!| NTEM           |-->| TEMPERATURE FOR DELWAQ CANAL
+!| NVEB           |-->| NODE EXCHANGE CANAL
+!| NVEL           |-->| VELOCITY CANAL
+!| NVIS           |-->| DIFFUSION CANAL
+!| ORISEG         |-->| ORIENTATION OF SEGMENTS FORMING AN ELEMENT
+!| SALI           |-->| SALINITY (IF SALI_DEL)
+!| SALI_DEL       |-->| IF YES, THERE IS SALINITY
+!| TEMP           |-->| TEMPERATURE (IF TEMP_DEL)
+!| TEMP_DEL       |-->| IF YES, THERE IS TEMPERATURE
+!| TITRE          |-->| TITLE OF STUDY
+!| U              |-->| COMPONENT OF HORIZONTAL VELOCITY
+!| V              |-->| COMPONENT OF HORIZONTAL VELOCITY
+!| V2DPAR         |-->| INTEGRAL OF TEST FUNCTIONS, ASSEMBLED IN PARALLEL
+!| VELO_DEL       |-->| IF YES, WRITES VELOCITY FILE FOR DELWAQ
+!| VISC           |-->| DIFFUSION COEFFICIENT
+!| W              |<->| COMPONENT OF HORIZONTAL VELOCITY
+!| X              |-->| COORDINATES OF HORIZONTAL MESH
+!| Y              |-->| COORDINATES OF HORIZONTAL MESH
+!| YAFLULIM       |-->| IF YES, FLUX LIMITATION
+!| ZNEW           |-->| COORDINATE OF Z
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       USE BIEF
       USE INTERFACE_TELEMAC2D, EX_TEL4DEL => TEL4DEL
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN)            :: NPOIN,NPOIN2,NELEM,NSEG,NPTFR
       INTEGER, INTENT(IN)            :: NOLAY,LLT,NNIT,NELEM2
       INTEGER, INTENT(IN)            :: MAXSEG,MARDAT(3),MARTIM(3)
@@ -144,20 +222,20 @@ C
       LOGICAL           , INTENT(IN) :: INFOGR,SALI_DEL,TEMP_DEL,INIFLOW
       LOGICAL           , INTENT(IN) :: VELO_DEL,DIFF_DEL,YAFLULIM
       TYPE(BIEF_MESH), INTENT(INOUT) :: MESH2D,MESH3D
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER ERR,IOPT1
       INTEGER ISTEPA            ! I  ITERATION NUMBER FOR TIME AGGREGATION
-C
+!
       INTEGER ITSTRT            ! O  STARTTIME
       INTEGER ITSTOP            ! O  STOPTIME
       INTEGER ITSTEP            ! O  TIMESTEPSIZE
-C
-      LOGICAL TRICK             ! I  IF TRUE, TRICK FOR DDT < 1 SECOND, NOW TO BE DELEVERED
-C
-C     LOCAL ALLOCATABLE ARRAYS:                DESCRIPTION
-C
+!
+      LOGICAL TRICK             ! I  IF TRUE, TRICK FOR DDT
+!
+!     LOCAL ALLOCATABLE ARRAYS:                DESCRIPTION
+!
       INTEGER, ALLOCATABLE :: NODENRS(:)  ! WAQ ARRAY FOR OPEN BOUNDARIES
       INTEGER, ALLOCATABLE :: IFROM1 (:)  ! FROM MINUS 1 NODE-NRS OF AN EXCHANGE  LP 05/04/2009
       INTEGER, ALLOCATABLE :: ITOPL1 (:)  ! TO PLUS 1 NODE-NRS OF AN EXCHANGE     LP 05/04/2009
@@ -176,9 +254,9 @@ C
       DOUBLE PRECISION , ALLOCATABLE :: SUMVISC(:)  ! FOR TIME INTEGRATION
       DOUBLE PRECISION , ALLOCATABLE :: SUMVELO(:)  ! FOR TIME INTEGRATION
       DOUBLE PRECISION , ALLOCATABLE :: W2D(:,:)    ! FOR FLUXES IN 3D
-C
-C     LOCAL SINGLE VARIABLES OR ARRAYS WITH FIXED LENGTH
-C
+!
+!     LOCAL SINGLE VARIABLES OR ARRAYS WITH FIXED LENGTH
+!
       INTEGER NPTFR2                    !  NUMBER OF 2D BOUNDARY POINTS
       INTEGER STATIO                    !  IF 1, THEN STATIONARY OUTPUT
       INTEGER NLAY                      !  NUMBER OF LAYERS AND LOOP COUNTER OF IT
@@ -196,33 +274,33 @@ C
       DOUBLE PRECISION SSUM,MASINI,ERRTOT
       DOUBLE PRECISION X2, Y2, X3, Y3
       DOUBLE PRECISION SURFACC
-C
+!
       INTEGER ITOLD
-C
+!
       INTRINSIC MAX,REAL,ABS
-C
+!
       SAVE
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(DDT.LT.1.D0) THEN
         TRICK=.TRUE.
       ELSE
         TRICK=.FALSE.
       ENDIF
-C
-C     FIRST CALL: INITIALIZATIONS AND MEMORY ALLOCATION
-C
+!
+!     FIRST CALL: INITIALISATIONS AND MEMORY ALLOCATION
+!
       IF(LLT.EQ.0) THEN
-C
+!
          NPTFR2 = NPTFR/NOLAY
-C        THE WRITING OF EXCHANGE POINTERS IS MOVED TO HERE   LP 05/04/2009
-C
-C        DERIVE THE OPEN BOUNDARY NODES AND NUMBER THEM NEGATIVELY
-C
-C        NODENRS : IF NOT OPEN BOUNDARY = NODE NUMBER
-C                  IF     OPEN BOUNDARY = - (OPEN BOUNDARY NODE NUMBERING)
-C
+!        THE WRITING OF EXCHANGE POINTERS IS MOVED TO HERE   LP 05/04/2009
+!
+!        DERIVES THE OPEN BOUNDARY NODES AND NUMBERS THEM NEGATIVELY
+!
+!        NODENRS : IF NOT OPEN BOUNDARY = NODE NUMBER
+!                  IF     OPEN BOUNDARY = - (OPEN BOUNDARY NODE NUMBER)
+!
          ALLOCATE( NODENRS(NPOIN2) ,STAT=ERR)
          DO INODE = 1, NPOIN2
            NODENRS(INODE) = INODE
@@ -234,30 +312,30 @@ C
                NODENRS(NBOR(IBOR)) = -MBND
             ENDIF
          ENDDO
-C        BECAUSE MBND EXCHANGES ARE ADDED                              LP 05/04/2009
-C
-C        DERIVE THE HORIZONTAL PART (NOQ1) OF THE FROM-TO EXCHANGE TABLE
-C            FOR COMPUTATIONAL ELEMENTS. THE ELEMENT NUMBERS AT THE LAYERS
-C            DIFFER NPOIN2 IN IN COMPUTATIONAL ELEMENT NUMBER AND MBND IN
-C            BOUNDARY NUMBER (MBND ITSELF IS POSITIVE)
-C        COMPUTE HORIZONTAL 'FROM' AND 'TO' HALF DISTANCES ON THE FLY
-C            THEY ARE THE SAME FOR ALL LAYERS, SO DO ONLY FOR LAYER 1
-C                                                                    ! LP 05/04/2009
+!        BECAUSE MBND EXCHANGES ARE ADDED                              LP 05/04/2009
+!
+!        DERIVES THE HORIZONTAL PART (NOQ1) OF THE FROM-TO EXCHANGE TABLE
+!            FOR COMPUTATIONAL ELEMENTS. THE ELEMENT NUMBERS AT THE LAYERS
+!            DIFFER NPOIN2 IN IN COMPUTATIONAL ELEMENT NUMBER AND MBND IN
+!            BOUNDARY NUMBER (MBND ITSELF IS POSITIVE)
+!        COMPUTES HORIZONTAL 'FROM' AND 'TO' HALF DISTANCES ON THE FLY
+!            THEY ARE THE SAME FOR ALL LAYERS, SO DO ONLY FOR LAYER 1
+!                                                                    ! LP 05/04/2009
          NOQ1 =  NOLAY   *(NSEG + MBND)  ! NUMBER OF FLOWS IN FIRST DIRECTION
          NOQ3 = (NOLAY-1)*NPOIN2         ! NUMBER OF VERTICAL FLOW TERMS
          NOQ  = NOQ1 + NOQ3              ! TOTAL NUMBER OF FLOW TERMS FOR WAQ
          NOQF = NOLAY*NSEG + NOQ3        ! OLD NOQ FOR FLOW ARRAY    ! LP 05/04/2009
-C
-C        ALLOCATION OF ALL THE ARRAYS USED IN THE SUBROUTINE
-C
+!
+!        ALLOCATES ALL THE ARRAYS USED IN THE SUBROUTINE
+!
          ALLOCATE( DIST(3,NELEM2)  ,STAT=ERR)
          ALLOCATE( LENGTH (2,NSEG+MBND) ,STAT=ERR)                   ! LP 05/04/2009
          ALLOCATE( W2D(NELEM2,3)   ,STAT=ERR)
          ALLOCATE( IFROM1(MAXSEG)  ,STAT=ERR)                        ! LP 05/04/2009
          ALLOCATE( ITOPL1(MAXSEG)  ,STAT=ERR)                        ! LP 05/04/2009
-C
-C        ARRAYS FOR ALL TRANSPORT AND OTHER ADVECTION DIFFUSION TERMS
-C
+!
+!        ARRAYS FOR ALL TRANSPORT AND OTHER ADVECTION DIFFUSION TERMS
+!
          ALLOCATE( F(NPOIN2,NOLAY)      ,STAT=ERR)
          ALLOCATE( VELO(NPOIN)   ,STAT=ERR)
          ALLOCATE( VOL2(NPOIN2)  ,STAT=ERR)
@@ -284,19 +362,19 @@ C
            ALLOCATE( SUMVISC(NPOIN),STAT=ERR)
            SUMVISC = 0.D0
          ENDIF
-C
+!
       ENDIF
-C
+!
       IF(LLT.EQ.0) THEN
-C
+!
          STATIO = 0
-C
-C        COMPUTING THE AREA ASSOCIATED TO EACH NODE
-C        AS 1/3 OF EVERY NEIGHBOURING TRIANGLE
-C
-C        COMPUTING 1/3 OF THE HEIGHT OF THE TRIANGLES FROM NODE I
-C        HEIGHT = 2*SURFACE/(LENGTH OF THE SEGMENT)
-C
+!
+!        COMPUTES THE AREA ASSOCIATED WITH EACH NODE
+!        AS 1/3 OF EVERY NEIGHBOURING TRIANGLE
+!
+!        COMPUTES 1/3 OF THE HEIGHT OF THE TRIANGLES FROM NODE I
+!        HEIGHT = 2*SURFACE/(LENGTH OF THE SEGMENT)
+!
          DO IELEM=1,NELEM2
            ND1 = IKLE(IELEM,1)
            ND2 = IKLE(IELEM,2)
@@ -313,44 +391,44 @@ C
              DIST(I,IELEM)=2.D0*SURFACC/SQRT(A1**2+A2**2)/3.D0
            ENDDO
          ENDDO
-C
-C        CHECKING THE INITIAL MASS
-C
-C        MASINI=0.D0
-C        DO I=1,NPOIN2
-C          MASINI=MASINI+V2DPAR(I)*HNEW(I)
-C        ENDDO
-C        WRITE(LU,*) 'INITIAL MASS=',MASINI
-C
+!
+!        CHECKS THE INITIAL MASS
+!
+!        MASINI=0.D0
+!        DO I=1,NPOIN2
+!          MASINI=MASINI+V2DPAR(I)*HNEW(I)
+!        ENDDO
+!        WRITE(LU,*) 'INITIAL MASS=',MASINI
+!
          IF(NCSIZE.GT.0) THEN
            WRITE(NINI) 'AREA2D '
            WRITE(NINI) NOLAY
          ENDIF
-C
+!
          WRITE(NINI) NPOIN2,0,NPOIN2,NPOIN2,NPOIN2,0
          WRITE(NINI) (REAL(V2DPAR(I)),I=1,NPOIN2)
-C
+!
          IF(NCSIZE.GT.0) THEN
            WRITE(NVEB) 'IFRMTO '
            WRITE(NVEB) NOLAY
            WRITE(NMAF) 'LENGTH '
            WRITE(NMAF) NOLAY
          ENDIF
-C
-C        THE WRITING OF EXCHANGE POINTERS IS CHANGED       *START*     LP 05/04/2009
+!
+!        THE WRITING OF EXCHANGE POINTERS IS CHANGED       *START*     LP 05/04/2009
          DO NLAY  = 1, NOLAY
             DO ISEG  = 1, NSEG
                IFROM = GLOSEG(ISEG,1)
                ITO   = GLOSEG(ISEG,2)
                IF ( NLAY .EQ. 1 ) THEN
                   CALL FDNRST(IFROM,ITO,X,Y,NODENRS,NPOIN2,
-     *                                  IFROM1(ISEG),ITOPL1(ISEG))
+     &                                  IFROM1(ISEG),ITOPL1(ISEG))
                   DX = X(GLOSEG(ISEG,1)) - X(GLOSEG(ISEG,2))
                   DY = Y(GLOSEG(ISEG,1)) - Y(GLOSEG(ISEG,2))
                   LENGTH(1,ISEG) = SQRT(DX**2+DY**2)*0.5D0
                   LENGTH(2,ISEG) = LENGTH(1,ISEG)
-                  IF ( IFROM1(ISEG) .LT. 0 .AND.              !  *start*  LP 24/04/2009
-     *                 IFROM1(ISEG) .NE. NODENRS(IFROM) ) THEN
+                  IF ( IFROM1(ISEG) .LT. 0 .AND.              !  *START*  LP 24/04/2009
+     &                 IFROM1(ISEG) .NE. NODENRS(IFROM) ) THEN
                      DO I = 1,NPOIN2
                         IF ( NODENRS(I) .EQ. IFROM1(ISEG) ) THEN
                            IFROM1(ISEG) = I
@@ -359,14 +437,14 @@ C        THE WRITING OF EXCHANGE POINTERS IS CHANGED       *START*     LP 05/04/
                      ENDDO
                   ENDIF
                   IF ( ITOPL1(ISEG) .LT. 0 .AND.
-     *                 ITOPL1(ISEG) .NE. NODENRS(ITO  ) ) THEN
+     &                 ITOPL1(ISEG) .NE. NODENRS(ITO  ) ) THEN
                      DO I = 1,NPOIN2
                         IF ( NODENRS(I) .EQ. ITOPL1(ISEG) ) THEN
                            ITOPL1(ISEG) = I
                            EXIT
                         ENDIF
                      ENDDO
-                  ENDIF                                       !  **end**  LP 24/04/2009
+                  ENDIF                                       !  **END**  LP 24/04/2009
                ENDIF
                IFRM1 = IFROM1(ISEG)
                ITOP1 = ITOPL1(ISEG)
@@ -389,8 +467,8 @@ C        THE WRITING OF EXCHANGE POINTERS IS CHANGED       *START*     LP 05/04/
                   IFROM = NODENRS(NBOR(IBOR))                        ! EXCHANGES ADDED
                   ITO   = NBOR(IBOR)
                   IF ( NLAY .EQ. 1 ) THEN
-C                    11/06/2009 CHI-TUAN PHAM, BUG CORRIGE
-C                    THERE WAS ISEG INSTEAD OF NSEG    
+!                    11/06/2009 CHI-TUAN PHAM, CORRECTED BUG
+!                    ISEG WAS USED INSTEAD OF NSEG
                      LENGTH(1,NSEG-IFROM) = 10.D0                   ! DUMMY LENGTH
                      LENGTH(2,NSEG-IFROM) = 10.D0
                   ENDIF
@@ -403,44 +481,52 @@ C                    THERE WAS ISEG INSTEAD OF NSEG
                   WRITE ( NVEB ) IFROM,ITO,IFRM1,ITOP1
                ENDIF
             ENDDO
-C        THE WRITING OF EXCHANGE POINTERS IS CHANGED       **END**     LP 05/04/2009
+!        THE WRITING OF EXCHANGE POINTERS IS CHANGED       **END**     LP 05/04/2009
          ENDDO
-C
-C        WRITE ALL HORIZONTAL 'FROM' 'TO' HALF LENGTHES
-C
-         WRITE(NMAF) 0
-         DO NLAY = 1, NOLAY
-           WRITE(NMAF) ((REAL(LENGTH(I,J)),I=1,2),J=1,NSEG+MBND)     ! LP 05/04/2009
-         ENDDO
-C
-C        DERIVE THE FROM-TO EXCHANGE TABLE FOR COMPUTATIONAL ELEMENTS
-C        VERTICALLY FOR ALL LAYERS. THE LAYERS DIFFER NPOIN2 IN
-C        COMPUTATIONAL ELEMENT NUMBER. BOUNDARY NODES HAVE NO VERTICAL FLOW
-C        WRITE 1.0 FOR THE VERTICAL 'FROM' AND 'TO' HALFDISTANCES
-C        THEY ARE UPDATED BY WAQ TO BECOME VOLUME/AREA/2.0 DURING
-C        SIMULATION TIME, SINCE VERTICAL DISTANCES CHANGE WITH VOLUME.
-C
+!
+!        WRITES ALL HORIZONTAL 'FROM' 'TO' HALF LENGTHS
+!
+!        WRITE(NMAF) 0
+!        DO NLAY = 1, NOLAY
+!          WRITE(NMAF) ((REAL(LENGTH(I,J)),I=1,2),J=1,NSEG+MBND)     ! LP 05/04/2009
+!        ENDDO
+!
+! LP 27/02/2011: BECAUSE OF UNFORMATTED FILES. ALL NOW IN 1 RECORD
+!
+         WRITE(NMAF) 0, (((REAL(LENGTH(I,J)),I=1,2),J=1,NSEG+MBND),     ! LP 27/02/2011
+     &                     NLAY=1,NOLAY), ((1.0,1.0), K=NOQ1+1,NOQ)     ! BECAUSE OF
+!                                                                       ! UNFORMATTED FILES
+!                                                                       ! ALL NOW IN 1 RECORD
+!
+!
+!        DERIVES THE FROM-TO EXCHANGE TABLE FOR COMPUTATIONAL ELEMENTS
+!        VERTICALLY FOR ALL LAYERS. THE LAYERS DIFFER NPOIN2 IN
+!        COMPUTATIONAL ELEMENT NUMBER. BOUNDARY NODES HAVE NO VERTICAL FLOW
+!        WRITES 1.0 FOR THE VERTICAL 'FROM' AND 'TO' HALFDISTANCES
+!        THEY ARE UPDATED BY WAQ TO BECOME VOLUME/AREA/2.0 DURING
+!        SIMULATION TIME, SINCE VERTICAL DISTANCES CHANGE WITH VOLUME.
+!
          DO NLAY = 1, NOLAY-1
             DO INODE = 1, NPOIN2
-C        THE WRITING OF EXCHANGE POINTERS IS CHANGED       *START*     LP 05/04/2009
+!        THE WRITING OF EXCHANGE POINTERS IS CHANGED       *START*     LP 05/04/2009
                IFROM = INODE
                IFRM1 = IFROM +  MAX(NLAY-2,   0   )*NPOIN2
                ITOP1 = IFROM +  MIN(NLAY+1,NOLAY-1)*NPOIN2
                IFROM = IFROM + (    NLAY-1        )*NPOIN2
                ITO   = IFROM +                      NPOIN2
                WRITE ( NVEB ) IFROM,ITO,IFRM1,ITOP1
-C        THE WRITING OF EXCHANGE POINTERS IS CHANGED       **END**     LP 05/04/2009
+!        THE WRITING OF EXCHANGE POINTERS IS CHANGED       **END**     LP 05/04/2009
             ENDDO
-            WRITE(NMAF) (1.0, I=1,NPOIN2*2) ! VERTICAL LENGTHES AT A DUMMY 1.0
+!           WRITE(NMAF) (1.0, I=1,NPOIN2*2) ! VERTICAL LENGTHS AT A DUMMY 1.0
          ENDDO                  ! WAQ COMPUTES THEM ON THE FLY FROM VOLUMES
-C
-C        FILL IN THE HORIZONTAL AREA IN THE LAST DIRECTION EXCHANGE AREA
-C
+!
+!        FILLS IN THE HORIZONTAL AREA IN THE LAST DIRECTION EXCHANGE AREA
+!
          DO NLAY = 1 , NOLAY-1
             AREAWQ( (NOLAY*(NSEG+MBND))+(NLAY-1)*NPOIN2+1 :             !  LP 05/04/2009
-     *              (NOLAY*(NSEG+MBND))+ NLAY   *NPOIN2     ) = V2DPAR  !  LP 05/04/2009
+     &              (NOLAY*(NSEG+MBND))+ NLAY   *NPOIN2     ) = V2DPAR  !  LP 05/04/2009
          ENDDO
-C
+!
          IF(TRICK) THEN
 !           WRITE ( 4 , * )
 !    *           "TIME STEP: ",DDT," SMALLER THAN ONE SECOND !"
@@ -451,15 +537,15 @@ C
          ELSE
             ITSTRT = INT(AAT)
          ENDIF
-C
+!
          ISTEPA=0
-C
+!
          IF(NCSIZE.GT.0) THEN
-C
+!
            WRITE(NSOU) NPOIN ! VOLUMES
            WRITE(NSOU) NOLAY
            WRITE(NSOU)(KNOLG(I),I=1,NPOIN2)
-C
+!
            WRITE(NMAB) 'SUMAREA'
            WRITE(NMAB) NPOIN
            WRITE(NMAB) NSEG
@@ -472,7 +558,7 @@ C
            WRITE(NMAB)(NODENRS(I),I=1,NPOIN2)
            WRITE(NMAB)(NBOR(I),I=1,NPTFR2)
            WRITE(NMAB)(LIHBOR(I),I=1,NPTFR2)
-C
+!
            WRITE(NCOU) 'SUMFLOW'
            WRITE(NCOU) NPOIN
            WRITE(NCOU) NSEG
@@ -485,7 +571,7 @@ C
            WRITE(NCOU)(NODENRS(I),I=1,NPOIN2)
            WRITE(NCOU)(NBOR(I),I=1,NPTFR2)
            WRITE(NCOU)(LIHBOR(I),I=1,NPTFR2)
-C
+!
            IF(SALI_DEL) THEN
              WRITE(NSAL) NPOIN
              WRITE(NSAL) NOLAY
@@ -506,49 +592,49 @@ C
              WRITE(NVIS) NOLAY
              WRITE(NVIS)(KNOLG(I),I=1,NPOIN2)
            ENDIF
-C
+!
          ENDIF
-C
+!
       ENDIF   ! FOR LLT = 0
-C
-C-----------------------------------------------------------------------
-C
-C        TIME STEP
-C
-C-----------------------------------------------------------------------
-C
-C
-C        GET THE DEPTH MULTIPLICATION FACTOR FOR AN ACTIVE POINT
-C                   TO USE FOR THE WHOLE AREA (SIGMA COORDINATES)
-C                   F IN TELEMAC ORDER (FIRST LAYER = BOTTOM)
-C                   F IS THE LAYER THICKNESS AROUND THE PLANES
-C
+!
+!-----------------------------------------------------------------------
+!
+!        TIME STEP
+!
+!-----------------------------------------------------------------------
+!
+!
+!        GETS THE DEPTH MULTIPLICATION FACTOR FOR AN ACTIVE POINT
+!                   TO USE FOR THE WHOLE AREA (SIGMA COORDINATES)
+!                   F IN TELEMAC ORDER (FIRST LAYER = BOTTOM)
+!                   F IS THE LAYER THICKNESS AROUND THE PLANES
+!
        IF(NOLAY.EQ.1) THEN !  2D
          DO I=1,NPOIN2
            F(I,1) = 1.D0
          ENDDO
        ELSE !  3D
          DO ND1=1,NPOIN2
-           DO NLAY = 1 , NOLAY !  DETERMINE F WITH THIS NODE
+           DO NLAY = 1 , NOLAY !  DETERMINES F WITH THIS NODE
              ND2 = ND1 + (NLAY-1)*NPOIN2
              IF(NLAY.EQ.1) THEN
                IF(HNEW(ND1).GT.1.D-4) THEN
                  F(ND1,NLAY)=(ZNEW(ND2+NPOIN2)-ZNEW(ND2))
-     *                       /(2.D0*HNEW(ND1))
+     &                       /(2.D0*HNEW(ND1))
                ELSE
                  F(ND1,NLAY)=0.5D0/(NOLAY-1.D0)
                ENDIF
              ELSEIF(NLAY.EQ.NOLAY) THEN
                IF(HNEW(ND1).GT.1.D-4) THEN
                  F(ND1,NLAY)=(ZNEW(ND2)-ZNEW(ND2-NPOIN2))
-     *                        /(2.D0*HNEW(ND1))
+     &                        /(2.D0*HNEW(ND1))
                ELSE
                  F(ND1,NLAY)=0.5D0/(NOLAY-1.D0)
                ENDIF
              ELSE
                IF(HNEW(ND1).GT.1.D-4) THEN
                  F(ND1,NLAY)=(ZNEW(ND2+NPOIN2)-ZNEW(ND2-NPOIN2))
-     *                        /(2.D0*HNEW(ND1))
+     &                        /(2.D0*HNEW(ND1))
                ELSE
                  F(ND1,NLAY)=1.D0/(NOLAY-1.D0)
                ENDIF
@@ -556,32 +642,32 @@ C
            ENDDO
          ENDDO
        ENDIF
-C
-C
-C
+!
+!
+!
       IF (.NOT.TRICK) ITSTEP = INT(DDT)
       IF (.NOT.TRICK .AND. DDT < 1.D0 )
-     *     STOP "DT CHANGED FROM BIGGER THAN 1 TO SMALLER THAN 1"
+     &     STOP "DT CHANGED FROM BIGGER THAN 1 TO SMALLER THAN 1"
       IF (       TRICK .AND. DDT > 1.D0 )
-     *     STOP "DT CHANGED FROM SMALLER THAN 1 TO BIGGER THAN 1"
+     &     STOP "DT CHANGED FROM SMALLER THAN 1 TO BIGGER THAN 1"
       IF ( .NOT. TRICK .AND. ( FLOAT(INT(DDT)) .NE. DDT ) )
-     *     STOP "DT IN FRACTIONS OF SECONDS IS NOT SUPPORTED"
+     &     STOP "DT IN FRACTIONS OF SECONDS IS NOT SUPPORTED"
       ATOLD = AAT
-      IF(LLT.NE.0) VOLOLD = VOLUME   ! SAVE VOLUME OF PREV. TIME LEVEL
+      IF(LLT.NE.0) VOLOLD = VOLUME   ! SAVES VOLUME OF PREV. TIME LEVEL
       IF ( NOLAY .EQ. 1 ) THEN
-C
-C        THIS IS THE 2D VOLUME AT START OF TIME STEP
-C
+!
+!        THIS IS THE 2D VOLUME AT START OF TIME STEP
+!
          DO INODE = 1, NPOIN2
            VOLUME(INODE) = HNEW(INODE)*V2DPAR(INODE)
          ENDDO
-C
+!
       ELSE
-C
-C        NOTE THAT WAQ NUMBERS 3D FROM TOP TO BOTTOM !!!!
-C        NLAY IS THE TELEMAC CURRENT PLANE NUMBER
-C        ND1  IS THE WAQ VOLUMES COUNTER
-C
+!
+!        NOTE THAT WAQ NUMBERS 3D FROM TOP TO BOTTOM !!!!
+!        NLAY IS THE TELEMAC CURRENT PLANE NUMBER
+!        ND1  IS THE WAQ VOLUMES COUNTER
+!
          ND1 = 1
          DO NLAY = NOLAY , 1 , -1 ! REVERSED ORDER FOR WAQ
            DO INODE = 1, NPOIN2
@@ -590,7 +676,7 @@ C
            ENDDO
          ENDDO
       ENDIF
-C
+!
       IF ( MOD(ISTEPA,NSTEPA) .EQ. 0 ) THEN
          IF(STATIO.NE.1) THEN
             IF(TRICK) THEN
@@ -609,9 +695,9 @@ C
         ISTEPA=ISTEPA+1
         RETURN                 ! INITIALISATION DONE
       ENDIF
-C
-C     HORIZONTAL VELOCITIES IN THE NODES (FOR MORPHOLOGY, REAERATION, ETC.)
-C
+!
+!     HORIZONTAL VELOCITIES IN THE NODES (FOR MORPHOLOGY, REAERATION, ETC.)
+!
       ND1 = 1                   ! WAQ NUMBERING IS TOP TO BOTTOM
       DO NLAY  = 1, NOLAY
          ND2 = (NOLAY-NLAY)*NPOIN2 + 1 ! TELEMAC NUMBERING IS BOTTOM TO TOP
@@ -621,94 +707,94 @@ C
             ND2 = ND2 + 1
          ENDDO
       ENDDO
-C
-C        ZERO THE FLOWS AND THE EXCHANGE AREAS
-C        NB: LAST DIRECTION OF ECHANGE AREAS REMAINS AT HORSURF
-C
+!
+!        ZEROES THE FLOWS AND THE EXCHANGE AREAS
+!        NB: LAST DIRECTION OF EXCHANGE AREAS REMAINS AT HORSURF
+!
       IF(INIFLOW) THEN
         DO I=1,NOQF
           FLOW(I) = 0.D0
         ENDDO
       ELSE
 !       3D PART SET TO ZERO (MAYBE NOT NECESSARY FOR VERTICAL FLOWS)
-!       the privious code was on error, so I hope it was not necessary   LP 05/04/2009
+!       THE PREVIOUS CODE WAS IN ERROR, SO I HOPE IT WAS NOT NECESSARY   LP 05/04/2009
         IF(NOQ.GT.NSEG) THEN
           DO I=NOLAY*NSEG+1,NOQF                                      !  LP 05/04/2009
             FLOW(I) = 0.D0
           ENDDO
         ENDIF
       ENDIF
-C
-C     MAKE EXCHANGE AREAS
-C
+!
+!     MAKES EXCHANGE AREAS
+!
       AREAWQ(1:NOLAY*(NSEG+MBND)) = 0.D0                              !  LP 05/04/2009
       DO IELEM=1,NELEM2
         DO NLAY = 1 , NOLAY
         DO I = 1,3
           ISEG  = ELTSEG(IELEM,I)
           ISEGL = ISEG + (NOLAY-NLAY)*(NSEG+MBND) ! WAQ ORDER         !  LP 05/04/2009
-C         JMH 27/03/2009 : NOT SURE, I DID NOT UNDERSTAND THE FORMULA
-C                          USED IN VERSION 5.8
-C         IT WAS :
-C         AREAWQ(ISEGL) = AREAWQ(ISEGL) + DIST(I,IELEM)*H*F(NLAY)
-C         WITH H=(HOLD(ND1)+HOLD(ND2)+HOLD(ND3))/3. AVERAGE DEPTH
-C         OF A TRIANGLE
-C*LEO        DIST is the distance of the gravity point to this segment
-C                 see line 322 in this code. This distance times the
-C                 average thickness of the slice (H*F(NLAY)) is the
-C                 area as used in the diffusion term D*A/dL in m3/s
-C                 a similar contribution comes from the other element
-C                 sharing this segment, that is why contributions are
-C                 added. If you want to do something similar then you could
-C                 do something like:
-C         IF ( I .EQ. 1 ) H = ( HOLD(GLOSEG(ISEG,1)*F(GLOSEG(ISEG,1),NLAY) +
-C    *                          HOLD(GLOSEG(ISEG,2)*F(GLOSEG(ISEG,2),NLAY) +
-C    *                          HOLD(GLOSEG(ISEG,3)*F(GLOSEG(ISEG,3),NLAY) ) / 3
-C         AREAWQ(ISEGL) = AREAWQ(ISEGL) + DIST(I,IELEM)*H
-C         Your formula is slightly different, but it is not so critical.
-C         Horizontal diffusion is generally not a sensitive process in 3D.
-C*LEO     Please remove these lines after reading (JMH: read but not removed)
+!         JMH 27/03/2009 : NOT SURE, I DID NOT UNDERSTAND THE FORMULA
+!                          USED IN VERSION 5.8
+!         IT WAS :
+!         AREAWQ(ISEGL) = AREAWQ(ISEGL) + DIST(I,IELEM)*H*F(NLAY)
+!         WITH H=(HOLD(ND1)+HOLD(ND2)+HOLD(ND3))/3. AVERAGE DEPTH
+!         OF A TRIANGLE
+!*LEO        DIST IS THE DISTANCE OF THE GRAVITY POINT TO THIS SEGMENT
+!                 SEE LINE 322 IN THIS CODE. THIS DISTANCE TIMES THE
+!                 AVERAGE THICKNESS OF THE SLICE (H*F(NLAY)) IS THE
+!                 AREA AS USED IN THE DIFFUSION TERM D*A/DL IN M3/S
+!                 A SIMILAR CONTRIBUTION COMES FROM THE OTHER ELEMENT
+!                 SHARING THIS SEGMENT, THAT IS WHY CONTRIBUTIONS ARE
+!                 ADDED. IF YOU WANT TO DO SOMETHING SIMILAR THEN YOU COULD
+!                 DO SOMETHING LIKE:
+!         IF ( I .EQ. 1 ) H = ( HOLD(GLOSEG(ISEG,1)*F(GLOSEG(ISEG,1),NLAY) +
+!    *                          HOLD(GLOSEG(ISEG,2)*F(GLOSEG(ISEG,2),NLAY) +
+!    *                          HOLD(GLOSEG(ISEG,3)*F(GLOSEG(ISEG,3),NLAY) ) / 3
+!         AREAWQ(ISEGL) = AREAWQ(ISEGL) + DIST(I,IELEM)*H
+!         YOUR FORMULA IS SLIGHTLY DIFFERENT, BUT IT IS NOT SO CRITICAL.
+!         HORIZONTAL DIFFUSION IS GENERALLY NOT A SENSITIVE PROCESS IN 3D.
+!*LEO     PLEASE REMOVE THESE LINES AFTER READING (JMH: READ BUT NOT REMOVED)
           AREAWQ(ISEGL) = AREAWQ(ISEGL) +
-     *    DIST(I,IELEM)*(HPROP(GLOSEG(ISEG,1))+HPROP(GLOSEG(ISEG,2)))*
-     *        ( F(GLOSEG(ISEG,1),NLAY)+F(GLOSEG(ISEG,2),NLAY) )*0.25D0
+     &    DIST(I,IELEM)*(HPROP(GLOSEG(ISEG,1))+HPROP(GLOSEG(ISEG,2)))*
+     &        ( F(GLOSEG(ISEG,1),NLAY)+F(GLOSEG(ISEG,2),NLAY) )*0.25D0
         ENDDO
         ENDDO
       ENDDO
       DO I=1,NOQ                                                       !  LP 05/04/2009
-         IF ( AREAWQ(I) .LT. 1.0D-20 ) AREAWQ(I) = 10.D0  ! boundaries    LP 05/04/2009
+         IF ( AREAWQ(I) .LT. 1.0D-20 ) AREAWQ(I) = 10.D0  ! BOUNDARIES    LP 05/04/2009
       ENDDO                                                            !  LP 05/04/2009
-C
-C     NOW THE MOST IMPORTANT THING, THE TRANSPORT ITSELF
-C
-C     THE FINITE ELEMENT FLUXES PER NODE ARE IN W, THEY ARE
-C     GIVEN BY TELEMAC-2D OR 3D
-C
-C--------------------------------------------------------------------
-C DIFFERENT OPTIONS TO COMPUTE THE FLUXES (TAKEN FROM CVTRVF IN BIEF)
-C--------------------------------------------------------------------
-C
+!
+!     NOW THE MOST IMPORTANT THING, THE TRANSPORT ITSELF
+!
+!     THE FINITE ELEMENT FLUXES PER NODE ARE IN W, THEY ARE
+!     GIVEN BY TELEMAC-2D OR 3D
+!
+!--------------------------------------------------------------------
+! DIFFERENT OPTIONS TO COMPUTE THE FLUXES (TAKEN FROM CVTRVF IN BIEF)
+!--------------------------------------------------------------------
+!
       IOPT1 = 2
       IF(NOLAY.EQ.1) THEN
 !
 !       2D CASE
         CALL FLUX_EF_VF(FLOW,W,NSEG,NELEM2,ELTSEG,ORISEG,IKLE,
-     *                  INIFLOW,IOPT1)
+     &                  INIFLOW,IOPT1)
 !
       ELSE
 !
 !       3D CASE
         CALL FLUX_EF_VF_3D(FLOW,W2D,W,NSEG,MESH3D%NSEG,NELEM2,
-     *                     MESH3D%NELEM,MESH2D,MESH3D,INIFLOW,
-     *                     IOPT1,2)
+     &                     MESH3D%NELEM,MESH2D,MESH3D,INIFLOW,
+     &                     IOPT1,2)
 !                                2: HORIZONTAL FLUXES FROM TOP TO BOTTOM
 !       FLUX LIMITATION (FLULIM IS 2D, SO NUMBERING FROM TOP TO BOTTOM
-!                        MAKES NO PROBLEM)          
-        IF(YAFLULIM) CALL FLUX3DLIM(FLOW,FLULIM,NOLAY,NSEG) 
+!                        MAKES NO PROBLEM)
+        IF(YAFLULIM) CALL FLUX3DLIM(FLOW,FLULIM,NOLAY,NSEG)
 !
       ENDIF
-C
-C     WRITE THE EXCHANGE AREAS (LAST DIRECTION REMAINS AT HORSURF)
-C
+!
+!     WRITES THE EXCHANGE AREAS (LAST DIRECTION REMAINS AT HORSURF)
+!
       SUMAREA = SUMAREA + AREAWQ
       IF(MOD(ISTEPA,NSTEPA).EQ.0) THEN
         SUMAREA=SUMAREA/NSTEPA
@@ -721,9 +807,9 @@ C
         ENDIF
         SUMAREA=0.D0
       ENDIF
-C
-C     WRITE THE SALINITY (AND INVERT THE PLANES FOR DELWAQ)
-C
+!
+!     WRITES THE SALINITY (AND INVERTS THE PLANES FOR DELWAQ)
+!
       IF(SALI_DEL) THEN
         SUMSALI=SUMSALI+SALI
         IF(MOD(ISTEPA,NSTEPA).EQ.0) THEN
@@ -731,18 +817,18 @@ C
           IF(STATIO.NE.1) THEN
             IF(TRICK) THEN
               WRITE(NSAL) ITOLD-NSTEPA,
-     *((REAL(SUMSALI(I+(NOLAY-J)*NPOIN2)),I=1,NPOIN2),J=1,NOLAY)
+     &((REAL(SUMSALI(I+(NOLAY-J)*NPOIN2)),I=1,NPOIN2),J=1,NOLAY)
             ELSE
               WRITE(NSAL) INT(AAT-NSTEPA*DDT),
-     *((REAL(SUMSALI(I+(NOLAY-J)*NPOIN2)),I=1,NPOIN2),J=1,NOLAY)
+     &((REAL(SUMSALI(I+(NOLAY-J)*NPOIN2)),I=1,NPOIN2),J=1,NOLAY)
             ENDIF
           ENDIF
           SUMSALI=0.D0
         ENDIF
       ENDIF
-C
-C     WRITE THE TEMPERATURE (AND INVERT THE PLANES FOR DELWAQ)
-C
+!
+!     WRITES THE TEMPERATURE (AND INVERTS THE PLANES FOR DELWAQ)
+!
       IF(TEMP_DEL) THEN
         SUMTEMP=SUMTEMP+TEMP
         IF(MOD(ISTEPA,NSTEPA).EQ.0) THEN
@@ -750,18 +836,18 @@ C
           IF(STATIO.NE.1) THEN
             IF(TRICK) THEN
               WRITE(NTEM) ITOLD-NSTEPA,
-     *((REAL(SUMTEMP(I+(NOLAY-J)*NPOIN2)),I=1,NPOIN2),J=1,NOLAY)
+     &((REAL(SUMTEMP(I+(NOLAY-J)*NPOIN2)),I=1,NPOIN2),J=1,NOLAY)
             ELSE
               WRITE(NTEM) INT(AAT-NSTEPA*DDT),
-     *((REAL(SUMTEMP(I+(NOLAY-J)*NPOIN2)),I=1,NPOIN2),J=1,NOLAY)
+     &((REAL(SUMTEMP(I+(NOLAY-J)*NPOIN2)),I=1,NPOIN2),J=1,NOLAY)
             ENDIF
           ENDIF
           SUMTEMP=0.D0
         ENDIF
       ENDIF
-C
-C     WRITE THE DIFFUSION (AND INVERT THE PLANES FOR DELWAQ)
-C
+!
+!     WRITES THE DIFFUSION (AND INVERTS THE PLANES FOR DELWAQ)
+!
       IF(DIFF_DEL) THEN
         SUMVISC=SUMVISC+VISC
         IF(MOD(ISTEPA,NSTEPA).EQ.0) THEN
@@ -769,19 +855,19 @@ C
           IF(STATIO.NE.1) THEN
             IF(TRICK) THEN
               WRITE(NVIS) ITOLD-NSTEPA,
-     *((REAL(SUMVISC(I+(NOLAY-J)*NPOIN2)),I=1,NPOIN2),J=1,NOLAY)
+     &((REAL(SUMVISC(I+(NOLAY-J)*NPOIN2)),I=1,NPOIN2),J=1,NOLAY)
             ELSE
               WRITE(NVIS) INT(AAT-NSTEPA*DDT),
-     *((REAL(SUMVISC(I+(NOLAY-J)*NPOIN2)),I=1,NPOIN2),J=1,NOLAY)
+     &((REAL(SUMVISC(I+(NOLAY-J)*NPOIN2)),I=1,NPOIN2),J=1,NOLAY)
             ENDIF
           ENDIF
           SUMVISC=0.D0
         ENDIF
       ENDIF
-C
-C     WRITE THE VELOCITY (AND NOT !!!!!!    INVERT THE PLANES FOR DELWAQ)
-C                         AS IT HAS BEEN DONE WITH DELWAQ NUMBERING
-C
+!
+!     WRITES THE VELOCITY (AND NOT !!!!!!    INVERTS THE PLANES FOR DELWAQ)
+!                         AS IT HAS BEEN DONE WITH DELWAQ NUMBERING
+!
       IF(VELO_DEL) THEN
         SUMVELO=SUMVELO+VELO
         IF(MOD(ISTEPA,NSTEPA).EQ.0) THEN
@@ -791,16 +877,16 @@ C
               WRITE(NVEL) ITOLD-NSTEPA,(REAL(SUMVELO(I)),I=1,NPOIN)
             ELSE
               WRITE(NVEL) INT(AAT-NSTEPA*DDT),
-     *                    (REAL(SUMVELO(I)),I=1,NPOIN)
+     &                    (REAL(SUMVELO(I)),I=1,NPOIN)
             ENDIF
           ENDIF
           SUMVELO=0.D0
         ENDIF
       ENDIF
-C
-C     MAKE THE VERTICAL FLOWS HERE
-C     FIRST THE NEW VOLUMES WITHOUT VERTICAL FLOWS
-C
+!
+!     MAKES THE VERTICAL FLOWS HERE
+!     FIRST THE NEW VOLUMES WITHOUT VERTICAL FLOWS
+!
       DO NLAY = 1 , NOLAY       ! NOW IN WAQ ORDER
          DO ISEG = 1 , NSEG
             IFROM = GLOSEG(ISEG,1)                            !        LP 24/04/2009
@@ -816,10 +902,10 @@ C
 !           ENDIF                                             !        LP 24/04/2009
          ENDDO
       ENDDO
-C
-C     THEN THE TOTAL NEW VOLUMES: VOL2 IS THE SUM OF ALL
-C     3D VOLUMES OF A VERTICAL
-C
+!
+!     THEN THE TOTAL NEW VOLUMES: VOL2 IS THE SUM OF ALL
+!     3D VOLUMES OF A VERTICAL
+!
       DO INODE = 1 , NPOIN2
         VOL2(INODE)=0.D0
         DO NLAY=1,NOLAY
@@ -827,20 +913,20 @@ C
           VOL2(INODE) = VOL2(INODE) + VOLOLD(ND1)
         ENDDO
       ENDDO
-C
-C     DETERMINE THE OPEN BOUNDARY FLOWS                    *START*     LP 05/04/2009
-C
-      DO IBOR = 1, NPTFR2                              ! Probably the open boundary flow
-        IF(LIHBOR(IBOR).NE.2) THEN                     ! is available somewhere in
-          A1 = 0.D0                                    ! TELEMAC for flow boundaries
-          INODE = NBOR(IBOR)                           ! It is however unlikely that it
-          DO NLAY=1,NOLAY                              ! is available for water level
-            ND1 = INODE + (NLAY-1)*NPOIN2              ! boundaries and this procedure
-            A1 = A1 + VOLUME(ND1)                      ! should work equally well for both
-          ENDDO                                        ! A1   is correct depth integrated volume
-          A2 = ( A1 - VOL2(INODE) ) / DDT              ! VOL2 is previous volume + flows*dt
-          VOL2(INODE) = A1                             ! A2   is difference in m3/s that
-          DO NLAY=1,NOLAY                              !      comes from the open boundary
+!
+!     DETERMINES THE OPEN BOUNDARY FLOWS                    *START*     LP 05/04/2009
+!
+      DO IBOR = 1, NPTFR2                              ! PROBABLY THE OPEN BOUNDARY FLOW
+        IF(LIHBOR(IBOR).NE.2) THEN                     ! IS AVAILABLE SOMEWHERE IN
+          A1 = 0.D0                                    ! TELEMAC FOR FLOW BOUNDARIES
+          INODE = NBOR(IBOR)                           ! IT IS HOWEVER UNLIKELY THAT IT
+          DO NLAY=1,NOLAY                              ! IS AVAILABLE FOR WATER LEVEL
+            ND1 = INODE + (NLAY-1)*NPOIN2              ! BOUNDARIES AND THIS PROCEDURE
+            A1 = A1 + VOLUME(ND1)                      ! SHOULD WORK EQUALLY WELL FOR BOTH
+          ENDDO                                        ! A1   IS CORRECT DEPTH INTEGRATED VOLUME
+          A2 = ( A1 - VOL2(INODE) ) / DDT              ! VOL2 IS PREVIOUS VOLUME + FLOWS*DT
+          VOL2(INODE) = A1                             ! A2   IS DIFFERENCE IN M3/S THAT
+          DO NLAY=1,NOLAY                              !      COMES FROM THE OPEN BOUNDARY
             ND1 = INODE + (NLAY-1)*NPOIN2
             ND2 = (NLAY-1)*(NSEG+MBND)+NSEG-NODENRS(INODE)
             SUMFLOW(ND2)=SUMFLOW(ND2)+A2*F(INODE,NOLAY-NLAY+1)
@@ -848,26 +934,26 @@ C
           ENDDO
         ENDIF
       ENDDO
-C     DETERMINE THE OPEN BOUNDARY FLOWS                    **END**     LP 05/04/2009
-C
-C     NOW MAKE THE VERTICAL FLOWS (STORED AFTER THE HORIZONTAL FLOWS)
-C
+!     DETERMINES THE OPEN BOUNDARY FLOWS                    **END**     LP 05/04/2009
+!
+!     NOW MAKES THE VERTICAL FLOWS (STORED AFTER THE HORIZONTAL FLOWS)
+!
       ND2 = NOLAY*NSEG
       DO INODE = 1 , NPOIN2
         IF(NOLAY.GT.1) THEN
-C       FROM BOTTOM TO LAYER BELOW THE FREE SURFACE
+!       FROM BOTTOM TO LAYER BELOW THE FREE SURFACE
         DO NLAY=1,NOLAY-1
           ND1 = INODE + (NLAY-1)*NPOIN2
           FLOW(ND1+ND2)=(VOLOLD(ND1)-VOL2(INODE)*
-     *                   F(INODE,NOLAY-NLAY+1))/DDT
+     &                   F(INODE,NOLAY-NLAY+1))/DDT
           VOLOLD(ND1       )= VOLOLD(ND1       ) - FLOW(ND1+ND2)*DDT
           VOLOLD(ND1+NPOIN2)= VOLOLD(ND1+NPOIN2) + FLOW(ND1+ND2)*DDT
         ENDDO
         ENDIF
       ENDDO
-C
-C     TESTING MASS ERRORS ON INTERNAL NODES
-C
+!
+!     TESTS MASS ERRORS ON INTERNAL NODES
+!
       IF(INFOGR) THEN
         SSUM  =0.D0
         ERRTOT=0.D0
@@ -890,11 +976,11 @@ C
         ENDIF
         WRITE(LU,*) ' '
       ENDIF
-C
-C     WRITE THE FLOWS (MULTIPLICATION WITH DT IS TRICK TO MODEL < 1 SEC
-C
-CCCCCCAGREG
-      I3D = 1                                                 !  *start*  LP 05/04/2009
+!
+!     WRITES THE FLOWS (MULTIPLICATION WITH DT IS TRICK TO MODEL)
+!
+!CCCCCAGREG
+      I3D = 1                                                 !  *START*  LP 05/04/2009
       DO I=1,NOLAY
         I2D = (I-1)*(NSEG+MBND)
         DO J=1,NSEG
@@ -902,16 +988,16 @@ CCCCCCAGREG
           I3D = I3D + 1
         ENDDO
       ENDDO
-      DO I=1,NOLAY-1                                          !  *start*  LP 24/04/2009
+      DO I=1,NOLAY-1                                          !  *START*  LP 24/04/2009
         I2D = NOLAY*(NSEG+MBND) + (I-1)*NPOIN2
         DO J=1,NPOIN2
           SUMFLOW(I2D+J) = SUMFLOW(I2D+J) + FLOW(I3D)
           I3D = I3D + 1
         ENDDO
-      ENDDO                                                   !  **end**  LP 24/04/2009
-C     DO I=1,NOQ
-C       SUMFLOW(I) = SUMFLOW(I) + FLOW(I)
-C     ENDDO                                                      **end**  LP 05/04/2009
+      ENDDO                                                   !  **END**  LP 24/04/2009
+!     DO I=1,NOQ
+!       SUMFLOW(I) = SUMFLOW(I) + FLOW(I)
+!     ENDDO                                                      **END**  LP 05/04/2009
       IF(MOD(ISTEPA,NSTEPA).EQ.0) THEN
         SUMFLOW = SUMFLOW / NSTEPA
         IF(STATIO.NE.1) THEN
@@ -924,12 +1010,12 @@ C     ENDDO                                                      **end**  LP 05/
         ENDIF
         SUMFLOW = 0.D0
       ENDIF
-CCCCCCAGREG
-C
-C        STATIONARY DATABASE IF REQUIRED
-C
+!CCCCCAGREG
+!
+!        STATIONARY DATABASE IF REQUIRED
+!
  20   CONTINUE
-C
+!
       IF ( LLT .LT. NNIT ) THEN
          ISTEPA = ISTEPA + 1
          RETURN                 !  FINALISATION
@@ -972,9 +1058,9 @@ C
            WRITE(NSOU) INT(AAT-NSTEPA*DDT),(REAL(VOLUME(I)),I=1,NPOIN)
          ENDIF
       ENDIF
-C
-C     DUMMY RECORDS AT THE END. THEY ARE NOT USED BY WAQ BUT SHOULD BE THERE
-C
+!
+!     DUMMY RECORDS AT THE END. THEY ARE NOT USED BY WAQ BUT SHOULD BE THERE
+!
       SUMAREA = 0.D0
       SUMFLOW = 0.D0
       IF(TRICK) THEN
@@ -985,25 +1071,25 @@ C
       WRITE ( NMAB ) K, (REAL(SUMAREA(I)),I=1,NOQ)
       WRITE ( NCOU ) K, (REAL(SUMFLOW(I)),I=1,NOQ)
       IF(SALI_DEL) THEN
-        WRITE ( NSAL ) K, 
-     *        ((REAL(SUMSALI(I+(NOLAY-J)*NPOIN2)),I=1,NPOIN2),J=1,NOLAY)
+        WRITE ( NSAL ) K,
+     &        ((REAL(SUMSALI(I+(NOLAY-J)*NPOIN2)),I=1,NPOIN2),J=1,NOLAY)
       ENDIF
       IF(TEMP_DEL) THEN
-        WRITE ( NTEM ) K,     
-     *        ((REAL(SUMTEMP(I+(NOLAY-J)*NPOIN2)),I=1,NPOIN2),J=1,NOLAY)
+        WRITE ( NTEM ) K,
+     &        ((REAL(SUMTEMP(I+(NOLAY-J)*NPOIN2)),I=1,NPOIN2),J=1,NOLAY)
       ENDIF
       IF(DIFF_DEL) THEN
-        WRITE ( NVIS ) K,                        
-     *        ((REAL(SUMVISC(I+(NOLAY-J)*NPOIN2)),I=1,NPOIN2),J=1,NOLAY)
+        WRITE ( NVIS ) K,
+     &        ((REAL(SUMVISC(I+(NOLAY-J)*NPOIN2)),I=1,NPOIN2),J=1,NOLAY)
       ENDIF
       IF(VELO_DEL) THEN
-        WRITE ( NVEL ) K, (REAL(SUMVELO(I)),I=1,NPOIN) 
+        WRITE ( NVEL ) K, (REAL(SUMVELO(I)),I=1,NPOIN)
       ENDIF
       ITSTOP = K
       IF(.NOT.TRICK) NSTEPA = INT(NSTEPA*DDT)   ! FOR WRIHYD ONLY
-C
-C     WRITING A COMMAND FILE FOR DELWAQ
-C
+!
+!     WRITES A COMMAND FILE FOR DELWAQ
+!
       IF(NCSIZE.GT.0) THEN
         WRITE(NCOB,'(I6)')NOLAY
         WRITE(NCOB,'(I3)')LEN_TRIM(TITRE)
@@ -1058,15 +1144,15 @@ C
           WRITE(NCOB,'(F10.4)')F(1,I)
         ENDDO
       ENDIF
-C
+!
       CALL WRIHYD( TITRE  , ITSTRT , ITSTOP , ITSTEP , NPOIN2, MBND   ,
-     *             NSEG   , NOLAY  , NOMGEO , NOMLIM ,
-     *             F      , NSTEPA ,
-     *             NOMSOU , NOMMAB , NOMCOU , NOMINI , NOMVEB,
-     *             NOMMAF , NOMSAL , NOMTEM , NOMVEL , NOMVIS, NCOB   ,
-     *             SALI_DEL,TEMP_DEL,VELO_DEL,DIFF_DEL,MARDAT, MARTIM)
-C
-C-----------------------------------------------------------------------
-C
+     &             NSEG   , NOLAY  , NOMGEO , NOMLIM ,
+     &             F      , NSTEPA ,
+     &             NOMSOU , NOMMAB , NOMCOU , NOMINI , NOMVEB,
+     &             NOMMAF , NOMSAL , NOMTEM , NOMVEL , NOMVIS, NCOB   ,
+     &             SALI_DEL,TEMP_DEL,VELO_DEL,DIFF_DEL,MARDAT, MARTIM)
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

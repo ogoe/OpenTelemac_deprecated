@@ -1,84 +1,82 @@
-C                       ******************
-                        SUBROUTINE WAITFOR
-C                       ******************
-C
-     * (DOSSIER,FICHIER)                                            
-C
-C***********************************************************************
-C  BIEF VERSION 5.2    08/02/2001    NATHALY BARBRY (UNIVERSITE DE CAEN)
-C                                        J-M HERVOUET (LNHE) 30 87 80 18
-C***********************************************************************
-C
-C  FONCTION : 'FICHIER' EST UN NOM DE FICHIER ATTENDU DANS LE DOSSIER.
-C             SA PRESENCE EST INDIQUEE PAR L'EXISTENCE D'UN FICHIER VIDE
-C             DONT LE NOM EST LE MEME QUE 'FICHIER' PRECEDE DE YA.
-C
-C             QUAND LE FICHIER YAFICHIER EXISTE, ON LE DETRUIT ET ON SORT
-C
-C
-C  FUNCTION : FICHIER IS THE NAME OF A FILE WHICH IS WAITED IN DIRECTOTY
-C             DOSSIER. THIS FILE EXISTS IF THERE EXISTS ANOTHER EMPTY
-C             FILE CALLED YAFICHIER (NAME OF THE FILE WITH 'YA' BEFORE).
-C
-C             WHEN FILE YAFICHIER EXISTS, IT IS DELETED AND WE RETURN TO
-C             THE CALLING PROGRAM.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |   DOSSIER      | -->| DOSSIER OU SE TROUVENT LES FICHIERS A LIRE   |
-C |   FICHIER      | -->| FICHIER A LIRE                               |
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C----------------------------------------------------------------------
-C
-C  APPELE PAR : COUPLAGE
-C
-C**********************************************************************
-C
+!                    ******************
+                     SUBROUTINE WAITFOR
+!                    ******************
+!
+     & (DOSSIER,FICHIER)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    'FICHIER' IS THE NAME OF A FILE EXPECTED IN THE DIRECTORY.
+!+                THIS FILE EXISTS IF THERE IS AN EMPTY FILE CALLED
+!+               'YAFICHIER' (NAME OF THE FILE PRECEDED WITH 'YA').
+!+
+!+            WHEN FILE 'YAFICHIER' EXISTS, IT IS DELETED AND WE EXIT
+!+                THE SUBROUTINE.
+!
+!history  NATHALY BARBRY (UNIVERSITE DE CAEN); J-M HERVOUET (LNHE)
+!+        08/02/2001
+!+        V5P2
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| DOSSIER        |-->| DIRECTORY WHERE IS THE FILE TO BE READ
+!| FICHIER        |-->| FILE TO BE READ
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
+!
       CHARACTER(LEN=250), INTENT(IN) :: DOSSIER
       CHARACTER(LEN=*)  , INTENT(IN) :: FICHIER
-C
+!
       CHARACTER(LEN=270) NOMFIC
       LOGICAL OUI
       INTEGER ERR1
-C
-C     TEMPS D'ATTENTE PARAMETRABLE
-C
+!
+!     PARAMETER: WAIT TIME
+!
       INTEGER, PARAMETER :: LAPS = 3
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       INTRINSIC TRIM
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
 10    CONTINUE
-C
+!
       NOMFIC=TRIM(DOSSIER)//'YA'//FICHIER
       INQUIRE(FILE=NOMFIC,EXIST=OUI,ERR=84,IOSTAT=ERR1)
-C
-C-----------------------------------------------------------------------
-C  
+!
+!-----------------------------------------------------------------------
+!
       IF(OUI) THEN
-C
+!
         OPEN(94,FILE=NOMFIC,
-     *          STATUS='OLD',FORM='UNFORMATTED',ERR=85,IOSTAT=ERR1)
+     &          STATUS='OLD',FORM='UNFORMATTED',ERR=85,IOSTAT=ERR1)
         CLOSE(94,STATUS='DELETE',ERR=86,IOSTAT=ERR1)
-C
+!
         GO TO 1000
-C
+!
       ELSE
-C
+!
         INQUIRE(FILE=TRIM(DOSSIER)//'STOP',EXIST=OUI,ERR=84,IOSTAT=ERR1)
         IF(OUI) THEN
           IF(LNG.EQ.1) THEN
@@ -98,17 +96,17 @@ C
           IF(LNG.EQ.2) THEN
             WRITE(LU,*) 'WAITING ',LAPS,' SECONDS'
           ENDIF
-          CALL ATTEND(LAPS) 
+          CALL ATTEND(LAPS)
         ENDIF
-C
+!
         GO TO 10
-C
-      ENDIF 
-C
-C-----------------------------------------------------------------------
-C     MESSAGES D'ERREUR
-C-----------------------------------------------------------------------
-C
+!
+      ENDIF
+!
+!-----------------------------------------------------------------------
+!     ERROR MESSAGES
+!-----------------------------------------------------------------------
+!
 84    CONTINUE
       IF(LNG.EQ.1) THEN
         WRITE(LU,*) 'WAITFOR : ERREUR DE INQUIRE SUR LE FICHIER :'
@@ -144,12 +142,12 @@ C
       ENDIF
       CALL PLANTE(1)
       STOP
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
 1000  CONTINUE
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

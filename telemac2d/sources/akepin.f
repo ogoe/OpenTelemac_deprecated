@@ -1,118 +1,117 @@
-C                       *****************
-                        SUBROUTINE AKEPIN
-C                       *****************
-C
-     *(AK,EP,U,V,H,NPOIN,KFROT,CMU,C2,ESTAR,SCHMIT,KMIN,EMIN,CF)
-C
-C***********************************************************************
-C  TELEMAC 2D VERSION 5.2    27/11/92    J-M HERVOUET (LNH) 30 87 80 18
-C                            30/05/94    L. VAN HAREN (LNH) 30 87 84 14
-C***********************************************************************
-C
-C     FONCTION  : INITIALISATION DE K ET EPSILON
-C
-C     LOIS DE FROTTEMENT :
-C
-C     KFROT = 0 :  PAS DE FROTTEMENT   (NON PREVU)
-C     KFROT = 1 :  LOIS LINEAIRE       (NON PREVU)
-C     KFROT = 2 :  LOIS DE CHEZY
-C     KFROT = 3 :  LOIS DE STRICKLER
-C     KFROT = 4 :  LOIS DE MANNING
-C     KFROT = 5 :  LOIS DE NIKURADSE
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |      AK        |<---| ENERGIE TURBULENTE                           |
-C |      EP        |<---| DISSIPATION TURBULENTE                       |
-C |      U,V       | -->| COMPOSANTES DE LA VITESSE                    |
-C |       H        | -->| HAUTEUR D'EAU                                |
-C |     NPOIN      | -->| NOMBRE DE POINTS DU MAILLAGE.                |
-C |     KFROT      | -->| CORRESPOND AU MOT CLE: "LOI DE FROTTEMENT SUR|
-C |                |    | LE FOND"  (1:CHEZY 2:LINEAIRE 3:STRICKLER).  |
-C |     FFON       | -->| COEFFICIENT DE FROTTEMENT.                   |
-C |     CHESTR     | -->| TABLEAU DES COEFFICIENTS DE FROTTEMENT SUR LE|
-C |                |    | FOND.
-C |     GRAV       | -->| ACCELERATION DE LA PESANTEUR.                |
-C |     KARMAN     | -- | CONSTANTE DE KARMAN                          |
-C |     CMU        | -->| CONSTANTE DU MODELE K-EPSILON                |
-C |     C1         | -- | CONSTANTE DU MODELE K-EPSILON                |
-C |     C2         | -->| CONSTANTE DU MODELE K-EPSILON                |
-C |     SIGMAK     | -- | CONSTANTE DU MODELE K-EPSILON                |
-C |     SIGMAE     | -- | CONSTANTE DU MODELE K-EPSILON                |
-C |     ESTAR      | -->| CONSTANTE DU MODELE K-EPSILON                |
-C |     SCHMIT     | -->| NOMBRE DE SCHMITT                            |
-C |     KMIN       | -->| K MINIMUM EN CAS DE CLIPPING                 |
-C |     KMAX       | -- | K MAXIMUM EN CAS DE CLIPPING                 |
-C |     EMIN       | -->| EPSILON MINIMUM EN CAS DE CLIPPING           |
-C |     EMAX       | -->| EPSILON MAXIMUM EN CAS DE CLIPPING           |
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : TELMAC
-C
-C SOUS-PROGRAMME APPELE : OV
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE AKEPIN
+!                    *****************
+!
+     &(AK,EP,U,V,H,NPOIN,KFROT,CMU,C2,ESTAR,SCHMIT,KMIN,EMIN,CF)
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    INITIALISES K AND EPSILON.
+!
+!note     FRICTION LAWS :
+!+
+!note     KFROT = 0:  NO FRICTION   (NOT CODED)
+!note     KFROT = 1:  LINEAR LAW      (NOT CODED)
+!note     KFROT = 2:  LAW OF CHEZY
+!note     KFROT = 3:  LAW OF STRICKLER
+!note     KFROT = 4:  LAW OF MANNING
+!note     KFROT = 5:  LAW OF NIKURADSE
+!
+!history  J-M HERVOUET (LNHE)
+!+        27/11/1992
+!+
+!+
+!
+!history  L. VAN HAREN (LNH)
+!+        30/05/1994
+!+        V5P2
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| AK             |<--| TURBULENT KINETIC ENERGY
+!| C2             |-->| CONSTANT IN K-EPSILON MODEL
+!| CF             |-->| ADIMENSIONAL FRICTION COEFFICIENT
+!| CMU            |-->| CONSTANT IN K-EPSILON MODEL
+!| EMIN           |-->| MINIMUM EPSILON IF CLIPPING
+!| EP             |<--| TURBULENT DISSIPATION
+!| ESTAR          |-->| CONSTANT IN K-EPSILON MODEL
+!| H              |-->| WATER DEPTH
+!| KFROT          |-->| KEY-WORD: "LAW OF BOTTOM FRICTION"
+!|                |   | 1:CHEZY 2:LINEAIRE 3:STRICKLER
+!| KMIN           |-->| MINIMUM K IF CLIPPING
+!| NPOIN          |-->| NUMBER OF POINTS
+!| SCHMIT         |-->| SCHMITT NUMBER
+!| U              |-->| X-COMPONENT OF VELOCITY
+!| V              |-->| Y-COMPONENT OF VELOCITY
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN) :: NPOIN,KFROT
       DOUBLE PRECISION, INTENT(INOUT) :: AK(NPOIN),EP(NPOIN)
       DOUBLE PRECISION, INTENT(IN) :: KMIN,EMIN,CMU,C2,ESTAR,SCHMIT
       DOUBLE PRECISION, INTENT(IN) :: U(NPOIN),V(NPOIN),H(NPOIN),CF(*)
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER K
-C
+!
       DOUBLE PRECISION TIERS,HAUT,USTAR,CEPS
-C
+!
       INTRINSIC SQRT,MAX
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       TIERS = 1.D0/3.D0
-C
-C  INITIALISATION DE K ET EPSILON
-C
-C     *******************
+!
+!     INITIALISATION OF K AND EPSILON
+!
+!     *******************
       IF(KFROT.EQ.0) THEN
-C     *******************
-C
+!     *******************
+!
         IF(LNG.EQ.1) WRITE(LU,100)
         IF(LNG.EQ.2) WRITE(LU,101)
 100     FORMAT(1X,'AKEPIN N''EST PAS PREVU SANS FROTTEMENT SUR LE FOND')
 101     FORMAT(1X,'AKEPIN IS NOT PROVIDED WITHOUT BOTTOM FRICTION')
         CALL PLANTE(1)
         STOP
-C
-C     ****
+!
+!     ****
       ELSE
-C     ****
-C
-        DO 20 K=1,NPOIN
+!     ****
+!
+        DO K=1,NPOIN
            HAUT  = MAX(H(K),1.D-4)
            USTAR = SQRT( 0.5D0 * CF(K) * ( U(K)**2 + V(K)**2 ) )
            CEPS  = C2*SQRT(CMU)/SQRT(ESTAR*SCHMIT)/(0.5D0*CF(K))**0.75D0
            AK(K) = C2*USTAR**2/(0.5D0*CF(K)*CEPS)
            EP(K) = MAX( USTAR**3/(HAUT*SQRT(0.5D0*CF(K))) , EMIN )
-20      CONTINUE
-C
-C     *****
+        ENDDO
+!
+!     *****
       ENDIF
-C     *****
-C
-C-----------------------------------------------------------------------
-C
+!     *****
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END
- 

@@ -1,79 +1,82 @@
-C                       *****************
-                        SUBROUTINE COSAKE
-C                       *****************
-C
-     *(KARMAN,CMU,C1,C2,SIGMAK,SIGMAE,ESTAR,SCHMIT,KMIN,KMAX,EMIN,EMAX)
-C
-C***********************************************************************
-C  TELEMAC 2D VERSION 5.2    17/08/94    J-M HERVOUET (LNH) 30 87 80 18
-C
-C***********************************************************************
-C
-C     FONCTION  : FIXE LES CONSTANTES DU MODELE K-EPSILON
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |    KARMAN      |<-- | CONSTANTE DE KARMAN                          |
-C |    CMU         |<-- | CONSTANTE DU MODELE K-EPSILON                |
-C |    C1          |<-- | CONSTANTE DU MODELE K-EPSILON                |
-C |    C2          |<-- | CONSTANTE DU MODELE K-EPSILON                |
-C |    SIGMAK      |<-- | CONSTANTE DU MODELE K-EPSILON                |
-C |    SIGMAE      |<-- | CONSTANTE DU MODELE K-EPSILON                |
-C |    ESTAR       |<-- | CONSTANTE DU MODELE K-EPSILON                |
-C |    SCHMITT     |<-- | NOMBRE DE SCHMITT                            |
-C |    KMIN        |<-- | K MINIMUM EN CAS DE CLIPPING                 |
-C |    KMAX        |<-- | K MAXIMUM EN CAS DE CLIPPING                 |
-C |    EMIN        |<-- | EPSILON MINIMUM EN CAS DE CLIPPING           |
-C |    EMAX        |<-- | EPSILON MAXIMUM EN CAS DE CLIPPING           |
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : TELMAC
-C
-C SOUS-PROGRAMME APPELE : NEANT
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE COSAKE
+!                    *****************
+!
+     &(KARMAN,CMU,C1,C2,SIGMAK,SIGMAE,ESTAR,SCHMIT,KMIN,KMAX,EMIN,EMAX)
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    SETS THE CONSTANTS FOR THE K-EPSILON MODEL.
+!
+!history  J-M HERVOUET (LNHE)
+!+        17/08/1994
+!+        V5P2
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| C1             |<--| CONSTANT IN K-EPSILON MODEL
+!| C2             |<--| CONSTANT IN K-EPSILON MODEL
+!| CMU            |<--| CONSTANT IN K-EPSILON MODEL
+!| EMAX           |<--| MAXIMUM EPSILON IF CLIPPING
+!| EMIN           |-->| MINIMUM EPSILON IF CLIPPING
+!| ESTAR          |-->| CONSTANT IN K-EPSILON MODEL
+!| KARMAN         |-->| VON KARMAN CONSTANT
+!| KMAX           |<--| MAXIMUM K IF CLIPPING
+!| KMIN           |<--| MINIMUM K IF CLIPPING
+!| SCHMIT         |-->| SCHMITT NUMBER
+!| SIGMAE         |<--| K-EPSILON CONSTANT FOR DIFFUSION OF EPSILON
+!| SIGMAK         |<--| K-EPSILON CONSTANT FOR DIFFUSION OF K
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       DOUBLE PRECISION, INTENT(OUT) :: KMIN,KMAX,EMIN,EMAX
       DOUBLE PRECISION, INTENT(OUT) :: KARMAN,CMU,C1,C2
       DOUBLE PRECISION, INTENT(OUT) :: SIGMAK,SIGMAE,ESTAR,SCHMIT
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-C CONSTANTE DE KARMAN
-C
-      KARMAN = 0.41D0
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+! KARMAN CONSTANT
+!
+!     UP TO VERSION 6.0 : 0.41, FROM VERSION 6.1 ON : 0.40
+      KARMAN = 0.40D0
       CMU    = 0.09D0
       C1     = 1.44D0
       C2     = 1.92D0
       SIGMAK = 1.00D0
       SIGMAE = 1.30D0
       ESTAR  = 0.15D0
-C
-C NOMBRE DE SCHMIDT
-C
+!
+! SCHMIDT NUMBER
+!
       SCHMIT = 0.50D0
-C
-C VALEURS EXTREMES POUR LE CLIPPING DE K ET EPSILON
-C
+!
+! RANGE OF VALUES USED TO CLIP K AND EPSILON
+!
       KMIN = 1.D-8
       EMIN = 1.D-8
       KMAX = 1.D10
       EMAX = 1.D10
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END
- 

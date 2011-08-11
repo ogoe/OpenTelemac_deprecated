@@ -1,51 +1,58 @@
-C		       ********************* 
-                       SUBROUTINE SD_SOLVE_4
-C		       *********************
-C 
+!                    *********************
+                     SUBROUTINE SD_SOLVE_4
+!                    *********************
+!
      &(NPOIN,NSEGB,GLOSEGB,DAB1,DAB2,DAB3,DAB4,XAB1,XAB2,XAB3,XAB4,
      & XX1,XX2,CVB1,CVB2,INFOGR,TYPEXT)
-C
-C***********************************************************************
-C BIEF VERSION 5.9     20/11/06   E. RAZAFINDRAKOTO (LNH) 01 30 87 74 03
-C
-C***********************************************************************
-C
-C  IMPORTANT NOTICE: INSPIRED FROM PACKAGE CMLIB3 - YALE UNIVERSITE-YSMP
-C
-C  FONCTION: RESOLUTION DIRECTE D'UN SYSTEME BLOCK 2 X 2 PAR
-C            PERMUTATION MINIMUM DEGREE ET DECOMPOSITION LDLT 
-C
-C            TRANSFORMATION STOCKAGE SEGMENT EN STOCKAGE COMPACT (MORSE)
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |   NPOIN        | -->| NOMBRE D'INCONNUES
-C |   NSEGB        | -->| NOMBRE DE SEGMENTS 
-C |   GLOSEG       | -->| NUMEROS GLOBAUX DES POINTS DES SEGMENTS
-C |   DA,XA        | -->| DIAGONALES ET TERMES EXTRA-DIAGONAUX DES
-C |                |    | MATRICES
-C |   XX1,XX2      |<-- | SOLUTIONS
-C |   CVB1,CVB2    | -->| SECONDS MEMBRES
-C |   INFOGR       | -->| IF, YES INFORMATIONS ON LISTING
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES : RIEN EN STANDARD
-C
-C***********************************************************************
-C
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/07/2011
+!***********************************************************************
+!
+!brief    DIRECT RESOLUTION OF A SYSTEM 2 X 2 WITH
+!+                MINIMUM DEGREE PERMUTATION AND LDLT DECOMPOSITION.
+!+
+!+            FROM SEGMENT STORAGE TO COMPACT STORAGE (MORSE).
+!
+!note     IMPORTANT: INSPIRED FROM PACKAGE CMLIB3 - YALE UNIVERSITE-YSMP
+!
+!history  E. RAZAFINDRAKOTO (LNH)
+!+        20/11/06
+!+        V5P9
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CVB1,CVB2      |-->| SECOND MEMBERS OF THE 2 SUB-SYSTEMS
+!| DABX           |-->| DIAGONAL TERMS OF SUB-MATRIX X
+!| GLOSEGB        |-->| GLOBAL NUMBER OF SEGMENT OF A SUB-MATRIX
+!| INFOGR         |-->| IF, YES INFORMATIONS ON LISTING
+!| NPOIN          |-->| NOMBRE D'INCONNUES
+!| NSEGB          |-->| NOMBRE DE SEGMENTS
+!| TYPEXT         |-->| = 'S' : SYMETRIC MATRIX
+!| XABX           |-->| OFF-DIAGONAL TERMS OF SUB-MATRIX X
+!| XX1,XX2        |<--| SOLUTIONS
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_SD_SOLVE_4 => SD_SOLVE_4
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN) :: NPOIN,NSEGB
       INTEGER, INTENT(IN) :: GLOSEGB(NSEGB*2)
       LOGICAL, INTENT(IN) :: INFOGR
@@ -54,40 +61,40 @@ C
       DOUBLE PRECISION, INTENT(IN)    :: XAB1(NSEGB),XAB2(NSEGB)
       DOUBLE PRECISION, INTENT(IN)    :: XAB3(NSEGB),XAB4(NSEGB)
       DOUBLE PRECISION, INTENT(INOUT) :: XX1(NPOIN),XX2(NPOIN)
-      DOUBLE PRECISION, INTENT(IN)    :: CVB1(NPOIN),CVB2(NPOIN)    
+      DOUBLE PRECISION, INTENT(IN)    :: CVB1(NPOIN),CVB2(NPOIN)
       CHARACTER(LEN=1), INTENT(IN)    :: TYPEXT
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C              
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER NPBLK,NSEGBLK,I
-C
+!
       INTEGER, ALLOCATABLE          :: GLOSEG4(:)
       DOUBLE PRECISION, ALLOCATABLE :: XA(:),DA(:)
-      DOUBLE PRECISION, ALLOCATABLE :: RHS(:),XINC(:)     
-C
+      DOUBLE PRECISION, ALLOCATABLE :: RHS(:),XINC(:)
+!
       INTEGER SIZE_GLOSEG4,SIZE_DA,SIZE_XA,SIZE_RHS,SIZE_XINC
-C
+!
       DATA SIZE_GLOSEG4/0/
       DATA SIZE_DA     /0/
       DATA SIZE_XA     /0/
       DATA SIZE_RHS    /0/
       DATA SIZE_XINC   /0/
-C
+!
       SAVE
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       NPBLK=NPOIN*2
-      NSEGBLK=4*NSEGB+NPOIN 
-C 
-      IF(SIZE_GLOSEG4.EQ.0) THEN      
+      NSEGBLK=4*NSEGB+NPOIN
+!
+      IF(SIZE_GLOSEG4.EQ.0) THEN
         ALLOCATE(GLOSEG4(2*NSEGBLK))
         SIZE_GLOSEG4=    2*NSEGBLK
       ELSEIF(            2*NSEGBLK.GT.SIZE_GLOSEG4) THEN
         DEALLOCATE(GLOSEG4)
         ALLOCATE(GLOSEG4(2*NSEGBLK))
         SIZE_GLOSEG4=    2*NSEGBLK
-      ENDIF 
+      ENDIF
       IF(SIZE_DA.EQ.0) THEN
         ALLOCATE(DA(NPBLK))
         SIZE_DA=    NPBLK
@@ -95,15 +102,15 @@ C
         DEALLOCATE(DA)
         ALLOCATE(DA(NPBLK))
         SIZE_DA=    NPBLK
-      ENDIF                
-      IF(SIZE_XA.EQ.0) THEN      
+      ENDIF
+      IF(SIZE_XA.EQ.0) THEN
         ALLOCATE(XA(2*NSEGBLK))
         SIZE_XA=    2*NSEGBLK
       ELSEIF(       2*NSEGBLK.GT.SIZE_XA) THEN
         DEALLOCATE(XA)
         ALLOCATE(XA(2*NSEGBLK))
         SIZE_XA=    2*NSEGBLK
-      ENDIF              
+      ENDIF
       IF(SIZE_RHS.EQ.0) THEN
         ALLOCATE(RHS(NPBLK))
         SIZE_RHS=    NPBLK
@@ -111,7 +118,7 @@ C
         DEALLOCATE(RHS)
         ALLOCATE(RHS(NPBLK))
         SIZE_RHS=    NPBLK
-      ENDIF 
+      ENDIF
       IF(SIZE_XINC.EQ.0) THEN
         ALLOCATE(XINC(NPBLK))
         SIZE_XINC=    NPBLK
@@ -119,41 +126,41 @@ C
         DEALLOCATE(XINC)
         ALLOCATE(XINC(NPBLK))
         SIZE_XINC=    NPBLK
-      ENDIF             
-C
-C-----------------------------------------------------------------------
-C       
-C     1. SECOND MEMBRE DU SYSTEME
-C     ===========================
-C
+      ENDIF
+!
+!-----------------------------------------------------------------------
+!
+!     1. SECOND MEMBER OF THE SYSTEM
+!     ===========================
+!
       DO I=1,NPOIN
         RHS(I)      = CVB1(I)
         RHS(I+NPOIN)= CVB2(I)
-      ENDDO       
-C              
-C     2. CONSTRUCTION STOCKAGE SEGMENT MATRICE BLOCK (DE 4)
-C     ===================================================== 
-C	    
+      ENDDO
+!
+!     2. BUILDS SEGMENT STORAGE MATRIX BLOCK (OF 4)
+!     =====================================================
+!
       CALL SD_STRSG4(NPOIN,NSEGB,GLOSEGB,NPBLK,NSEGBLK,GLOSEG4)
-C     
+!
       CALL SD_FABSG4(NPOIN,NSEGB,DAB1,DAB2,DAB3,DAB4,
-     *               XAB1,XAB2,XAB3,XAB4,NPBLK,NSEGBLK,DA,XA)
-C
-C     3. RESOLUTION COMME UNE MATRICE SYMETRIQUE NORMALE
-C     ================================================== 
-C 
+     &               XAB1,XAB2,XAB3,XAB4,NPBLK,NSEGBLK,DA,XA)
+!
+!     3. SOLVES LIKE A STANDARD SYMMETRICAL MATRIX
+!     ==================================================
+!
       CALL SD_SOLVE_1(NPBLK,NSEGBLK,GLOSEG4,NSEGBLK,DA,XA,
-     *                XINC,RHS,INFOGR,TYPEXT)
-C
-C     4. RECUPERATION DES INCONNUES
-C     ============================= 
-C 
+     &                XINC,RHS,INFOGR,TYPEXT)
+!
+!     4. RECOVERS THE UNKNOWNS
+!     =============================
+!
       DO I=1,NPOIN
         XX1(I)= XINC(I)
         XX2(I)= XINC(I+NPOIN)
       ENDDO
-C
-C-----------------------------------------------------------------------
-C 
-      RETURN              
+!
+!-----------------------------------------------------------------------
+!
+      RETURN
       END

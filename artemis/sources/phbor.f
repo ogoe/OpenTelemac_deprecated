@@ -1,45 +1,64 @@
-C                       ****************
-                        SUBROUTINE PHBOR
-C                       ****************
-C
-C***********************************************************************
-C  ARTEMIS V6P0          18/03/2010  C. DENIS (SINETICS)   
-C
-C  ARTEMIS VERSION 5.1   21/08/00    D. AELBRECHT (LNH) 01 30 87 74 12
-C
-C  LINKED TO BIEF VERS. 5.0          J-M HERVOUET (LNH) 01 30 87 80 18
-C
-C***********************************************************************
-C
-C      FONCTION:    TRADUIT LES CONDITIONS AUX LIMITES
-C                   IMPOSEES PAR L'UTILISATEUR EN CALCULANT
-C                   LES COEFFICIENTS APHIR, APHII, ...
-C                   POUR CHAQUE SEGMENT DE FRONTIERE
-C
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : ARTEMI
-C
-C***********************************************************************
-C
+!                    ****************
+                     SUBROUTINE PHBOR
+!                    ****************
+!
+!
+!***********************************************************************
+! ARTEMIS   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    TRANSLATES THE BOUNDARY CONDITIONS SPECIFIED
+!+                BY THE USER,
+!+                I.E. COMPUTES THE COEFFICIENTS
+!+                APHIR, APHII, ... FOR EACH BOUNDARY SEGMENT.
+!
+!history  J-M HERVOUET (LNH)
+!+
+!+
+!+   LINKED TO BIEF 5.0
+!
+!history  D. AELBRECHT (LNH)
+!+        21/08/2000
+!+        V5P1
+!+
+!
+!history  C. DENIS (SINETICS)
+!+        18/03/2010
+!+        V6P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
       USE DECLARATIONS_TELEMAC
       USE DECLARATIONS_ARTEMIS
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
+!
       LOGICAL TRVDEB
-C
+!
       INTEGER I,IPREC,IG,IG0,IGP1,IFR,IOIDEB(5),IOIFIN(5),ITOTO,IFROI
-C
+!
       DOUBLE PRECISION PI,DEGRAD
       DOUBLE PRECISION AUXI1,AUXI2,PHASOI,AUXIC,AUXIS,RADDEG,BID
-C
+!
       DOUBLE PRECISION, ALLOCATABLE ::  APHI1BT(:)
-      DOUBLE PRECISION, ALLOCATABLE ::  BPHI1BT(:) 
+      DOUBLE PRECISION, ALLOCATABLE ::  BPHI1BT(:)
       DOUBLE PRECISION, ALLOCATABLE ::  CPHI1BT(:)
       DOUBLE PRECISION, ALLOCATABLE ::  DPHI1BT(:)
       DOUBLE PRECISION, ALLOCATABLE ::  APHI2BT(:)
@@ -54,25 +73,22 @@ C
       DOUBLE PRECISION, ALLOCATABLE ::  BPHI4BT(:)
       DOUBLE PRECISION, ALLOCATABLE ::  CPHI4BT(:)
       DOUBLE PRECISION, ALLOCATABLE ::  DPHI4BT(:)
-      
-
+!
       INTRINSIC COS,SIN
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       PARAMETER( PI = 3.1415926535897932384626433D0 , DEGRAD=PI/180.D0 )
       PARAMETER( RADDEG = 180.D0 / PI )
-C
-C-----------------------------------------------------------------------
-C
-C ON INITIALISE LIDIR A KSORT (UNE VALEUR DIFFERENTE DE KENT)
-C AFIN DE NE PAS ACTIVER LA PRISE EN COMPTE DES POINTS IMPOSES DANS
-C PRIDIH QUAND CE N'EST PAS DEMANDE.
-C     
-     
-
+!
+!-----------------------------------------------------------------------
+!
+! INITIALISES LIDIR TO KSORT (A DIFFERENT VALUE FROM KENT)
+! IN ORDER NOT TO TAKE NODES IMPOSED IN PRIDIH INTO ACCOUNT,
+! WHEN IT HAS NOT BEEN REQUESTED.
+!
+!
       IF (NCSIZE .GT. 1) THEN
-
       ALLOCATE(APHI1BT(NPTFR_TOT))
       ALLOCATE(BPHI1BT(NPTFR_TOT))
       ALLOCATE(CPHI1BT(NPTFR_TOT))
@@ -90,8 +106,7 @@ C
       ALLOCATE(CPHI4BT(NPTFR_TOT))
       ALLOCATE(DPHI4BT(NPTFR_TOT))
       ALLOCATE(LIDIRT(2*NPTFR_TOT))
-
-     
+!
       DO I=1,MESH%NPTFR
          APHI1B%R(I) = 0.D0
          BPHI1B%R(I) = 0.D0
@@ -110,13 +125,11 @@ C
          CPHI4B%R(I) = 0.D0
          DPHI4B%R(I) = 0.D0
       END DO
-      
-
-
-      
+!
+!
         DO I=1,NPTFR_TOT
            LIDIRT(I) = KSORT
-C     ATTENTION ON SUPPOSE ICI QUE NPTFRX=NPTFR
+!     BEWARE: IT IS ASSUMED HERE THAT NPTFRX=NPTFR
            LIDIRT(I+NPTFR_TOT) = KSORT
            IF (LIHBORT(I).EQ.KENT) THEN
               LIHBORT(I) = KINC
@@ -137,32 +150,29 @@ C     ATTENTION ON SUPPOSE ICI QUE NPTFRX=NPTFR
            BPHI4BT(I) = 0.D0
            CPHI4BT(I) = 0.D0
            DPHI4BT(I) = 0.D0
-          
         END DO
-      
-
-
-C
-C-----------------------------------------------------------------------
-C
-C
-C     ************************************************
-C     INITIALISATION DE LA PHASE POUR L'ONDE INCIDENTE
-C     ************************************************
-C
+!
+!
+!-----------------------------------------------------------------------
+!
+!
+!     ************************************************
+!     INITIALISES THE PHASE FOR INCIDENT WAVES
+!     ************************************************
+!
       PHASOI = 0.D0
-C
-C     ******************************************
-C     TRAITEMENT PARTICULIER DE L'ONDE INCIDENTE
-C     ******************************************
-C
-C     -------------------------------------------------
-C     REPERAGE DES DEBUTS DES FRONTIERES ONDE INCIDENTE
-C     -------------------------------------------------
-C
+!
+!     ******************************************
+!     PARTICULAR TREATMENT FOR INCIDENT WAVES
+!     ******************************************
+!
+!     -------------------------------------------------
+!     LOCATES THE BEGINNINGS OF THE INCIDENT WAVE BOUNDARY
+!     -------------------------------------------------
+!
       TRVDEB = .TRUE.
       IFROI = 0
-C
+!
       DO 10 I=1,NPTFR_TOT
          IF (LIHBORT(I).EQ.KINC) THEN
             ITOTO = KP1BOR_TOT(I+NPTFR_TOT)
@@ -172,297 +182,290 @@ C
                ENDIF
          ENDIF
  10   CONTINUE
-     
-C
+!
       IF(LNG.EQ.1) WRITE(LU,11) IFROI
       IF(LNG.EQ.2) WRITE(LU,12) IFROI
 11    FORMAT(1X,'PHBOR : IL Y A : ',1I3,' FRONTIERE(S) ',
-     *       1X,'DE TYPE ONDE INCIDENTE ')
+     &       1X,'DE TYPE ONDE INCIDENTE ')
 12    FORMAT(1X,'PHBOR : THERE ARE :',1I3,' BOUNDARIE(S) ',
-     *       1X,'OF INCIDENT WAVE TYPE ')
-C
-C     --------------------------------------------------------------
-C     CALCUL DES COEFFICIENTS POUR LES FRONTIERES D'ONDE INCIDENTE
-C     A PARTIR DE IOIDEB (DEBUT ONDE INCIDENTE)
-C     --------------------------------------------------------------
-C    
-   
-      
+     &       1X,'OF INCIDENT WAVE TYPE ')
+!
+!     --------------------------------------------------------------
+!     COMPUTES THE COEFFICIENTS FOR INCIDENT WAVE BOUNDARIES
+!     FROM IOIDEB (BEGINNING OF INCIDENT WAVE)
+!     --------------------------------------------------------------
+!
+!
       DO 15 IFR=1,IFROI
          I = IOIDEB(IFR)
-         
-C
+!
  20   CONTINUE
-C
-C        ********************************
-C        NUMERO GLOBAL DU POINT DE BORD I
-C        ********************************
-C
-C         IG   = MESH%NBOR%I(I)
+!
+!        ********************************
+!        GLOBAL NUMBER OF THE BOUNDARY NODE I
+!        ********************************
+!
+!         IG   = MESH%NBOR%I(I)
       IG   = NBOR_TOT(I)
-C
-C        ******************************************
-C        NUMERO GLOBAL DU POINT DE BORD PRECEDENT I
-C        ******************************************
-C
+!
+!        ******************************************
+!        GLOBAL NUMBER OF THE BOUNDARY NODE PRECEDING I
+!        ******************************************
+!
       IG0  = NBOR_TOT(KP1BOR_TOT(I+NPTFR_TOT))
-C
-C        ****************************************
-C        NUMERO GLOBAL DU POINT DE BORD SUIVANT I
-C        ****************************************
-C
-        
+!
+!        ****************************************
+!        GLOBAL NUMBER OF THE BOUNDARY NODE FOLLOWING I
+!        ****************************************
+!
       IGP1 = NBOR_TOT(KP1BOR_TOT(I))
-
-             
+!
          AUXIC      = COS(TETABT(I)*DEGRAD)
          AUXIS      = SIN(TETABT(I)*DEGRAD)
-         AUXI1      = GRAV/OMEGA * HBT(I)/2.D0 * 
-     *                CTT(IG) * CGT(IG) * KT(IG)
-C
-C
-C           DEVELOPPEMENT POUR LA DIRECTION NON UNIFORME
-C           PHASOI EST LA PHASE DE LA HOULE
-C
-C           ANCIENNE FORMULE : PHASE = K * X (ONDE PLANE) :
-C      
-C                     PHASOI = KM * ( XM*AUXIC + YM*AUXIS )
-C
-C           NOUVELLE FORMULATION (ONDE NON PLANE) :
-C
-C                                   M
-C                                 / 
-C                    PHASOI(M) = /        K(N) * dX(N) 
-C                               / 
-C                                Mdeb
-C
-C           Ou Mdeb est le point de debut du segment d'onde incidente,
-C           a partir duquel on calcule la phase. L'integrale ci-dessus est
-C           simplement calculee par approximation lineaire
-C
-C           On ajoute l'eventuel dephasage ALFAP pour assurer la coherence
-C           des phases des differentes cretes de houle s'il y a plusieurs
-C           frontieres d'ondes incidentes non continues
-C
+         AUXI1      = GRAV/OMEGA * HBT(I)/2.D0 *
+     &                CTT(IG) * CGT(IG) * KT(IG)
+!
+!
+!           DEVELOPMENT FOR NON-UNIFORM DIRECTION
+!           PHASOI IS THE PHASE
+!
+!           PREVIOUS FORMULATION : PHASE = K * X (PLANE WAVE) :
+!
+!                     PHASOI = KM * ( XM*AUXIC + YM*AUXIS )
+!
+!           NEW FORMULATION (NON PLANE WAVE) :
+!
+!                                   M
+!                                 /
+!                    PHASOI(M) = /        K(N) * DX(N)
+!                               /
+!                                MDEB
+!
+!           WHERE MDEB IF THE BEGINNING (NODE) OF AN INCIDENT WAVE SEGMENT,
+!           FROM WHICH THE PHASE IS COMPUTED. THE ABOVE INTEGRAL IS
+!           COMPUTED BY LINEAR APPROXIMATION.
+!
+!           THE POSSIBLE DEPHASING ALFAP IS ADDED TO ENSURE COHERENCE
+!           BETWEEN THE PHASES OF THE DIFFERENT WAVE  CRESTS IF SEVERAL
+!           NONCONTINUOUS INCIDENT WAVE BOUNDARIES EXIST
+!
       PHASOI = PHASOI + KT(IG)*AUXIC*(XT(IG) - XT(IG0))
-     *                + KT(IG)*AUXIS*(YT(IG) - YT(IG0))
-C
+     &                + KT(IG)*AUXIS*(YT(IG) - YT(IG0))
+!
       APHI1BT(I)  = - KT(IG) * CTT(IG) * CGT(IG)
-     *             * COS(TETAPT(I)*DEGRAD)
-C
+     &             * COS(TETAPT(I)*DEGRAD)
+!
       BPHI1BT(I)  = 0.D0
-C
+!
       CPHI1BT(I)  = AUXI1 * COS( PHASOI + ALFAPT(I)*DEGRAD )
-C
+!
       DPHI1BT(I)  = AUXI1 * SIN( PHASOI + ALFAPT(I)*DEGRAD )
-C
+!
       I = KP1BOR_TOT(I)
-C
-C     ON VA JUSQU'AU POINT SUIVANT LA FIN D'UNE FRONTIERE O.I.
-C
+!
+!     UNTIL THE NODE FOLLOWING THE END OF AN INCIDENT WAVE BND IS REACHED
+!
       IF (LIHBORT(I).NE.KINC) THEN
          IOIFIN(IFR) = I
-        
          IPREC      = KP1BOR_TOT(I+NPTFR_TOT)
-
          TETABT(I) = TETABT(IPREC)
          HBT(I)    = HBT(IPREC)
          AUXIC      = COS(TETABT(I)*DEGRAD)
          AUXIS      = SIN(TETABT(I)*DEGRAD)
-         AUXI1      = GRAV/OMEGA * HBT(I)/2.D0 * 
-     *                CTT(IG) * CGT(IG) * KT(IG)
+         AUXI1      = GRAV/OMEGA * HBT(I)/2.D0 *
+     &                CTT(IG) * CGT(IG) * KT(IG)
          PHASOI = PHASOI + KT(IG)*AUXIC*(XT(IG) - XT(IG0))
-     *                   + KT(IG)*AUXIS*(YT(IG) - YT(IG0))
-C
+     &                   + KT(IG)*AUXIS*(YT(IG) - YT(IG0))
+!
          APHI1BT(I) = - KT(IG) * CTT(IG) * CGT(IG)
-     *                 * COS(TETAPT(IPREC)*DEGRAD)
-C
+     &                 * COS(TETAPT(IPREC)*DEGRAD)
+!
          BPHI1BT(I) = 0.D0
-C
+!
          CPHI1BT(I) = AUXI1*COS(PHASOI + ALFAPT(IPREC)*DEGRAD)
-C
+!
          DPHI1BT(I) = AUXI1*SIN(PHASOI + ALFAPT(IPREC)*DEGRAD)
-C
+!
          GOTO 15
-C
+!
       ELSE
          GOTO 20
       ENDIF
-C
+!
 15    CONTINUE
-C
-C     ******************************************
-C     FIN TRAITEMENT DE L'ONDE INCIDENTE
-C     ******************************************
-C
+!
+!     ******************************************
+!     END OF TREATMENT OF THE INCIDENT WAVE BOUNDARY
+!     ******************************************
+!
       DO 100 I=1,NPTFR_TOT
-C
-C        ********************************
-C        NUMERO GLOBAL DU POINT DE BORD I
-C        ********************************
-C
+!
+!        ********************************
+!        GLOBAL NUMBER OF THE BOUNDARY NODE I
+!        ********************************
+!
          IG   = NBOR_TOT(I)
-C
-C        ******************************************
-C        NUMERO GLOBAL DU POINT DE BORD PRECEDENT I
-C        ******************************************
-C
+!
+!        ******************************************
+!        GLOBAL NUMBER OF THE BOUNDARY NODE PRECEDING I
+!        ******************************************
+!
          IG0  = NBOR_TOT(KP1BOR_TOT(I+NPTFR_TOT))
-C
-C        ****************************************
-C        NUMERO GLOBAL DU POINT DE BORD SUIVANT I
-C        ****************************************
-C
+!
+!        ****************************************
+!        GLOBAL NUMBER OF THE BOUNDARY NODE FOLLOWING I
+!        ****************************************
+!
          IGP1 = NBOR_TOT(KP1BOR_TOT(I))
-CCPHI1B%R
-C        -------------------------------------------------
-C        COEFFICIENTS POUR UN SEGMENT DE BORD SORTIE LIBRE
-C        -------------------------------------------------
-C
+!CPHI1B%R
+!        -------------------------------------------------
+!        COEFFICIENTS FOR A FREE EXIT BOUNDARY SEGMENT
+!        -------------------------------------------------
+!
          IF (LIHBORT(I).EQ.KSORT) THEN
             APHI2BT(I)  = - KT(IG) * CTT(IG) * CGT(IG)
-     *                   * COS(TETAPT(I)*DEGRAD)
-C
-             BPHI2BT(I)  = 0.D0
-C
+     &                   * COS(TETAPT(I)*DEGRAD)
+!
+            BPHI2BT(I)  = 0.D0
+!
             CPHI2BT(I)  = 0.D0
-C
+!
             DPHI2BT(I)  = 0.D0
-C
+!
          ELSEIF (LIHBORT(KP1BOR_TOT(I)).EQ.KSORT) THEN
             APHI2BT(I)  = - KT(IG) * CTT(IG) * CGT(IG)
-     *                   * COS(TETAPT(KP1BOR_TOT(I))*DEGRAD)
-C
-             BPHI2BT(I)  = 0.D0
-C
+     &                   * COS(TETAPT(KP1BOR_TOT(I))*DEGRAD)
+!
+            BPHI2BT(I)  = 0.D0
+!
             CPHI2BT(I)  = 0.D0
-C
+!
             DPHI2BT(I)  = 0.D0
-C
+!
          ELSEIF (LIHBORT(KP1BOR_TOT(I+NPTFR_TOT)).EQ.KSORT) THEN
             APHI2BT(I)  = - KT(IG) * CTT(IG) * CGT(IG)
-     *              * COS(TETAPT(KP1BOR_TOT(I+NPTFR_TOT))*DEGRAD)
-C
+     &              * COS(TETAPT(KP1BOR_TOT(I+NPTFR_TOT))*DEGRAD)
+!
              BPHI2BT(I)  = 0.D0
-C
+!
             CPHI2BT(I)  = 0.D0
-C
+!
             DPHI2BT(I)  = 0.D0
-C
+!
          ELSE
             APHI2BT(I)  = 0.D0
-C
+!
              BPHI2BT(I)  = 0.D0
-C
+!
             CPHI2BT(I)  = 0.D0
-C
+!
             DPHI2BT(I)  = 0.D0
-C
+!
          ENDIF
-C
-C        -------------------------------------------
-C        COEFFICIENTS POUR UN SEGMENT DE BORD SOLIDE
-C        -------------------------------------------
-C
+!
+!        -------------------------------------------
+!        COEFFICIENTS FOR A SOLID BOUNDARY SEGMENT
+!        -------------------------------------------
+!
          IF (LIHBORT(I).EQ.KLOG) THEN
-          AUXI1 = KT(IG) * CTT(IG) * CGT(IG) * 
-     *      COS(TETAPT(I)*DEGRAD) /
-     *      ( 1.D0 + RPT(I)*RPT(I) + 
-     *        2.D0*RPT(I)*COS(ALFAPT(I)*DEGRAD) )
-C
+          AUXI1 = KT(IG) * CTT(IG) * CGT(IG) *
+     &      COS(TETAPT(I)*DEGRAD) /
+     &      ( 1.D0 + RPT(I)*RPT(I) +
+     &        2.D0*RPT(I)*COS(ALFAPT(I)*DEGRAD) )
+!
           APHI3BT(I) = - (1.D0 - RPT(I) * RPT(I) ) * AUXI1
-C
+!
           BPHI3BT(I) = 2.D0*RPT(I)*SIN(ALFAPT(I)*DEGRAD) * AUXI1
-C
+!
           CPHI3BT(I)  = 0.D0
-C
+!
           DPHI3BT(I)  = 0.D0
-C
+!
          ELSEIF (LIHBORT(KP1BOR_TOT(I)).EQ.KLOG) THEN
           AUXI1 = KT(IG) * CTT(IG) * CGT(IG) *
-     *      COS(TETAPT(KP1BOR_TOT(I))*DEGRAD) /
-     *      (1.D0 + RPT(KP1BOR_TOT(I))*RPT(KP1BOR_TOT(I))
-     *      +2.D0 * RPT(KP1BOR_TOT(I))*
-     *       COS(ALFAPT(KP1BOR_TOT(I))*DEGRAD))
-C
+     &      COS(TETAPT(KP1BOR_TOT(I))*DEGRAD) /
+     &      (1.D0 + RPT(KP1BOR_TOT(I))*RPT(KP1BOR_TOT(I))
+     &      +2.D0 * RPT(KP1BOR_TOT(I))*
+     &       COS(ALFAPT(KP1BOR_TOT(I))*DEGRAD))
+!
           APHI3BT(I) = - (1.D0-RPT(KP1BOR_TOT(I))*
-     *      RPT(KP1BOR_TOT(I))) * AUXI1
-C
+     &      RPT(KP1BOR_TOT(I))) * AUXI1
+!
           BPHI3BT(I) = 2.D0*RPT(KP1BOR_TOT(I))
-     *                * SIN(ALFAPT(KP1BOR_TOT(I))*DEGRAD) * AUXI1
-C
+     &                * SIN(ALFAPT(KP1BOR_TOT(I))*DEGRAD) * AUXI1
+!
           CPHI3BT(I)  = 0.D0
-C
+!
           DPHI3BT(I)  = 0.D0
-C
+!
          ELSEIF (LIHBORT(KP1BOR_TOT(I+NPTFR_TOT)).EQ.KLOG) THEN
           AUXI1 = KT(IG) * CTT(IG) * CGT(IG) *
-     *     COS(TETAPT(KP1BOR_TOT(I+NPTFR_TOT))*DEGRAD) /
-     *     (1.D0 + RPT(KP1BOR_TOT(I+NPTFR_TOT))
-     *      *RPT(KP1BOR_TOT(I+NPTFR_TOT))
-     *      +2.D0 * RPT(KP1BOR_TOT(I+NPTFR_TOT))*
-     *       COS(ALFAPT(KP1BOR_TOT(I+NPTFR_TOT))*DEGRAD))
-C
+     &     COS(TETAPT(KP1BOR_TOT(I+NPTFR_TOT))*DEGRAD) /
+     &     (1.D0 + RPT(KP1BOR_TOT(I+NPTFR_TOT))
+     &      *RPT(KP1BOR_TOT(I+NPTFR_TOT))
+     &      +2.D0 * RPT(KP1BOR_TOT(I+NPTFR_TOT))*
+     &       COS(ALFAPT(KP1BOR_TOT(I+NPTFR_TOT))*DEGRAD))
+!
           APHI3BT(I) = - (1.D0-RPT(KP1BOR_TOT(I+NPTFR_TOT))*
-     *      RPT(KP1BOR_TOT(I+NPTFR_TOT))) * AUXI1
-C
+     &      RPT(KP1BOR_TOT(I+NPTFR_TOT))) * AUXI1
+!
           BPHI3BT(I) = 2.D0*RPT(KP1BOR_TOT(I+NPTFR_TOT))
-     *      * SIN(ALFAPT(KP1BOR_TOT(I+NPTFR_TOT))*DEGRAD) * AUXI1
-C
+     &      * SIN(ALFAPT(KP1BOR_TOT(I+NPTFR_TOT))*DEGRAD) * AUXI1
+!
           CPHI3BT(I)  = 0.D0
-C
+!
           DPHI3BT(I)  = 0.D0
-C
+!
          ELSE
           APHI3BT(I)  = 0.D0
-C
+!
           BPHI3BT(I)  = 0.D0
-C
+!
           CPHI3BT(I)  = 0.D0
-C
+!
           DPHI3BT(I)  = 0.D0
-C
+!
          ENDIF
-C
-C        -------------------------------------------------
-C        COEFFICIENTS POUR UN SEGMENT DE BORD ONDE IMPOSEE
-C        -------------------------------------------------
-CDA      ----------------------------------- 
-CDA      ON LAISSE CES LIGNES POUR MEMOIRE !
-CDA      ----------------------------------- 
-CDA
-CDA         IF (LIHBOR(I).EQ.KENT) THEN
-CDA         AUXIC      = COS(TETAB(I)*DEGRAD)
-CDA         AUXIS      = SIN(TETAB(I)*DEGRAD)
-CDA         AUXI1      = GRAV/OMEGA * HB(I)/2.D0 * C(IG) * CG(IG) *
-CDA     *                K(IG) * ( AUXIC *XSGBOR(I) +
-CDA     *                          AUXIS *YSGBOR(I) )
-CDA         AUXI2      = K(IG) * ( X(IG)*AUXIC +
-CDA     *                          Y(IG)*AUXIS )
-CDA
-CDA         APHI4B(I)  = 0.D0
-CDA
-CDA         BPHI4B(I)  = 0.D0
-CDA
-CDA         CPHI4B(I)  = AUXI1 * COS( AUXI2 )
-CDA
-CDA         DPHI4B(I)  = AUXI1 * SIN( AUXI2 )
-CDA
-CDA       VALEURS IMPOSEES AUX NOEUDS DU SEGMENT D'ENTREE
-CDA         LIDIR(I)         = KENT
-CDA
-CDA         AUXI1 = GRAV/OMEGA * HB(I)/2.D0
-CDA         AUXI2 = K(IG) * (X(IG)*AUXIC +
-CDA     *                    Y(IG)*AUXIS )
-CDA
-CDA            PHIRB(I) =   AUXI1 * SIN( AUXI2 )
-CDA            PHIIB(I) = - AUXI1 * COS( AUXI2 )
-CDA         ENDIF
-C
-C
+!
+!        -------------------------------------------------
+!        COEFFICIENTS FOR AN IMPOSED WAVE BOUNDARY SEGMENT
+!        -------------------------------------------------
+!DA      -----------------------------------
+!DA      KEPT FOR MEMORY!
+!DA      -----------------------------------
+!DA
+!DA         IF (LIHBOR(I).EQ.KENT) THEN
+!DA         AUXIC      = COS(TETAB(I)*DEGRAD)
+!DA         AUXIS      = SIN(TETAB(I)*DEGRAD)
+!DA         AUXI1      = GRAV/OMEGA * HB(I)/2.D0 * C(IG) * CG(IG) *
+!DA     *                K(IG) * ( AUXIC *XSGBOR(I) +
+!DA     *                          AUXIS *YSGBOR(I) )
+!DA         AUXI2      = K(IG) * ( X(IG)*AUXIC +
+!DA     *                          Y(IG)*AUXIS )
+!DA
+!DA         APHI4B(I)  = 0.D0
+!DA
+!DA         BPHI4B(I)  = 0.D0
+!DA
+!DA         CPHI4B(I)  = AUXI1 * COS( AUXI2 )
+!DA
+!DA         DPHI4B(I)  = AUXI1 * SIN( AUXI2 )
+!DA
+!DA       VALUES IMPOSED AT THE NODES OF A KENT SEGMENT
+!DA         LIDIR(I)         = KENT
+!DA
+!DA         AUXI1 = GRAV/OMEGA * HB(I)/2.D0
+!DA         AUXI2 = K(IG) * (X(IG)*AUXIC +
+!DA     *                    Y(IG)*AUXIS )
+!DA
+!DA            PHIRB(I) =   AUXI1 * SIN( AUXI2 )
+!DA            PHIIB(I) = - AUXI1 * COS( AUXI2 )
+!DA         ENDIF
+!
+!
 100   CONTINUE
-C-----------------------------------------------------------------------
-C
+!-----------------------------------------------------------------------
+!
         CALL GLOBAL_TO_LOCAL_BOUND(APHI1BT,APHI1B,MESH%NPTFR,NPTFR_TOT)
         CALL GLOBAL_TO_LOCAL_BOUND(BPHI1BT,BPHI1B,MESH%NPTFR,NPTFR_TOT)
         CALL GLOBAL_TO_LOCAL_BOUND(CPHI1BT,CPHI1B,MESH%NPTFR,NPTFR_TOT)
@@ -485,11 +488,10 @@ C
         CALL GLOBAL_TO_LOCAL_BOUND(RPT,RP,MESH%NPTFR,NPTFR_TOT)
         CALL GLOBAL_TO_LOCAL_BOUND(HBT,HB,MESH%NPTFR,NPTFR_TOT)
         CALL GLOBAL_TO_LOCAL_BOUND(ALFAPT,ALFAP,MESH%NPTFR,NPTFR_TOT)
-c        CALL GLOBAL_TO_LOCAL_BOUND2(CTT,C,MESH%NPOIN,NPOIN_TOT)
-c        CALL GLOBAL_TO_LOCAL_BOUND2(CGT,CG,MESH%NPOIN,NPOIN_TOT)
-c        CALL GLOBAL_TO_LOCAL_BOUND2(KT,K,MESH%NPOIN,NPOIN_TOT)
-
-
+!        CALL GLOBAL_TO_LOCAL_BOUND2(CTT,C,MESH%NPOIN,NPOIN_TOT)
+!        CALL GLOBAL_TO_LOCAL_BOUND2(CGT,CG,MESH%NPOIN,NPOIN_TOT)
+!        CALL GLOBAL_TO_LOCAL_BOUND2(KT,K,MESH%NPOIN,NPOIN_TOT)
+!
         DEALLOCATE(APHI1BT)
         DEALLOCATE(BPHI1BT)
         DEALLOCATE(CPHI1BT)
@@ -506,24 +508,21 @@ c        CALL GLOBAL_TO_LOCAL_BOUND2(KT,K,MESH%NPOIN,NPOIN_TOT)
         DEALLOCATE(BPHI4BT)
         DEALLOCATE(CPHI4BT)
         DEALLOCATE(DPHI4BT)
-
         DEALLOCATE(LIDIRT)
-c        DEALLOCATE(XT)
-c        DEALLOCATE(YT)
-c        DEALLOCATE(CTT)
-c        DEALLOCATE(KT)
-c        DEALLOCATE(CGT)
+!        DEALLOCATE(XT)
+!        DEALLOCATE(YT)
+!        DEALLOCATE(CTT)
+!        DEALLOCATE(KT)
+!        DEALLOCATE(CGT)
       DO 110 IFR = 1,IFROI
          I          = IOIFIN(IFR)
          IPREC      = KP1BOR_TOT(I+NPTFR_TOT)
          TETAPT(I) = TETAPT(IPREC)
 110   CONTINUE
-C 
+!
       ELSE
-
-
-
-  
+!
+!
         DO I=1,NPTFR
                 LIHBOR%I(I)=LIHBORT(I)
                 RP%R(I)=RPT(I)
@@ -531,13 +530,11 @@ C
                 ALFAP%R(I)=ALFAPT(I)
                 TETAB%R(I)=TETABT(I)
                 TETAP%R(I)=TETAPT(I)
-         END DO       
-
-
-
+         END DO
+!
          DO 501 I=1,NPTFR
         LIDIR%I(I) = KSORT
-C       ATTENTION ON SUPPOSE ICI QUE NPTFRX=NPTFR
+!       BEWARE: IT IS ASSUMED HERE THAT NPTFRX=NPTFR
         LIDIR%I(I+NPTFR) = KSORT
         IF (LIHBOR%I(I).EQ.KENT) THEN
            LIHBOR%I(I) = KINC
@@ -559,27 +556,27 @@ C       ATTENTION ON SUPPOSE ICI QUE NPTFRX=NPTFR
         CPHI4B%R(I) = 0.D0
         DPHI4B%R(I) = 0.D0
  501    CONTINUE
-C
-C-----------------------------------------------------------------------
-C
-C
-C     ************************************************
-C     INITIALISATION DE LA PHASE POUR L'ONDE INCIDENTE
-C     ************************************************
-C
+!
+!-----------------------------------------------------------------------
+!
+!
+!     ************************************************
+!     INITIALISES THE PHASE FOR INCIDENT WAVES
+!     ************************************************
+!
       PHASOI = 0.D0
-C
-C     ******************************************
-C     TRAITEMENT PARTICULIER DE L'ONDE INCIDENTE
-C     ******************************************
-C
-C     -------------------------------------------------
-C     REPERAGE DES DEBUTS DES FRONTIERES ONDE INCIDENTE
-C     -------------------------------------------------
-C
+!
+!     ******************************************
+!     PARTICULAR TREATMENT FOR INCIDENT WAVES
+!     ******************************************
+!
+!     -------------------------------------------------
+!     LOCATES THE BEGINNINGS OF THE INCIDENT WAVE BOUNDARY
+!     -------------------------------------------------
+!
       TRVDEB = .TRUE.
       IFROI = 0
-C
+!
       DO 101 I=1,NPTFR
          IF (LIHBOR%I(I).EQ.KINC) THEN
                ITOTO = MESH%KP1BOR%I(I+NPTFR)
@@ -589,93 +586,90 @@ C
                ENDIF
          ENDIF
  101  CONTINUE
-
-     
-C
+!
+!
       IF(LNG.EQ.1) WRITE(LU,111) IFROI
       IF(LNG.EQ.2) WRITE(LU,121) IFROI
  111  FORMAT(1X,'PHBOR : IL Y A : ',1I3,' FRONTIERE(S) ',
-     *       1X,'DE TYPE ONDE INCIDENTE ')
+     &       1X,'DE TYPE ONDE INCIDENTE ')
  121  FORMAT(1X,'PHBOR : THERE ARE :',1I3,' BOUNDARIE(S) ',
-     *       1X,'OF INCIDENT WAVE TYPE ')
-C
-C     --------------------------------------------------------------
-C     CALCUL DES COEFFICIENTS POUR LES FRONTIERES D'ONDE INCIDENTE
-C     A PARTIR DE IOIDEB (DEBUT ONDE INCIDENTE)
-C     --------------------------------------------------------------
-C
-
-   
+     &       1X,'OF INCIDENT WAVE TYPE ')
+!
+!     --------------------------------------------------------------
+!     COMPUTES THE COEFFICIENTS FOR INCIDENT WAVE BOUNDARIES
+!     FROM IOIDEB (BEGINNING OF INCIDENT WAVE)
+!     --------------------------------------------------------------
+!
+!
       DO 151 IFR=1,IFROI
          I = IOIDEB(IFR)
-C
+!
  201     CONTINUE
-C
-C        ********************************
-C        NUMERO GLOBAL DU POINT DE BORD I
-C        ********************************
-C
+!
+!        ********************************
+!        GLOBAL NUMBER OF THE BOUNDARY NODE I
+!        ********************************
+!
          IG   = MESH%NBOR%I(I)
-C
-C        ******************************************
-C        NUMERO GLOBAL DU POINT DE BORD PRECEDENT I
-C        ******************************************
-C
+!
+!        ******************************************
+!        GLOBAL NUMBER OF THE BOUNDARY NODE PRECEDING I
+!        ******************************************
+!
          IG0  = MESH%NBOR%I(MESH%KP1BOR%I(I+NPTFR))
-C
-C        ****************************************
-C        NUMERO GLOBAL DU POINT DE BORD SUIVANT I
-C        ****************************************
-C
+!
+!        ****************************************
+!        GLOBAL NUMBER OF THE BOUNDARY NODE FOLLOWING I
+!        ****************************************
+!
          IGP1 = MESH%NBOR%I(MESH%KP1BOR%I(I))
-C
-     
-
+!
+!
          AUXIC      = COS(TETAB%R(I)*DEGRAD)
          AUXIS      = SIN(TETAB%R(I)*DEGRAD)
-         AUXI1      = GRAV/OMEGA * HB%R(I)/2.D0 * 
-     *                C%R(IG) * CG%R(IG) * K%R(IG)
-C
-C
-C           DEVELOPPEMENT POUR LA DIRECTION NON UNIFORME
-C           PHASOI EST LA PHASE DE LA HOULE
-C
-C           ANCIENNE FORMULE : PHASE = K * X (ONDE PLANE) :
-C      
-C                     PHASOI = KM * ( XM*AUXIC + YM*AUXIS )
-C
-C           NOUVELLE FORMULATION (ONDE NON PLANE) :
-C
-C                                   M
-C                                 / 
-C                    PHASOI(M) = /        K(N) * dX(N) 
-C                               / 
-C                                Mdeb
-C
-C           Ou Mdeb est le point de debut du segment d'onde incidente,
-C           a partir duquel on calcule la phase. L'integrale ci-dessus est
-C           simplement calculee par approximation lineaire
-C
-C           On ajoute l'eventuel dephasage ALFAP pour assurer la coherence
-C           des phases des differentes cretes de houle s'il y a plusieurs
-C           frontieres d'ondes incidentes non continues
-C
+         AUXI1      = GRAV/OMEGA * HB%R(I)/2.D0 *
+     &                C%R(IG) * CG%R(IG) * K%R(IG)
+!
+!
+!           DEVELOPMENT FOR NON-UNIFORM DIRECTION
+!           PHASOI IS THE PHASE
+!
+!           PREVIOUS FORMULATION : PHASE = K * X (PLANE WAVE) :
+!
+!                     PHASOI = KM * ( XM*AUXIC + YM*AUXIS )
+!
+!           NEW FORMULATION (NON PLANE WAVE) :
+!
+!                                   M
+!                                 /
+!                    PHASOI(M) = /        K(N) * DX(N)
+!                               /
+!                                MDEB
+!
+!           WHERE MDEB IS THE BEGINNING (NODE) OF AN INCIDENT WAVE SEGMENT,
+!           FROM WHICH THE PHASE IS COMPUTED. THE ABOVE INTEGRAL IS
+!           COMPUTED BY LINEAR APPROXIMATION.
+!
+!           THE POSSIBLE DEPHASING ALFAP IS ADDED TO ENSURE COHERENCE
+!           BETWEEN THE PHASES OF THE DIFFERENT WAVE CRESTS IF SEVERAL
+!           NONCONTINUOUS INCIDENT WAVE BOUNDARIES EXIST
+!
       PHASOI = PHASOI + K%R(IG)*AUXIC*(X(IG) - X(IG0))
-     *                + K%R(IG)*AUXIS*(Y(IG) - Y(IG0))
-C
+     &                + K%R(IG)*AUXIS*(Y(IG) - Y(IG0))
+!
       APHI1B%R(I)  = - K%R(IG) * C%R(IG) * CG%R(IG)
-     *             * COS(TETAP%R(I)*DEGRAD)
-C
+     &             * COS(TETAP%R(I)*DEGRAD)
+!
       BPHI1B%R(I)  = 0.D0
-C
+!
       CPHI1B%R(I)  = AUXI1 * COS( PHASOI + ALFAP%R(I)*DEGRAD )
-C
+!
       DPHI1B%R(I)  = AUXI1 * SIN( PHASOI + ALFAP%R(I)*DEGRAD )
-C
+!
       I = MESH%KP1BOR%I(I)
-C
-C     ON VA JUSQU'AU POINT SUIVANT LA FIN D'UNE FRONTIERE O.I.
-C
+!
+!     UNTIL THE NODE FOLLOWING THE END OF AN INCIDENT WAVE BND IS REACHED
+!
       IF (LIHBOR%I(I).NE.KINC) THEN
          IOIFIN(IFR) = I
          IPREC      = MESH%KP1BOR%I(I+NPTFR)
@@ -683,227 +677,222 @@ C
          HB%R(I)    = HB%R(IPREC)
          AUXIC      = COS(TETAB%R(I)*DEGRAD)
          AUXIS      = SIN(TETAB%R(I)*DEGRAD)
-         AUXI1      = GRAV/OMEGA * HB%R(I)/2.D0 * 
-     *                C%R(IG) * CG%R(IG) * K%R(IG)
+         AUXI1      = GRAV/OMEGA * HB%R(I)/2.D0 *
+     &                C%R(IG) * CG%R(IG) * K%R(IG)
          PHASOI = PHASOI + K%R(IG)*AUXIC*(X(IG) - X(IG0))
-     *                   + K%R(IG)*AUXIS*(Y(IG) - Y(IG0))
-C
+     &                   + K%R(IG)*AUXIS*(Y(IG) - Y(IG0))
+!
          APHI1B%R(I) = - K%R(IG) * C%R(IG) * CG%R(IG)
-     *                 * COS(TETAP%R(IPREC)*DEGRAD)
-C
+     &                 * COS(TETAP%R(IPREC)*DEGRAD)
+!
          BPHI1B%R(I) = 0.D0
-C
+!
          CPHI1B%R(I) = AUXI1*COS(PHASOI + ALFAP%R(IPREC)*DEGRAD)
-C
+!
          DPHI1B%R(I) = AUXI1*SIN(PHASOI + ALFAP%R(IPREC)*DEGRAD)
-C
+!
          GOTO 151
-C
+!
       ELSE
          GOTO 201
       ENDIF
-C
+!
  151  CONTINUE
-C
-C     ******************************************
-C     FIN TRAITEMENT DE L'ONDE INCIDENTE
-C     ******************************************
-C
+!
+!     ******************************************
+!     END OF TREATMENT OF THE INCIDENT WAVE BOUNDARY
+!     ******************************************
+!
       DO 1001 I=1,NPTFR
-C
-C        ********************************
-C        NUMERO GLOBAL DU POINT DE BORD I
-C        ********************************
-C
+!
+!        ********************************
+!        GLOBAL NUMBER OF THE BOUNDARY NODE I
+!        ********************************
+!
          IG   = MESH%NBOR%I(I)
-C
-C        ******************************************
-C        NUMERO GLOBAL DU POINT DE BORD PRECEDENT I
-C        ******************************************
-C
+!
+!        ******************************************
+!        GLOBAL NUMBER OF THE BOUNDARY NODE PRECEDING I
+!        ******************************************
+!
          IG0  = MESH%NBOR%I(MESH%KP1BOR%I(I+NPTFR))
-C
-C        ****************************************
-C        NUMERO GLOBAL DU POINT DE BORD SUIVANT I
-C        ****************************************
-C
+!
+!        ****************************************
+!        GLOBAL NUMBER OF THE BOUNDARY NODE FOLLOWING I
+!        ****************************************
+!
          IGP1 = MESH%NBOR%I(MESH%KP1BOR%I(I))
-C
-C        -------------------------------------------------
-C        COEFFICIENTS POUR UN SEGMENT DE BORD SORTIE LIBRE
-C        -------------------------------------------------
-C
+!
+!        -------------------------------------------------
+!        COEFFICIENTS FOR A FREE EXIT BOUNDARY SEGMENT
+!        -------------------------------------------------
+!
          IF (LIHBOR%I(I).EQ.KSORT) THEN
             APHI2B%R(I)  = - K%R(IG) * C%R(IG) * CG%R(IG)
-     *                   * COS(TETAP%R(I)*DEGRAD)
-C
+     &                   * COS(TETAP%R(I)*DEGRAD)
+!
             BPHI2B%R(I)  = 0.D0
-C
+!
             CPHI2B%R(I)  = 0.D0
-C
+!
             DPHI2B%R(I)  = 0.D0
-C
+!
          ELSEIF (LIHBOR%I(MESH%KP1BOR%I(I)).EQ.KSORT) THEN
             APHI2B%R(I)  = - K%R(IG) * C%R(IG) * CG%R(IG)
-     *                   * COS(TETAP%R(MESH%KP1BOR%I(I))*DEGRAD)
-C
+     &                   * COS(TETAP%R(MESH%KP1BOR%I(I))*DEGRAD)
+!
             BPHI2B%R(I)  = 0.D0
-C
+!
             CPHI2B%R(I)  = 0.D0
-C
+!
             DPHI2B%R(I)  = 0.D0
-C
+!
          ELSEIF (LIHBOR%I(MESH%KP1BOR%I(I+NPTFR)).EQ.KSORT) THEN
             APHI2B%R(I)  = - K%R(IG) * C%R(IG) * CG%R(IG)
-     *              * COS(TETAP%R(MESH%KP1BOR%I(I+NPTFR))*DEGRAD)
-C
+     &              * COS(TETAP%R(MESH%KP1BOR%I(I+NPTFR))*DEGRAD)
+!
             BPHI2B%R(I)  = 0.D0
-C
+!
             CPHI2B%R(I)  = 0.D0
-C
+!
             DPHI2B%R(I)  = 0.D0
-C
+!
          ELSE
             APHI2B%R(I)  = 0.D0
-C
+!
             BPHI2B%R(I)  = 0.D0
-C
+!
             CPHI2B%R(I)  = 0.D0
-C
+!
             DPHI2B%R(I)  = 0.D0
-C
+!
          ENDIF
-C
-C        -------------------------------------------
-C        COEFFICIENTS POUR UN SEGMENT DE BORD SOLIDE
-C        -------------------------------------------
-C
+!
+!        -------------------------------------------
+!        COEFFICIENTS FOR A SOLID BOUNDARY SEGMENT
+!        -------------------------------------------
+!
          IF (LIHBOR%I(I).EQ.KLOG) THEN
-          AUXI1 = K%R(IG) * C%R(IG) * CG%R(IG) * 
-     *      COS(TETAP%R(I)*DEGRAD) /
-     *      ( 1.D0 + RP%R(I)*RP%R(I) + 
-     *        2.D0*RP%R(I)*COS(ALFAP%R(I)*DEGRAD) )
-C
+          AUXI1 = K%R(IG) * C%R(IG) * CG%R(IG) *
+     &      COS(TETAP%R(I)*DEGRAD) /
+     &      ( 1.D0 + RP%R(I)*RP%R(I) +
+     &        2.D0*RP%R(I)*COS(ALFAP%R(I)*DEGRAD) )
+!
           APHI3B%R(I) = - (1.D0 - RP%R(I) * RP%R(I) ) * AUXI1
-C
+!
           BPHI3B%R(I) = 2.D0*RP%R(I)*SIN(ALFAP%R(I)*DEGRAD) * AUXI1
-C
+!
           CPHI3B%R(I)  = 0.D0
-C
+!
           DPHI3B%R(I)  = 0.D0
-C
+!
          ELSEIF (LIHBOR%I(MESH%KP1BOR%I(I)).EQ.KLOG) THEN
           AUXI1 = K%R(IG) * C%R(IG) * CG%R(IG) *
-     *      COS(TETAP%R(MESH%KP1BOR%I(I))*DEGRAD) /
-     *      (1.D0 + RP%R(MESH%KP1BOR%I(I))*RP%R(MESH%KP1BOR%I(I))
-     *      +2.D0 * RP%R(MESH%KP1BOR%I(I))*
-     *       COS(ALFAP%R(MESH%KP1BOR%I(I))*DEGRAD))
-C
+     &      COS(TETAP%R(MESH%KP1BOR%I(I))*DEGRAD) /
+     &      (1.D0 + RP%R(MESH%KP1BOR%I(I))*RP%R(MESH%KP1BOR%I(I))
+     &      +2.D0 * RP%R(MESH%KP1BOR%I(I))*
+     &       COS(ALFAP%R(MESH%KP1BOR%I(I))*DEGRAD))
+!
           APHI3B%R(I) = - (1.D0-RP%R(MESH%KP1BOR%I(I))*
-     *      RP%R(MESH%KP1BOR%I(I))) * AUXI1
-C
+     &      RP%R(MESH%KP1BOR%I(I))) * AUXI1
+!
           BPHI3B%R(I) = 2.D0*RP%R(MESH%KP1BOR%I(I))
-     *                * SIN(ALFAP%R(MESH%KP1BOR%I(I))*DEGRAD) * AUXI1
-C
+     &                * SIN(ALFAP%R(MESH%KP1BOR%I(I))*DEGRAD) * AUXI1
+!
           CPHI3B%R(I)  = 0.D0
-C
+!
           DPHI3B%R(I)  = 0.D0
-C
+!
          ELSEIF (LIHBOR%I(MESH%KP1BOR%I(I+NPTFR)).EQ.KLOG) THEN
           AUXI1 = K%R(IG) * C%R(IG) * CG%R(IG) *
-     *     COS(TETAP%R(MESH%KP1BOR%I(I+NPTFR))*DEGRAD) /
-     *     (1.D0 + RP%R(MESH%KP1BOR%I(I+NPTFR))
-     *      *RP%R(MESH%KP1BOR%I(I+NPTFR))
-     *      +2.D0 * RP%R(MESH%KP1BOR%I(I+NPTFR))*
-     *       COS(ALFAP%R(MESH%KP1BOR%I(I+NPTFR))*DEGRAD))
-C
+     &     COS(TETAP%R(MESH%KP1BOR%I(I+NPTFR))*DEGRAD) /
+     &     (1.D0 + RP%R(MESH%KP1BOR%I(I+NPTFR))
+     &      *RP%R(MESH%KP1BOR%I(I+NPTFR))
+     &      +2.D0 * RP%R(MESH%KP1BOR%I(I+NPTFR))*
+     &       COS(ALFAP%R(MESH%KP1BOR%I(I+NPTFR))*DEGRAD))
+!
           APHI3B%R(I) = - (1.D0-RP%R(MESH%KP1BOR%I(I+NPTFR))*
-     *      RP%R(MESH%KP1BOR%I(I+NPTFR))) * AUXI1
-C
+     &      RP%R(MESH%KP1BOR%I(I+NPTFR))) * AUXI1
+!
           BPHI3B%R(I) = 2.D0*RP%R(MESH%KP1BOR%I(I+NPTFR))
-     *      * SIN(ALFAP%R(MESH%KP1BOR%I(I+NPTFR))*DEGRAD) * AUXI1
-C
+     &      * SIN(ALFAP%R(MESH%KP1BOR%I(I+NPTFR))*DEGRAD) * AUXI1
+!
           CPHI3B%R(I)  = 0.D0
-C
+!
           DPHI3B%R(I)  = 0.D0
-C
+!
          ELSE
           APHI3B%R(I)  = 0.D0
-C
+!
           BPHI3B%R(I)  = 0.D0
-C
+!
           CPHI3B%R(I)  = 0.D0
-C
+!
           DPHI3B%R(I)  = 0.D0
-C
+!
          ENDIF
-C
-C        -------------------------------------------------
-C        COEFFICIENTS POUR UN SEGMENT DE BORD ONDE IMPOSEE
-C        -------------------------------------------------
-CDA      ----------------------------------- 
-CDA      ON LAISSE CES LIGNES POUR MEMOIRE !
-CDA      ----------------------------------- 
-CDA
-CDA         IF (LIHBOR(I).EQ.KENT) THEN
-CDA         AUXIC      = COS(TETAB(I)*DEGRAD)
-CDA         AUXIS      = SIN(TETAB(I)*DEGRAD)
-CDA         AUXI1      = GRAV/OMEGA * HB(I)/2.D0 * C(IG) * CG(IG) *
-CDA     *                K(IG) * ( AUXIC *XSGBOR(I) +
-CDA     *                          AUXIS *YSGBOR(I) )
-CDA         AUXI2      = K(IG) * ( X(IG)*AUXIC +
-CDA     *                          Y(IG)*AUXIS )
-CDA
-CDA         APHI4B(I)  = 0.D0
-CDA
-CDA         BPHI4B(I)  = 0.D0
-CDA
-CDA         CPHI4B(I)  = AUXI1 * COS( AUXI2 )
-CDA
-CDA         DPHI4B(I)  = AUXI1 * SIN( AUXI2 )
-CDA
-CDA       VALEURS IMPOSEES AUX NOEUDS DU SEGMENT D'ENTREE
-CDA         LIDIR(I)         = KENT
-CDA
-CDA         AUXI1 = GRAV/OMEGA * HB(I)/2.D0
-CDA         AUXI2 = K(IG) * (X(IG)*AUXIC +
-CDA     *                    Y(IG)*AUXIS )
-CDA
-CDA            PHIRB(I) =   AUXI1 * SIN( AUXI2 )
-CDA            PHIIB(I) = - AUXI1 * COS( AUXI2 )
-CDA         ENDIF
-C
-C
+!
+!        -------------------------------------------------
+!        COEFFICIENTS FOR AN IMPOSED WAVE BOUNDARY SEGMENT
+!        -------------------------------------------------
+!DA      -----------------------------------
+!DA      KEPT FOR MEMORY !
+!DA      -----------------------------------
+!DA
+!DA         IF (LIHBOR(I).EQ.KENT) THEN
+!DA         AUXIC      = COS(TETAB(I)*DEGRAD)
+!DA         AUXIS      = SIN(TETAB(I)*DEGRAD)
+!DA         AUXI1      = GRAV/OMEGA * HB(I)/2.D0 * C(IG) * CG(IG) *
+!DA     *                K(IG) * ( AUXIC *XSGBOR(I) +
+!DA     *                          AUXIS *YSGBOR(I) )
+!DA         AUXI2      = K(IG) * ( X(IG)*AUXIC +
+!DA     *                          Y(IG)*AUXIS )
+!DA
+!DA         APHI4B(I)  = 0.D0
+!DA
+!DA         BPHI4B(I)  = 0.D0
+!DA
+!DA         CPHI4B(I)  = AUXI1 * COS( AUXI2 )
+!DA
+!DA         DPHI4B(I)  = AUXI1 * SIN( AUXI2 )
+!DA
+!DA       VALUES IMPOSED AT THE NODES OF A KENT SEGMENT
+!DA         LIDIR(I)         = KENT
+!DA
+!DA         AUXI1 = GRAV/OMEGA * HB(I)/2.D0
+!DA         AUXI2 = K(IG) * (X(IG)*AUXIC +
+!DA     *                    Y(IG)*AUXIS )
+!DA
+!DA            PHIRB(I) =   AUXI1 * SIN( AUXI2 )
+!DA            PHIIB(I) = - AUXI1 * COS( AUXI2 )
+!DA         ENDIF
+!
+!
  1001 CONTINUE
-C-----------------------------------------------------------------------
-
-    
-      
-
-
+!-----------------------------------------------------------------------
+!
+!
       DO 1101 IFR = 1,IFROI
          I          = IOIFIN(IFR)
          IPREC      = MESH%KP1BOR%I(I+NPTFR)
          TETAP%R(I) = TETAP%R(IPREC)
  1101 CONTINUE
-C 
-c      DO I=1,NPTFR
-c         ALFAP%R(I)=ALFAPT(I)
-c         TETAP%R(I)=TETAPT(I)
-c         TETAB%R(I)=TETABT(I)
-c         RP%R(I)=RPT(I)
-c         HB%R(I)=HBT(I)
-c      END DO
-
-
-
+!
+!      DO I=1,NPTFR
+!         ALFAP%R(I)=ALFAPT(I)
+!         TETAP%R(I)=TETAPT(I)
+!         TETAB%R(I)=TETABT(I)
+!         RP%R(I)=RPT(I)
+!         HB%R(I)=HBT(I)
+!      END DO
+!
       END IF
-      
-      
-      write(lu,*) 'END PHBOR' 
-      RETURN 
+!
+      WRITE(LU,*) 'END PHBOR'
+      RETURN
       CONTAINS
       SUBROUTINE GLOBAL_TO_LOCAL_BOUND(TAB1,OBJ,NPTFR,NPTFR_TOT)
+      IMPLICIT NONE
       DOUBLE PRECISION, INTENT(INOUT)  :: TAB1(:)
       TYPE (BIEF_OBJ), INTENT(INOUT) :: OBJ
       INTEGER, INTENT(IN) :: NPTFR
@@ -918,11 +907,12 @@ c      END DO
          END DO
       END DO
       OBJ%DIM1=NPTFR
-   
-
+!
       END SUBROUTINE
-
-      SUBROUTINE GLOBAL_TO_LOCAL_BOUNDi(TAB1,OBJ,NPTFR,NPTFR_TOT)
+!
+!
+      SUBROUTINE GLOBAL_TO_LOCAL_BOUNDI(TAB1,OBJ,NPTFR,NPTFR_TOT)
+      IMPLICIT NONE
       INTEGER, INTENT(INOUT)  :: TAB1(:)
       TYPE (BIEF_OBJ), INTENT(INOUT) :: OBJ
       INTEGER, INTENT(IN) :: NPTFR
@@ -944,8 +934,9 @@ c      END DO
          END DO
       END DO
       END SUBROUTINE
-
+!
        SUBROUTINE GLOBAL_TO_LOCAL_BOUND2(TAB1,OBJ,NPOIN,NPOIN_TOT)
+      IMPLICIT NONE
       DOUBLE PRECISION, INTENT(INOUT)  :: TAB1(:)
       TYPE (BIEF_OBJ), INTENT(INOUT) :: OBJ
       INTEGER, INTENT(IN) :: NPOIN_TOT
@@ -960,23 +951,7 @@ c      END DO
          END DO
       END DO
       OBJ%DIM1=NPOIN
-   
-      
-
-
+!
       END SUBROUTINE
-
-
-
-
-
-
-
-
-
-
-
-
-
-      
+!
       END

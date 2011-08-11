@@ -1,43 +1,52 @@
-C                       *****************************
-                        SUBROUTINE WRITE_MESH_SERAFIN
-C                       *****************************
-C
-     *(NFIC,MESH,NPLAN,DATE,TIME,I_ORIG,J_ORIG,FFORMAT)
-C
-C***********************************************************************
-C BIEF VERSION 6.0           01/04/2009          R NEBAUER (LNHE) 
-C***********************************************************************
-C
-C FONCTION : WRITES HEADER DATA IN A SERAFIN FORMAT FILE
-C            THEN ONLY THE RECORDS OF RESULTS WILL BE ADDED
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |   NFIC         | -->| LOGICAL UNIT OF FILE
-C |   MESH         | -->| MESH STRUCTURE
-C |   NPLAN        | -->| NUMBER OF PLANES IN 3D, 1 IN 2D
-C |   DATE, TIME   | -->| DATE AND TIME : YEAR MONTH DAY HOUR MIN SEC
-C |   I_ORIG,J_ORIG| -->| COORDINATES OF ORIGIN OF MESH (IN METRES) 
-C |   FFORMAT      | -->| FILE FORMAT
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES : RIEN EN STANDARD
-C
-C***********************************************************************
-C
+!                    *****************************
+                     SUBROUTINE WRITE_MESH_SERAFIN
+!                    *****************************
+!
+     &(NFIC,MESH,NPLAN,DATE,TIME,I_ORIG,J_ORIG,FFORMAT)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    WRITES HEADER DATA IN A SERAFIN FORMAT FILE
+!+                THEN, ONLY THE RECORDS OF RESULTS WILL BE ADDED.
+!
+!history  R NEBAUER (LNHE)
+!+        01/04/2009
+!+        V6P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| DATE           |-->| 3 INTEGERS (YEAR, MONTH, DAY)
+!| FFORMAT        |-->| FILE FORMAT
+!| I_ORIG         |-->| ABSCISSAE OF ORIGIN OF MESH (IN METRES)
+!| J_ORIG         |-->| ORDINATES OF ORIGIN OF MESH (IN METRES)
+!| MESH           |-->| MESH STRUCTURE
+!| NFIC           |-->| LOGICAL UNIT OF FILE
+!| NPLAN          |-->| NUMBER OF PLANES IN 3D, 1 IN 2D
+!| TIME           |-->| 3 INTEGERS (HOUR, MINUTE, SECOND)
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER        ,       INTENT(IN) :: NFIC   ! LU FILE
       TYPE(BIEF_MESH),       INTENT(IN) :: MESH   ! MESH STRUCTURE
       INTEGER        ,       INTENT(IN) :: NPLAN  ! NUMBER OF PRISM LAYERS
@@ -46,9 +55,9 @@ C
       INTEGER        ,       INTENT(IN) :: I_ORIG ! X ORIGIN OF MESH
       INTEGER        ,       INTENT(IN) :: J_ORIG ! Y ORIGIN OF MESH
       CHARACTER(LEN=8) ,     INTENT(IN) :: FFORMAT
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER              :: NDP      ! NODES PER ELEMENT
       INTEGER              :: IELEM    ! ELEMENT TYPE
       DOUBLE PRECISION     :: XBID(2)
@@ -58,7 +67,7 @@ C
       INTEGER              :: ISTAT    ! RETURN VALUE
       INTEGER              :: I        ! LOOP COUNTER
       INTEGER              :: ERR      ! ERROR CODE
-      INTEGER, ALLOCATABLE :: IPOBO(:) ! BORDER NODE ID'S
+      INTEGER, ALLOCATABLE :: IPOBO(:) ! BOUNDARY NODE ID'S
       INTEGER, ALLOCATABLE :: IKLES(:) ! GLOBAL CONNECTIVITY
       LOGICAL              :: YA_IPOBO
       LOGICAL              :: YA_IKLES
@@ -70,7 +79,7 @@ C
 !     IF(DEBUG) CALL PROC_BEGIN('WRITE_MESH_SERAFIN')
 !***********************************************************************
 !
-      IF(FFORMAT.EQ.'SERAFIND') THEN
+      IF(FFORMAT.EQ.'SERAFIND'.OR.FFORMAT.EQ.'SELAFIND') THEN
         RF = 'R8'
       ELSE
         RF = 'R4'
@@ -81,9 +90,9 @@ C
            NDP = 3
         CASE (20) ! QUADRANGLES
            NDP = 4
-        CASE (40) ! PRISMES
+        CASE (40) ! PRISMS
            NDP = 6
-        CASE (50) ! PRISMES DECOUPES EN TETRAS
+        CASE (50) ! PRISMS SPLIT IN TETRAS
            NDP = 4
         CASE DEFAULT
           IF(LNG.EQ.1) THEN
@@ -99,26 +108,26 @@ C
       YA_IPOBO = .FALSE.
       YA_IKLES = .FALSE.
 !
-!   LEC/ECR 4   : LISTE DE 10 PARAMETRES ENTIERS
+!   LEC/ECR 4   : LIST OF 10 INTEGER PARAMETERS
 !
         IB(1) = 1
         DO I = 2,10
           IB(I) = 0
-        ENDDO  
+        ENDDO
 !
 !       ORIGIN COORDINATES IN METRES
 !
         IB(3)=I_ORIG
         IB(4)=J_ORIG
-C
-C       NUMBER OF PLANES IN 3D
-C
-C       FOLLOWING LINE WILL GIVE NPLAN=0 IN 2D
-C       THIS IS WHAT IS EXPECTED IN GRETEL
-C       TO REMOVE IF(NPLAN.GT.1) CHANGE GRETEL ACCORDINGLY.
+!
+!       NUMBER OF PLANES IN 3D
+!
+!       FOLLOWING LINE WILL GIVE NPLAN=0 IN 2D
+!       THIS IS WHAT IS EXPECTED IN GRETEL
+!       TO REMOVE IF(NPLAN.GT.1) CHANGE GRETEL ACCORDINGLY
         IF(NPLAN.GT.1) IB(7)=NPLAN
 !
-!PARA   MARQUAGE POUR ANNONCER LA LECTURE DE KNOLG
+!PARA   MARKING TO INTRODUCE THE READING OF KNOLG
         IF(NCSIZE.GT.1) THEN
           IB(8)=MESH%NPTFR
           IB(9)=NPTIR
@@ -126,13 +135,13 @@ C       TO REMOVE IF(NPLAN.GT.1) CHANGE GRETEL ACCORDINGLY.
 !PARAFIN
         NELEM = MESH%NELEM
 !
-!   Y-A-T-IL PASSAGE DE LA DATE ?
+!   IS THE DATE PASSED ?
         IF(DATE(1)+DATE(2)+DATE(3)+TIME(1)+TIME(2)+TIME(3).NE.0) THEN
          IB(10) = 1
         ENDIF
-!   ECRITURE DU TABLEAU DE 10 PARAMETRES
+!   WRITES THE ARRAY OF 10 PARAMETERS
         CALL ECRI2(XBID,IB,CBID,10,'I ',NFIC,'STD',ISTAT)
-!   PASSAGE DE LA DATE
+!   PASSES THE DATE
         IF(IB(10).EQ.1) THEN
           IB(1)=DATE(1)
           IB(2)=DATE(2)
@@ -143,7 +152,7 @@ C       TO REMOVE IF(NPLAN.GT.1) CHANGE GRETEL ACCORDINGLY.
           CALL ECRI2(XBID,IB,CBID,6,'I ',NFIC,'STD',ISTAT)
         ENDIF
 !
-!   LEC/ECR 5 : 4 ENTIERS
+!   LEC/ECR 5: 4 INTEGERS
 !
       IF(MESH%TYPELM.NE.50) THEN
         IB(1) = NELEM
@@ -172,7 +181,7 @@ C       TO REMOVE IF(NPLAN.GT.1) CHANGE GRETEL ACCORDINGLY.
       ENDIF
       IF(ERR.NE.0) STOP 'ECRGEO : ALLOCATION DE IKLES'
       YA_IKLES = .TRUE.
-!     INVERSION DE IKLE EN IKLES POUR SELAFIN
+!     INVERSION OF IKLE IN IKLES FOR SELAFIN
       IKLE => MESH%IKLE%I
       IF(MESH%TYPELM.NE.50) THEN
         DO I = 1,NDP
@@ -199,7 +208,7 @@ C       TO REMOVE IF(NPLAN.GT.1) CHANGE GRETEL ACCORDINGLY.
       CALL ECRI2(XBID,IKLES,CBID,NELEM*2,'I ',NFIC,'STD',ISTAT)
       ENDIF
 !
-!   LEC/ECR 7 : IPOBO (CAS DES FICHIERS SANS PARALLELISME)
+!   LEC/ECR 7 : IPOBO (SCALAR MODE)
 !
       IF(IB(8).EQ.0.AND.IB(9).EQ.0) THEN
 !
@@ -208,7 +217,7 @@ C       TO REMOVE IF(NPLAN.GT.1) CHANGE GRETEL ACCORDINGLY.
         YA_IPOBO = .TRUE.
         DO I=1,MESH%NPOIN
          IPOBO(I) = 0
-        END DO  
+        END DO
 !       ONLY LATERAL BOUNDARY POINTS WITH PRISMS
         DO I =1,MESH%NPTFR
          IPOBO(MESH%NBOR%I(I)) = I
@@ -219,24 +228,24 @@ C       TO REMOVE IF(NPLAN.GT.1) CHANGE GRETEL ACCORDINGLY.
 !
       IF(IB(8).NE.0.OR.IB(9).NE.0) THEN
 !
-!   LEC/ECR  7.1 KNOLG (SEULEMENT EN CAS DE PARALLELISME)
+!   LEC/ECR  7.1 KNOLG (PARALLEL MODE)
 !
       CALL ECRI2(XBID,MESH%KNOLG%I,CBID,MESH%NPOIN,'I ',NFIC,'STD',
-     *           ISTAT)
+     &           ISTAT)
 !
       ENDIF
 !
-!   LEC/ECR  8 ET 9 : X ET Y  COORDONNEES DES POINTS DU MAILLAGE
-
+!   LEC/ECR 8 AND 9: X AND Y COORDINATES OF THE MESH POINTS
+!
       CALL ECRI2(MESH%X%R ,IBID,CBID,MESH%NPOIN,RF,NFIC,'STD',ISTAT)
       CALL ECRI2(MESH%Y%R ,IBID,CBID,MESH%NPOIN,RF,NFIC,'STD',ISTAT)
 !
       IF(YA_IPOBO) DEALLOCATE(IPOBO)
       IF(YA_IKLES) DEALLOCATE(IKLES)
-
+!
 !***********************************************************************
 !     IF(DEBUG) CALL PROC_END('WRITE_MESH_SERAFIN')
 !***********************************************************************
-
+!
       RETURN
       END

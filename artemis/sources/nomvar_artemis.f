@@ -1,55 +1,57 @@
-C                       *************************
-                        SUBROUTINE NOMVAR_ARTEMIS
-C                       *************************
-C
-     *(TEXTE,TEXTPR,MNEMO)
-C
-C***********************************************************************
-C
-C  ARTEMIS VERSION 5.1   13/01/98    D. AELBRECHT (LNH) 01 30 87 74 12
-C
-C***********************************************************************
-C
-C FONCTION  :  FIXE LES NOMS DES VARIABLES DU CODE POUR LES FICHIERS
-C              DE RESULTAT ET DE GEOMETRIE (TEXTE) ET POUR LE FICHIER
-C              DE RESULTATS DU CALCUL PRECEDENT (TEXTPR)
-C
-C              EN GENERAL TEXTE ET TEXTPR SONT EGAUX SAUF SI ON FAIT
-C              UNE SUITE A PARTIR D'UN AUTRE LOGICIEL.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |   TEXTE        |<-- | NOM DES VARIABLES                            |
-C |   TEXTPR       |<-- | NOM DES VARIABLES DU CALCUL PRECEDENT        |
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : PREDAT
-C
-C SOUS-PROGAMME APPELE : NEANT
-C
-C**********************************************************************
-C
-      USE INTERFACE_ARTEMIS, EX_NOMVAR_ARTEMIS => NOMVAR_ARTEMIS                 
+!                    *************************
+                     SUBROUTINE NOMVAR_ARTEMIS
+!                    *************************
+!
+     &(TEXTE,TEXTPR,MNEMO)
+!
+!***********************************************************************
+! ARTEMIS   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    GIVES THE VARIABLE NAMES FOR THE RESULTS AND GEOMETRY
+!+                FILES (TEXT) AND FOR THE PREVIOUS COMPUTATION
+!+                RESULTS FILE (TEXTPR).
+!+
+!+                TEXT AND TEXTPR ARE GENERALLY EQUAL EXCEPT IF THE
+!+                PREVIOUS COMPUTATION COMES FROM ANOTHER SOFTWARE.
+!
+!history  D. AELBRECHT (LNH)
+!+        13/01/1998
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| MNEMO          |---| ALIASES FOR VARIALBLES
+!| TEXTE          |<--| NAME OF VARIABLES
+!| TEXTPR         |<--| VARIABLES NAME OF PREVIOUS CALCULATION
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+      USE INTERFACE_ARTEMIS, EX_NOMVAR_ARTEMIS => NOMVAR_ARTEMIS
       IMPLICIT NONE
-
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
+!
       CHARACTER*32 TEXTE(26),TEXTPR(26)
-      CHARACTER*8  MNEMO(26)                                            
-C
-C-----------------------------------------------------------------------
-C
-C  ENGLISH
-C
+      CHARACTER*8  MNEMO(26)
+!
+!-----------------------------------------------------------------------
+!
+!  ENGLISH
+!
       IF(LNG.EQ.2) THEN
-C
+!
       TEXTE (1 ) = 'WAVE HEIGHT     M               '
       TEXTE (2 ) = 'WAVE PHASE      RAD             '
       TEXTE (3 ) = 'U0 SURFACE      M/S             '
@@ -76,12 +78,12 @@ C
       TEXTE (24) = 'STRESS_SXX      M3/S2           '
       TEXTE (25) = 'STRESS_SXY      M3/S2           '
       TEXTE (26) = 'STRESS_SYY      M3/S2           '
-C
-C TEXTPR IS USED FOR READING PREVIOUS COMPUTATION FILES.
-C IN GENERAL TEXTPR=TEXTE BUT YOU CAN FOLLOW UP A COMPUTATION
-C FROM ANOTHER CODE WITH DIFFERENT NAMES THAT YOU HAVE TO
-C WRITE HERE.
-C
+!
+! TEXTPR IS USED TO READ PREVIOUS COMPUTATION FILES.
+! IN GENERAL TEXTPR=TEXTE UNLESS ANOTHER CODE WAS USED TO
+! GENERATE THE PREVIOUS RESULT, IN WHICH CASE THE OUTPUT
+! VARIABLE NAMES HAVE TO BE WRITTEN HERE.
+!
       TEXTPR (1 ) = 'WAVE HEIGHT     M               '
       TEXTPR (2 ) = 'WAVE PHASE      RAD             '
       TEXTPR (3 ) = 'U0 SURFACE      M/S             '
@@ -108,13 +110,13 @@ C
       TEXTPR (24) = 'STRESS_SXX      M3/S2           '
       TEXTPR (25) = 'STRESS_SXY      M3/S2           '
       TEXTPR (26) = 'STRESS_SYY      M3/S2           '
-C
-C-----------------------------------------------------------------------
-C
-C  FRANCAIS OU AUTRE
-C
+!
+!-----------------------------------------------------------------------
+!
+!  FRENCH OR OTHER
+!
       ELSE
-C
+!
       TEXTE (1 ) = 'HAUTEUR HOULE   M               '
       TEXTE (2 ) = 'PHASE HOULE     RAD             '
       TEXTE (3 ) = 'U0 SURFACE      M/S             '
@@ -141,11 +143,11 @@ C
       TEXTE (24) = 'CONTRAINTE_SXX  M3/S2           '
       TEXTE (25) = 'CONTRAINTE_SXY  M3/S2           '
       TEXTE (26) = 'CONTRAINTE_SYY  M3/S2           '
-C
-C TEXTPR SERT A LA LECTURE DES FICHIERS DE CALCULS PRECEDENTS
-C A PRIORI TEXTPR=TEXTE MAIS ON PEUT ESSAYER DE FAIRE UNE SUITE
-C DE CALCUL A PARTIR D'UN AUTRE CODE.
-C
+!
+! TEXTPR SERT A LA LECTURE DES FICHIERS DE CALCULS PRECEDENTS
+! A PRIORI TEXTPR=TEXTE MAIS ON PEUT ESSAYER DE FAIRE UNE SUITE
+! DE CALCUL A PARTIR D'UN AUTRE CODE.
+!
       TEXTPR (1 ) = 'HAUTEUR HOULE   M               '
       TEXTPR (2 ) = 'PHASE HOULE     RAD             '
       TEXTPR (3 ) = 'U0 SURFACE      M/S             '
@@ -172,43 +174,43 @@ C
       TEXTPR (24) = 'CONTRAINTE_SXX  M3/S2           '
       TEXTPR (25) = 'CONTRAINTE_SXY  M3/S2           '
       TEXTPR (26) = 'CONTRAINTE_SYY  M3/S2           '
-C
+!
       ENDIF
-C                                                                       
-C-----------------------------------------------------------------------
-C                                                                       
-C   ALIAS DES NOMS DE VARIABLES POUR LE FICHIER DES PARAMETRES          
-C                                                                       
-C     REPREND L'ANCIEN : DATA LETVAR /'APUVSBHCGKIJDEFOLMNWXT????'/
-C                                                                       
-      MNEMO(1)    = 'HS      '                                          
-      MNEMO(2)    = 'PHAS    '                                          
-      MNEMO(3)    = 'U0      '                                          
-      MNEMO(4)    = 'V0      '                                          
-      MNEMO(5)    = 'ZS      '                                          
-      MNEMO(6)    = 'ZF      '                                          
-      MNEMO(7)    = 'HW      '                                          
-      MNEMO(8)    = 'C       '                                          
-      MNEMO(9)    = 'CG      '                                          
-      MNEMO(10)   = 'K       '                                          
-      MNEMO(11)   = 'PHIR    '                                          
-      MNEMO(12)   = 'PHII    '                                          
-      MNEMO(13)   = 'D       '                                          
-      MNEMO(14)   = 'E       '                                          
-      MNEMO(15)   = 'F       '                                          
-      MNEMO(16)   = 'G       '                                          
-      MNEMO(17)   = 'T01     '                                          
-      MNEMO(18)   = 'T02     '                                          
-      MNEMO(19)   = 'TM      '                                          
-      MNEMO(20)   = 'FX      '                                          
-      MNEMO(21)   = 'FY      '                                          
-      MNEMO(22)   = 'INC     '                                          
-      MNEMO(23)   = 'QB      '                                          
-      MNEMO(24)   = 'SXX     '                                          
-      MNEMO(25)   = 'SXY     '                                          
-      MNEMO(26)   = 'SYY     '                                          
-C                                                                       
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
+!   ALIASES FOR THE VARIABLES IN THE STEERING FILE
+!
+!     USES THE OLD : LETVAR/&#039 DATED; APUVSBHCGKIJDEFOLMNWXT???? ' /
+!
+      MNEMO(1)    = 'HS      '
+      MNEMO(2)    = 'PHAS    '
+      MNEMO(3)    = 'U0      '
+      MNEMO(4)    = 'V0      '
+      MNEMO(5)    = 'ZS      '
+      MNEMO(6)    = 'ZF      '
+      MNEMO(7)    = 'HW      '
+      MNEMO(8)    = 'C       '
+      MNEMO(9)    = 'CG      '
+      MNEMO(10)   = 'K       '
+      MNEMO(11)   = 'PHIR    '
+      MNEMO(12)   = 'PHII    '
+      MNEMO(13)   = 'D       '
+      MNEMO(14)   = 'E       '
+      MNEMO(15)   = 'F       '
+      MNEMO(16)   = 'G       '
+      MNEMO(17)   = 'T01     '
+      MNEMO(18)   = 'T02     '
+      MNEMO(19)   = 'TM      '
+      MNEMO(20)   = 'FX      '
+      MNEMO(21)   = 'FY      '
+      MNEMO(22)   = 'INC     '
+      MNEMO(23)   = 'QB      '
+      MNEMO(24)   = 'SXX     '
+      MNEMO(25)   = 'SXY     '
+      MNEMO(26)   = 'SYY     '
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

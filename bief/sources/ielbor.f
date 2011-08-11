@@ -1,42 +1,49 @@
-C                       ***********************
-                        INTEGER FUNCTION IELBOR
-C                       ***********************
-C
-     *( IELM , I )
-C
-C***********************************************************************
-C BIEF VERSION 5.9             06/02/08      J-M HERVOUET 01 30 87 80 18
-C***********************************************************************
-C
-C  FONCTION  : DONNE LE TYPE D'ELEMENT DE BORD CORRESPONDANT A UN
-C              TYPE D'ELEMENT DONNE DANS LE DOMAINE.
-C
-C              LORSQU'IL Y A PLUSIEURS TYPES (CAS DES PRISMES PAR
-C              EXEMPLE) ON UTILISE L'INDICE I POUR LES DISTINGUER.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |   IELM         | -->| TYPE D'ELEMENT SUR LE DOMAINE.
-C |   I            | -->| CAS DE PLUSIEURS TYPES D'ELEMENTS DE BORD
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES : RIEN EN STANDARD
-C
-C***********************************************************************
-C
+!                    ***********************
+                     INTEGER FUNCTION IELBOR
+!                    ***********************
+!
+     &( IELM , I )
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    GIVES THE BOUNDARY ELEMENT TYPE CORRESPONDING TO
+!+                A GIVEN ELEMENT TYPE IN THE DOMAIN.
+!+
+!+            WHEN THERE ARE SEVERAL TYPES (AS IS THE CASE FOR THE
+!+                PRISMS FOR EXAMPLE) USES INDEX I TO DISTINGUISH THEM.
+!
+!history  J-M HERVOUET
+!+        06/02/08
+!+        V5P9
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| I              |-->| CASE OF SEVERAL BOUNDARY ELEMENTS
+!| IELM           |-->| TYPE OF ELEMENT IN THE DOMAIN
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
+!
       INTEGER IELM,I
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(IELM.EQ.10.OR.IELM.EQ.20) THEN
         IELBOR = 0
       ELSEIF(IELM.EQ.11.OR.IELM.EQ.12.OR.IELM.EQ.21) THEN
@@ -71,8 +78,8 @@ C
         CALL PLANTE(1)
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

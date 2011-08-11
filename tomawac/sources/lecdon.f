@@ -1,101 +1,114 @@
-C                       *****************
-                        SUBROUTINE LECDON
-C                       *****************
-C
-     *( U , V , X, Y, NPOIN2, NDON, BINDON, NBOR, NPTFR, XRELV, YRELV,
-     *  UR, VR, TRA01,TRA02,TRA03,IDTEL,NPTT,DONTEL,COURAN,INDIC,NPMAX,
-     *  CHDON)
-C
-C***********************************************************************
-C  COWADIS VERSION 1.0    01/02/95        F.MARCOS     (LNH) 30 87 72 66
-C***********************************************************************
-C
-C   FONCTION : CE SOUS-PROGRAMME PROJETE LA VALEUR DES COURANTS OU VENTS
-C              SUR LE MAILLAGE DE CALCUL
-C        (INSPIRE DE LA ROUTINE FOND DE TELEMAC 2D)
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C !      NOM       !MODE!                   ROLE                       !
-C !________________!____!______________________________________________!
-C !    U,V         !<-- !  COURANT OU VENT AUX NOEUDS DU MAILLAGE      !
-C !    X,Y         ! -->!  COORDONNEES DU MAILLAGE                     !
-C !    NPOIN2      ! -->!  NOMBRE DE POINTS DU MAILLAGE                !
-C !    NDON        ! -->!  NUMERO D'UNITE LOGIQUE DU FICHIER           !
-C !    BINDON      ! -->!  BINAIRE DU FICHIER DES DONNEES  (INDIC>2)   !
-C !    NBOR        ! -->!  NUMEROTATION DES POINTS FRONTIERE           !
-C !    NPTFR       ! -->!  NOMBRE DE  POINTS FRONTIERE                 !
-C !    XRELV       !<-->!  TABLEAU DES ABSCISSES DES POINTS RELEVES    !
-C !    YRELV       !<-->!  TABLEAU DES ORDONNEES DES POINTS RELEVES    !
-C !    UR,VR       !<-->!  TABLEAU DES COURANTS RELEVES                !
-C !    TRA01       !<-->!  TABLEAU DE TRAVAIL                          !
-C !    TRA02       !<-->!  TABLEAU DE TRAVAIL                          !
-C !    TRA03       !<-->!  TABLEAU DE TRAVAIL                          !
-C !    IDTEL       ! -->!  RANG DE LA VARIABLE TELEMAC A RECUPERER     !
-C !    DONTEL      ! -->!  LOGIQUE INDIQUANT SI ON RECUPERE            !
-C !                !    !  UNE VARIABLE TELEMAC                        !
-C !    COURAN      ! -->!  LOGIQUE INDIQUANT LA PRESENCE DE DONNEES    !
-C !    INDIC       ! -->!  TYPE DE FORMAT DE LECTURE                   !
-C !    NPMAX       ! -->!  NOMBRE DE POINTS RELEVES MAXIMUM            !
-C !________________!____!______________________________________________!
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : WAC
-C
-C SOUS-PROGRAMME APPELE : COUUTI,FASP
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE LECDON
+!                    *****************
+!
+     &( U , V , X, Y, NPOIN2, NDON, BINDON, NBOR, NPTFR, XRELV, YRELV,
+     &  UR, VR, TRA01,TRA02,TRA03,IDTEL,NPTT,DONTEL,COURAN,INDIC,NPMAX,
+     &  CHDON)
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   21/06/2011
+!***********************************************************************
+!
+!brief    THIS SUBROUTINE PROJECTS THE CURRENTS / WINDS ON THE
+!+                COMPUTATION MESH.
+!+
+!+           (INSPIRED FROM SUBROUTINE FOND IN TELEMAC2D)
+!
+!history  F.MARCOS (LNH)
+!+        01/02/95
+!+        V1P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        20/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| BINDON         |-->| BINAIRE DU FICHIER DES DONNEES  (INDIC>2)
+!| CHDON          |-->| NAME OF THE VARIABLE READ FROM THE DATA FILE
+!| COURAN         |-->| LOGICAL INDICATING IF THERE IS A CURRENT
+!| DONTEL         |-->| LOGICAL INDICATING RECOVERY OF TELEMAC DATA ITEM
+!| IDTEL          |-->| RANK OF THE TELEMAC DATA ITEM TO BE RECOVERED
+!| INDIC          |-->| FILE FORMAT
+!| NBOR           |-->| GLOBAL NUMBER OF BOUNDARY POINTS
+!| NDON           |-->| LOGICAL UNIT NUMBER OF THA DATA FILE
+!| NPMAX          |-->| MAXIMUM NUMBER OF POINTS THAT CAN BE READ
+!| NPOIN2         |-->| NUMBER OF POINTS IN 2D MESH
+!| NPTFR          |-->| NUMBER OF BOUNDARY POINTS
+!| NPTT           |-->| TIME STEP NUMBER IN TELEMAC FILE
+!| TRA01          |<->| WORK TABLE
+!| TRA02          |<->| WORK TABLE
+!| TRA03          |<->| WORK TABLE
+!| U              |<--| CURRENT OR WIND ALONG X AT THE MESH POINTS
+!| UR,VR          |<->| TABLE OF THE VALUES READ IN THE DATA FILE
+!| V              |<--| CURRENT OR WIND ALONG Y AT THE MESH POINTS
+!| X              |-->| ABSCISSAE OF POINTS IN THE MESH
+!| Y              |-->| ORDINATES OF POINTS IN THE MESH
+!| XRELV          |<->| TABLE OF THE ABSCISSES OF DATA FILE POINTS
+!| YRELV          |<->| TABLE OF THE ABSCISSES OF DATA FILE POINTS
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
       USE DECLARATIONS_TOMAWAC ,ONLY : MESH
       IMPLICIT NONE
-C
+!
       INTEGER LNG,LU
       COMMON/INFO/ LNG,LU
-C
+!
       INTEGER NP,NDON,NPOIN2,NPTFR,INDIC,NCOL,NLIG,BID,I,J
-C
+!
       INTEGER NPMAX,NBOR(NPTFR,2)
-C
+!
       DOUBLE PRECISION X(NPOIN2),Y(NPOIN2),U(NPOIN2),V(NPOIN2)
       DOUBLE PRECISION TRA01(NPMAX),TRA02(NPMAX),TRA03(NPOIN2)
       DOUBLE PRECISION XRELV(NPMAX),YRELV(NPMAX),UR(NPMAX),VR(NPMAX)
       DOUBLE PRECISION XMAX,XMIN,YMAX,YMIN,DX,DY,ATT,BDX(2)
-C
+!
       INTEGER NVAR,IB(10),ISTAT,NPTT,ID(3),IDTEL
-C
+!
       CHARACTER*3  BINDON,C
       CHARACTER*7  CHDON
       CHARACTER*32 TEXTE(20)
       CHARACTER*72 TITCAS
-C
+!
       LOGICAL DONTEL,COURAN
-C
-C-----------------------------------------------------------------------      
-C
+!
+!-----------------------------------------------------------------------
+!
       REAL, ALLOCATABLE :: W(:)
       ALLOCATE(W(NPMAX))
-C
-C-----------------------------------------------------------------------
-C        LECTURE DES POINTS RELEVES SUR UNITE LOGIQUE NDON
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!        READS THE POINTS FROM LOGICAL UNIT NDON
+!-----------------------------------------------------------------------
+!
       IF (INDIC.EQ.1) THEN
-C
-C     ------------------------------------------------------------------
-C     FORMAT DE TYPE WAM - DIFFERENCES FINIES
-C     ------------------------------------------------------------------
-C
+!
+!     ------------------------------------------------------------------
+!     WAM-LIKE FORMAT - FINITE DIFFERENCES
+!     ------------------------------------------------------------------
+!
          READ(NDON,10,END=100,ERR=100)
-     *      NCOL,NLIG,YMIN,YMAX,XMIN,XMAX,BID,BID
+     &      NCOL,NLIG,YMIN,YMAX,XMIN,XMAX,BID,BID
          DX=(XMAX-XMIN)/REAL(NCOL-1)
          DY=(YMAX-YMIN)/REAL(NLIG-1)
          NP=NCOL*NLIG
          WRITE(LU,*)
-     *    '-----------------------------------------------------'
+     &    '-----------------------------------------------------'
          IF (LNG.EQ.1) THEN
             WRITE(LU,*)'LECDON : LECTURE DU FICHIER DE DONNEES'
             WRITE(LU,*)'         NOMBRE DE LIGNES   : ',NLIG
@@ -112,170 +125,170 @@ C
             WRITE(LU,*)'         MAXIMAL ABSCISSAE : ',XMAX
             WRITE(LU,*)'         MINIMAL ORDINATES : ',YMIN
             WRITE(LU,*)'         MAXIMAL ORDINATES : ',YMAX
-         ENDIF 
+         ENDIF
          WRITE(LU,*)
-     *    '-----------------------------------------------------'
+     &    '-----------------------------------------------------'
          IF (NP.GT.NPMAX) THEN
           WRITE(LU,*)
-     *     '*****************************************************'
+     &     '*****************************************************'
           IF (LNG.EQ.1) THEN
              WRITE(LU,*)
-     *        ' LA DIMENSION PREVUE PAR DEFAUT POUR LE TABLEAU '
+     &        ' LA DIMENSION PREVUE PAR DEFAUT POUR LE TABLEAU '
              WRITE(LU,*)
-     *        ' DE DONNEES :',NPMAX,' EST TROP FAIBLE POUR '
+     &        ' DE DONNEES :',NPMAX,' EST TROP FAIBLE POUR '
              WRITE(LU,*)
-     *        ' CONTENIR LA TOTALITE DES DONNEES :',NP
+     &        ' CONTENIR LA TOTALITE DES DONNEES :',NP
           ELSE
              WRITE(LU,*)
-     *        ' THE DEFAULT DIMENSION ALLOWED FOR THE ARRAY OF '
+     &        ' THE DEFAULT DIMENSION ALLOWED FOR THE ARRAY OF '
              WRITE(LU,*)
-     *        ' DATA :',NPMAX,' IS TOO LOW TO HOLD'
+     &        ' DATA :',NPMAX,' IS TOO LOW TO HOLD'
              WRITE(LU,*)
-     *        ' ALL THE DATA :',NP
+     &        ' ALL THE DATA :',NP
           ENDIF
           WRITE(LU,*)
-     *        '*****************************************************'
+     &        '*****************************************************'
           CALL PLANTE(0)
          ENDIF
          READ(NDON,*)
          READ(NDON,20,END=100,ERR=100)
-     *      (UR(I),I=1,NCOL*NLIG)
+     &      (UR(I),I=1,NCOL*NLIG)
          READ(NDON,*)
          READ(NDON,20,END=100,ERR=100)
-     *      (VR(I),I=1,NCOL*NLIG)
+     &      (VR(I),I=1,NCOL*NLIG)
          DO 30 I=1,NCOL
              DO 40 J=1,NLIG
                 XRELV((I-1)*NLIG+J)=XMIN+DX*(I-1)
                 YRELV((I-1)*NLIG+J)=YMIN+DY*(J-1)
 40       CONTINUE
 30       CONTINUE
-C
-C
+!
+!
       ELSEIF (INDIC.EQ.2) THEN
-C 
-C     ------------------------------------------------------------------
-C     FORMAT DE TYPE SINUSX - SEMIS DE POINTS
-C     ------------------------------------------------------------------
-C
+!
+!     ------------------------------------------------------------------
+!     SINUSX-LIKE FORMAT - SCATTER OF POINTS
+!     ------------------------------------------------------------------
+!
           DO 50 I=1,100000
             READ(NDON,*,END=60,ERR=100)
             NP=I
 50        CONTINUE
 60        CONTINUE
           WRITE(LU,*)
-     *     '-----------------------------------------------------'
+     &     '-----------------------------------------------------'
           IF (LNG.EQ.1) THEN
              WRITE(LU,*)'LECDON : LECTURE DU FICHIER DE DONNEES'
              WRITE(LU,*)'         NOMBRE DE POINTS   : ',NP
           ELSE
              WRITE(LU,*)'LECDON : READING OF THE DATA FILE '
              WRITE(LU,*)'         NUMBER OF POINTS   : ',NP
-          ENDIF   
+          ENDIF
           WRITE(LU,*)
-     *     '-----------------------------------------------------'
+     &     '-----------------------------------------------------'
           IF (NP.GT.NPMAX) THEN
            WRITE(LU,*)
-     *     '*****************************************************'
+     &     '*****************************************************'
            IF (LNG.EQ.1) THEN
              WRITE(LU,*)
-     *        ' LA DIMENSION PREVUE PAR DEFAUT POUR LE TABLEAU '
+     &        ' LA DIMENSION PREVUE PAR DEFAUT POUR LE TABLEAU '
              WRITE(LU,*)
-     *        ' DE DONNEES :',NPMAX,' EST TROP FAIBLE POUR '
+     &        ' DE DONNEES :',NPMAX,' EST TROP FAIBLE POUR '
              WRITE(LU,*)
-     *        ' CONTENIR LA TOTALITE DES DONNEES :',NP
+     &        ' CONTENIR LA TOTALITE DES DONNEES :',NP
            ELSE
              WRITE(LU,*)
-     *        ' THE DEFAULT DIMENSION ALLOWED FOR THE ARRAY OF '
+     &        ' THE DEFAULT DIMENSION ALLOWED FOR THE ARRAY OF '
              WRITE(LU,*)
-     *        ' DATA :',NPMAX,' IS TOO LOW TO HOLD'
+     &        ' DATA :',NPMAX,' IS TOO LOW TO HOLD'
              WRITE(LU,*)
-     *        ' ALL THE DATA :',NP
+     &        ' ALL THE DATA :',NP
            ENDIF
            WRITE(LU,*)
-     *        '*****************************************************'
+     &        '*****************************************************'
            CALL PLANTE(0)
           ENDIF
           REWIND NDON
-          DO 70 I=1,NP
-             READ(NDON,*,ERR=100) XRELV(I),YRELV(I),UR(I),VR(I)
-70        CONTINUE
-C
-C
+          DO I=1,NP
+            READ(NDON,*,ERR=100) XRELV(I),YRELV(I),UR(I),VR(I)
+          ENDDO
+!
       ELSEIF (INDIC.EQ.3) THEN
-C 
-C     ------------------------------------------------------------------
-C     FORMAT DE TYPE TELEMAC - MAILLAGE EVENTUELLEMENT DIFFERENT 
-C          (BINAIRE)                 DU MAILLAGE COWADIS
-C     ------------------------------------------------------------------
-C
-C      LECTURE DU TITRE
-C
+!
+!     ------------------------------------------------------------------
+!     TELEMAC-LIKE FORMAT - MESH CAN BE DIFFERENT
+!          (BINARY)                 FROM COWADIS MESH
+!     ------------------------------------------------------------------
+!
+!      READS TITLE
+!
           CALL LIT(X,W,IB,TITCAS,72,'CH',NDON,BINDON,ISTAT)
-C
-C      LECTURE DU NOMBRE DE VARIABLES ET DE LEURS NOMS
-C
+!
+!      READS NUMBER OF VARIABLES AND THEIR NAMES
+!
           CALL LIT(X,W,IB,C,2,'I ',NDON,BINDON,ISTAT)
           NVAR=IB(1)
-          DO 80 I=1,NVAR
+          DO I=1,NVAR
             CALL LIT(X,W,IB,TEXTE(I),32,'CH',NDON,BINDON,ISTAT)
-80        CONTINUE
-C
-C      VARIABLES FORMAT ET GEOMETRIE
-C
+          ENDDO
+!
+!      FORMAT AND GEOMETRY
+!
           READ(NDON)
           CALL LIT(X,W,IB,C,4,'I ',NDON,BINDON,ISTAT)
           NP=IB(2)
           WRITE(LU,*)
-     *        '-----------------------------------------------------'
+     &        '-----------------------------------------------------'
           IF (LNG.EQ.1) THEN
              WRITE(LU,*)'LECDON : LECTURE DU FICHIER TELEMAC'
              WRITE(LU,*)'         NOMBRE DE POINTS   : ',NP
           ELSE
              WRITE(LU,*)'LECDON : READING OF TELEMAC DATA FILE '
              WRITE(LU,*)'         NUMBER OF POINTS   : ',NP
-          ENDIF   
+          ENDIF
           IF (NP.GT.NPMAX) THEN
            WRITE(LU,*)
-     *        '*****************************************************'
+     &        '*****************************************************'
            IF (LNG.EQ.1) THEN
              WRITE(LU,*)
-     *        ' LA DIMENSION PREVUE PAR DEFAUT POUR LE TABLEAU '
+     &        ' LA DIMENSION PREVUE PAR DEFAUT POUR LE TABLEAU '
              WRITE(LU,*)
-     *        ' DE DONNEES :',NPMAX,' EST TROP FAIBLE POUR '
+     &        ' DE DONNEES :',NPMAX,' EST TROP FAIBLE POUR '
              WRITE(LU,*)
-     *        ' CONTENIR LA TOTALITE DES DONNEES :',NP
+     &        ' CONTENIR LA TOTALITE DES DONNEES :',NP
            ELSE
              WRITE(LU,*)
-     *        ' THE DEFAULT DIMENSION ALLOWED FOR THE ARRAY OF '
+     &        ' THE DEFAULT DIMENSION ALLOWED FOR THE ARRAY OF '
              WRITE(LU,*)
-     *        ' DATA :',NPMAX,' IS TOO LOW TO HOLD'
+     &        ' DATA :',NPMAX,' IS TOO LOW TO HOLD'
              WRITE(LU,*)
-     *        ' ALL THE DATA :',NP
+     &        ' ALL THE DATA :',NP
            ENDIF
            WRITE(LU,*)
-     *        '*****************************************************'
-           CALL PLANTE(0)
+     &        '*****************************************************'
+           CALL PLANTE(1)
+           STOP
            ENDIF
           READ(NDON)
           READ(NDON)
-C
-C      X ET Y
-C
+!
+!      X AND Y
+!
           CALL LIT(XRELV,W,IB,C,NP,'R4',NDON,BINDON,ISTAT)
           CALL LIT(YRELV,W,IB,C,NP,'R4',NDON,BINDON,ISTAT)
-C
-C      PAS DE TEMPS ET VARIABLES
-C
+!
+!      TIME STEP AND VARIABLES
+!
           DO 110 J=1,(NPTT-1)*(NVAR+1)
              READ(NDON)
 110       CONTINUE
-C
+!
           IF (DONTEL) ID(3)=IDTEL
           IF (COURAN) THEN
              ID(1)=1
              ID(2)=2
           ENDIF
-C
+!
           CALL LIT(BDX(1),W,IB,C,1,'R4',NDON,BINDON,ISTAT)
           ATT=BDX(1)
           DO 90 I=1,NVAR
@@ -289,9 +302,9 @@ C
                READ(NDON)
             ENDIF
 90        CONTINUE
-C
-C      IMPRESSIONS SUR LE LISTING
-C
+!
+!      WRITES TO THE LISTING
+!
           IF (LNG.EQ.1) THEN
             WRITE(LU,*)'         TITRE DU CAS TELEMAC : '
             WRITE(LU,*)'           ',TITCAS
@@ -302,41 +315,42 @@ C
             WRITE(LU,*)'           ',TITCAS
             WRITE(LU,*)'         TIME OF TELEMAC RECORD : ',ATT
             WRITE(LU,*)'         VARIABLE(S) OF TELEMAC READ : '
-          ENDIF  
+          ENDIF
           IF (COURAN) THEN
               WRITE(LU,*)'           ',TEXTE(ID(1))
               WRITE(LU,*)'           ',TEXTE(ID(2))
           ENDIF
           IF (DONTEL)
-     *            WRITE(LU,*)'           ',TEXTE(ID(3))
+     &            WRITE(LU,*)'           ',TEXTE(ID(3))
           WRITE(LU,*)
-     *        '-----------------------------------------------------'
-C
-C
+     &        '-----------------------------------------------------'
+!
+!
       ELSEIF (INDIC.EQ.4) THEN
-C
-C     ------------------------------------------------------------------
-C        LECTURE D'UN FORMAT DEFINI PAR L'UTILISATEUR
-C     ------------------------------------------------------------------
+!
+!     ------------------------------------------------------------------
+!       READS A USER-DEFINED FORMAT
+!     ------------------------------------------------------------------
         IF(CHDON(1:1).EQ.'C') THEN
-C         LECTURE D'UN CHAMP DE COURANT
+!         READS A CURRENT FIELD
               CALL COUUTI
-     *    (X,Y,NPOIN2,NDON,BINDON,NBOR,NPTFR,0.,0.,0.,0.,
-     *     NP,XRELV,YRELV,UR,VR,TRA03,TRA03,TRA03,TRA03,NPMAX)
+     &    (X,Y,NPOIN2,NDON,BINDON,NBOR,NPTFR,0.,0.,0.,0.,
+     &     NP,XRELV,YRELV,UR,VR,TRA03,TRA03,TRA03,TRA03,NPMAX)
         ELSEIF(CHDON(1:1).EQ.'V' .OR. CHDON(1:1).EQ.'W') THEN
-C         LECTURE D'UN CHAMP DE VENT
+!         READS A WIND FIELD
           CALL VENUTI
-     *    (X,Y,NPOIN2,NDON,BINDON,NBOR,NPTFR,0.,0.,0.,0.,
-     *     NP,XRELV,YRELV,UR,VR,TRA03,TRA03,TRA03,TRA03,NPMAX)
+     &    (X,Y,NPOIN2,NDON,BINDON,NBOR,NPTFR,0.,0.,0.,0.,
+     &     NP,XRELV,YRELV,UR,VR,TRA03,TRA03,TRA03,TRA03,NPMAX)
         ELSE
           IF(LNG.EQ.1) THEN
             WRITE(LU,*) 'LE TYPE DE DONNEES A LIRE EST INCONNU'
           ELSE
             WRITE(LU,*) 'UNKNOWN DATA'
           ENDIF
-            CALL PLANTE(0)
+            CALL PLANTE(1)
+            STOP
          ENDIF
-C
+!
       ELSE
         WRITE(LU,*)'***********************************************'
         IF (LNG.EQ.1) THEN
@@ -347,38 +361,39 @@ C
           WRITE(LU,*)'         DATA FILE UNKNOWN :',INDIC
         ENDIF
         WRITE(LU,*)'***********************************************'
-          
-          CALL PLANTE(0)
+        CALL PLANTE(1)
+        STOP
       ENDIF
-
-C
-C-----------------------------------------------------------------------
-C   LE COURANT EST CALCULE PAR INTERPOLATION SUR LES POINTS INTERIEURS
-C                         AU DOMAINE
-C-----------------------------------------------------------------------
-C
-      IF (COURAN) THEN
+!
+!-----------------------------------------------------------------------
+!   THE CURRENTS ARE INTERPOLATED ONTO ALL THE INTERIOR POINTS
+!                         TO THE DOMAIN
+!-----------------------------------------------------------------------
+!
+      IF(COURAN) THEN
         CALL FASP(X,Y,U,NPOIN2,XRELV,YRELV,UR,NP,NBOR,MESH%KP1BOR%I,
-     *                                                    NPTFR,1.D-6)
+     &                                                    NPTFR,1.D-6)
         CALL FASP(X,Y,V,NPOIN2,XRELV,YRELV,VR,NP,NBOR,MESH%KP1BOR%I,
-     *                                                    NPTFR,1.D-6)
+     &                                                    NPTFR,1.D-6)
       ENDIF
-      IF (DONTEL) 
-     *CALL FASP(X,Y,TRA03,NPOIN2,XRELV,YRELV,TRA01,NP,NBOR,
-     *                                      MESH%KP1BOR%I,NPTFR,1.D-6)
-C
-C-----------------------------------------------------------------------
-C
-C     FORMATS
-C
+      IF(DONTEL) THEN
+        CALL FASP(X,Y,TRA03,NPOIN2,XRELV,YRELV,TRA01,NP,NBOR,
+     &            MESH%KP1BOR%I,NPTFR,1.D-6)
+      ENDIF
+!
+!-----------------------------------------------------------------------
+!
+!     FORMATS
+!
 10    FORMAT (2I4,4F9.3,2I2)
-20    FORMAT (10f6.2)
-C
+20    FORMAT (10F6.2)
+!
       DEALLOCATE(W)
+!
       RETURN
-C
-C     EN CAS DE PROBLEME DE LECTURE ...
-C
+!
+!     IF FAILED TO READ THE FILE ...
+!
 100   CONTINUE
       WRITE(LU,*)'*********************************************'
       IF (LNG.EQ.1) THEN
@@ -390,7 +405,6 @@ C
       ENDIF
       WRITE(LU,*)'*********************************************'
       CALL PLANTE(1)
-C
-      DEALLOCATE(W)
+!
       RETURN
       END

@@ -1,161 +1,139 @@
-C                       *****************
-                        SUBROUTINE AIDELU
-C                       *****************
-C
-     *( ICOL , LIGNE, DOC )
-C
-C***********************************************************************
-C DAMOCLES VERSION 5.8     14/01/08   J.M. HERVOUET (LNH) 01 30 87 80 18
-C                                       A. YESSAYAN
-C                                       L. LEGUE
-C Copyright EDF 2008
-C
-C 14/01/2008 : MEILLEUR CONTROLE DES DEPASSEMENTS DE LA TAILLE DE LIGNE
-C
-C***********************************************************************
-C
-C FONCTION  : DECODE UNE CHAINE DE CARACTERES A PARTIR DE LA COLONNE
-C             ICOL+1 DE LA LIGNE. MAXIMUM 80 CARACTERES PAR LIGNE.
-C             CETTE CHAINE PEUT ETRE SUR PLUSIEURS LIGNES.
-C             AIDELU, NE SERT A DECODER QUE LE CHAMP AIDE DU
-C             DICTIONNAIRE ET LES MOTS IGNORES POUR EDAMOX.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C !      NOM       !MODE!                   ROLE                       !
-C !________________!____!______________________________________________!
-C !                !    !                                              !
-C !  ICOL          !<-->! INDICE DU CARACTERE COURANT DANS LA LIGNE    !
-C !  LIGNE         !<-->! LIGNE EN COURS DE DECODAGE.                  !
-C !  DOC           ! -->! LOGIQUE DE DOCUMENTATION DE LA SORTIE        !
-C !                !    ! = VRAI : IMPRIME L'AIDE (FICHIER RESULTAT)   !
-C !                !    ! = FAUX : N'IMPRIME PAS L'AIDE                !
-C !________________!____!______________________________________________!
-C !                !    !                                              !
-C !   /COMMON/     !    !                                              !
-C !                !    !                                              !
-C !    DCINFO      !    !                                              !
-C !  . LNG         ! -->! NUMERO DE LA LANGUE DE DECODAGE              !
-C !  . LU          ! -->! NUMERO DE L'UNITE LOGIQUE DES SORTIES        !
-C !                !    !                                              !
-C !    DCRARE      !    !                                              !
-C !  . ERREUR      !<-- ! SORT AVEC LA VALEUR .TRUE. EN CAS D'ERREUR   !
-C !  . RETOUR      !<-- ! SORT AVEC LA VALEUR .TRUE. EN CAS DE FIN DE  !
-C !                !    ! FIN DE FICHIER OU D'ERREUR DE LECTURE.       !
-C !                !    !                                              !
-C !    DCMLIG      !    !                                              !
-C !  . NLIGN       !<-->! NUMERO DE LA LIGNE TRAITEE DANS LE FICHIER LU!
-C !  . LONGLI      ! -->! LONGUEUR DES LIGNES                          !
-C !                !    !                                              !
-C !    DCCHIE      !    !                                              !
-C !  . NFIC        ! -->! NUMERO DE CANAL DU FICHIER EN COURS DE LECT. !
-C !________________!____!______________________________________________!
-C
-C-----------------------------------------------------------------------
-C
-C     - PRECAUTIONS D'EMPLOI :    ON SUIT ICI LA CONVENTION FORTRAN : ''
-C                                 EST COMME ETANT ' DANS UNE CHAINE DE
-C                                 CARACTERES SI CETTE CHAINE EST ECRITE
-C                                 ENTRE COTES
-C                                 ATTENTION, LES COTES PLACEES EN DEBUT
-C                                 ET EN FIN DE LIGNES SONT SOURCES
-C                                 POSSIBLES D'ERREURS
-C
-C     - PORTABILITE :             IBM,CRAY,HP,SUN
-C
-C     - APPELE PAR :              DAMOC
-C
-C     - FONCTIONS APPELEES :      NEXT,PRECAR
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE AIDELU
+!                    *****************
+!
+     &( ICOL , LIGNE, DOC )
+!
+!***********************************************************************
+! DAMOCLES   V6P0                                   21/08/2010
+!***********************************************************************
+!
+!brief    DECODES A CHARACTER STRING FROM COLUMN ICOL+1
+!+             OF A LINE  (80 CHARACTERS MAXIMUM PER LINE).
+!+             THIS STRING CAN RUN OVER SEVERAL LINES.
+!+             AIDELU IS USED TO DECODE THE HELP SECTION OF THE
+!+             DICTIONARY ONLY, AND THE WORDS IGNORED FOR EDAMOX.
+!
+!note     PORTABILITY : IBM,CRAY,HP,SUN
+!
+!warning  FOLLOWS THE FORTRAN CONVENTION : '' IS READ AS
+!+            ' WHEN WITHIN A CHARACTER STRING IF THE STRING
+!+            IS WRITTEN BETWEEN QUOTES
+!+
+!warning  QUOTES AT THE BEGINNING AND END OF LINES ARE POSSIBLE
+!+            SOURCES OF ERRORS
+!
+!history  J.M. HERVOUET (LNH); A. YESSAYAN; L. LEGUE
+!+        14/01/2008
+!+        V5P8
+!+   BETTER CONTROL OF 'LONG' LINES
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| DOC            |-->| LOGIQUE DE DOCUMENTATION DE LA SORTIE
+!|                |   | = VRAI : IMPRIME L'AIDE (FICHIER RESULTAT)
+!|                |   | = FAUX : N'IMPRIME PAS L'AIDE
+!| ICOL           |<->| INDICE DU CARACTERE COURANT DANS LA LIGNE
+!| LIGNE          |<->| LIGNE EN COURS DE DECODAGE.
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
-C
+!
+!
       INTEGER       ICOL
       LOGICAL       DOC
       CHARACTER*(*) LIGNE
-C
+!
       INTEGER  NEXT,PRECAR
       EXTERNAL NEXT,PRECAR
-C
+!
       INTEGER       LNG,LU
       INTEGER       NLIGN,LONGLI
       INTEGER       NFIC
       LOGICAL       ERREUR,RETOUR
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       INTEGER       IDEB,IFIN,JCOL
       CHARACTER*1   QUOTE,TABUL,PTVIRG
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       COMMON / DCINFO / LNG,LU
       COMMON / DCRARE / ERREUR,RETOUR
       COMMON / DCMLIG / NLIGN,LONGLI
       COMMON / DCCHIE / NFIC
-C
+!
       INTRINSIC CHAR
-c
-C***********************************************************************
-C                                   MARQUAGE RCS ET SCCS
-C
-C***********************************************************************
-C
+!
+!***********************************************************************
+!                                   MARKS RCS AND SCCS
+!
+!***********************************************************************
+!
       QUOTE  = ''''
       PTVIRG = ';'
       TABUL =CHAR(9)
 9     ICOL   = NEXT( ICOL+1 , LIGNE )
-C
-C        //// CALCUL DES EXTREMITES DE LA CHAINE ////
-C
-C    NOTE : LA CHAINE PEUT ETRE PLACEE ENTRE COTES OU SANS COTES
-C           SI ELLE N'EST PAS ENTRE COTES, ELLE NE PEUT CONTENIR
-C           DE CARACTERE BLANC.
-C
-C
+!
+!        //// FINDS THE ENDS OF THE STRING ////
+!
+!    NOTE: THE STRING CAN BE BETWEEN QUOTES OR NOT.
+!          IF NOT, IT CANNOT CONTAIN WHITE CHARACTERS.
+!
+!
+!
       IF ( LIGNE(ICOL:ICOL).NE.QUOTE ) THEN
            IDEB = ICOL
-C                 PRECAR : MEME ROLE QUE PREVAL, MAIS NE SAUTE PAS
-C                          LES ZONES COMMENTAIRES
+!                 PRECAR: SAME FUNCTION AS PREVAL, BUT DOES NOT JUMP
+!                         OVER COMMENTED LINES
            ICOL = PRECAR (ICOL+1,LIGNE,' ',PTVIRG,TABUL) - 1
            IFIN = ICOL
            IF (DOC) WRITE(LU,10) LIGNE(IDEB:IFIN)
 10         FORMAT(1X,A)
       ELSE
-C
-C SI LA CHAINE EST ENTRE QUOTES
-C
+!
+! IF THE STRING IS BETWEEN QUOTES
+!
          IDEB = ICOL + 1
-C
-C TANT QU'IL N'Y A PAS DE QUOTE SUR LA LIGNE
-C
+!
+! WHILE THERE IS NO QUOTE ON THE LINE
+!
 100      ICOL = PRECAR(ICOL+1,LIGNE,QUOTE,QUOTE,QUOTE)
          IF (ICOL.GT.LONGLI) THEN
-C         PAS DE COTE SUR LA LIGNE, ON L'IMPRIME ET ON PASSE A LA SUITE
+!         NO QUOTE ON THE LINE, IT'S WRITTEN OUT AND GOES TO NEXT
           IF (DOC) WRITE(LU,10) LIGNE(IDEB:LONGLI)
-C         ON LIT LA LIGNE SUIVANTE.
+!         READS NEXT LINE
           READ(NFIC,END=900,ERR=998,FMT='(A)') LIGNE
           NLIGN = NLIGN + 1
           ICOL = 1
           IDEB = 1
           GO TO 100
          ELSEIF(ICOL.EQ.LONGLI) THEN
-C         COTE EN BOUT DE LIGNE, ON IMPRIME LA LIGNE SAUF LA COTE
-C         ET C'EST TOUT.
+!        QUOTE AT THE END OF THE LINE, THE LINE IS WRITTEN OUT (EXCEPT
+!        THE QUOTE) AND THAT'S IT
           IF (DOC) WRITE(LU,10) LIGNE(IDEB:ICOL-1)
          ELSE
-C         QUOTE SUIVANTE
+!         NEXT QUOTE
           JCOL = PRECAR(ICOL+1,LIGNE,QUOTE,QUOTE,QUOTE)
-C         S'IL Y A UNE DOUBLE QUOTE, ON L'ENLEVE
+!         IF THERE IS A DOUBLE QUOTE, IT IS DELETED
           IF ((JCOL-ICOL).EQ.1) THEN
             ICOL=JCOL
             LIGNE(JCOL:LONGLI)=LIGNE(JCOL+1:LONGLI) // ' '
             GO TO 100
           ELSE
-C           ON IMPRIME L'AIDE LUE EN ENLEVANT LA DERNIERE QUOTE
+!           PRINTS OUT THE 'HELP' WHEN DELETING THE LAST QUOTE
             IF (DOC) WRITE(LU,10) LIGNE(IDEB:ICOL-1)
           ENDIF
          ENDIF
@@ -165,9 +143,9 @@ C           ON IMPRIME L'AIDE LUE EN ENLEVANT LA DERNIERE QUOTE
         IF(LIGNE(ICOL:ICOL).EQ.PTVIRG(1:1)) GO TO 9
       ENDIF
       GO TO 1000
-C
-C IMPRESSION DES ERREURS
-C
+!
+! WRITES OUT ERRORS
+!
 998   CONTINUE
       IF(LNG.EQ.1) THEN
         WRITE(LU,999) NFIC, NLIGN
@@ -179,17 +157,17 @@ C
       ENDIF
 900   CONTINUE
       RETOUR = .TRUE.
-C
-C FIN DE L'IMPRESSION DES ERREURS
-C
+!
+! END OF THE WRITING OF ERRORS
+!
 1000  CONTINUE
-C
-C DEUX LIGNES SAUTEES POUR LA MISE EN PAGE
-C
+!
+! TWO EMPTY LINES FOR THE PAGE LAYOUT
+!
       IF (DOC) WRITE(LU,*) ' '
       IF (DOC) WRITE(LU,*) ' '
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

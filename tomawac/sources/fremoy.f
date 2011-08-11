@@ -1,89 +1,86 @@
-C                       *****************
-                        SUBROUTINE FREMOY
-C                       *****************
-C
-     *( FMOY  , F     , FREQ  , DFREQ , TAILF , NF    , NPLAN , NPOIN2,
-     *  AUX1  , AUX2  )
-C
-C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C
-C                                                                     C
-C  EDF/DER - LABORATOIRE NATIONAL D'HYDRAULIQUE  -  CHATOU (FRANCE)   C
-C                                                                     C
-C  CODE TOMAWAC DE MODELISATION DES ETATS DE MER EN ELEMENTS FINIS    C
-C                       ---- VERSION 1.2 ----                         C
-C                                                                     C
-C  FREMOY : CALCUL DE LA FREQUENCE MOYENNE FMOY DU SPECTRE EN TOUS    C
-C  ******** LES POINTS DU MAILLAGE SPATIAL 2D. CETTE FREQUENCE        C
-C             MOYENNE, IDENTIQUE A CELLE CALCULEE PAR FEMEAN DANS WAM C
-C             CYCLE 4, EST DEFINIE PAR :                              C
-C                                                                     C
-C                     SOMME(  F(FREQ,TETA) DFREQ DTETA  )             C
-C             FMOY =  ----------------------------------------        C
-C                     SOMME(  F(FREQ,TETA)/FREQ DFREQ DTETA  )        C
-C                                                                     C
-C   - CREE POUR VERSION 1.0  LE 09/02/95 PAR P. THELLIER ET M. BENOIT C
-C                                                                     C
-C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C
-C                                                                     C
-C  ARGUMENTS D'APPEL :                                                C
-C  *******************                                                C
-C  +-------------+----+--------------------------------------------+  C
-C  ! NOM         !MODE! SIGNIFICATION - OBSERVATIONS               !  C
-C  +-------------+----+--------------------------------------------+  C
-C  ! FMOY(-)     !<-- ! TABLEAU DES FREQUENCES MOYENNES F01        !  C
-C  ! F(-,-,-)    ! -->! SPECTRE DIRECTIONNEL DE VARIANCE           !  C
-C  ! FREQ(-)     ! -->! TABLEAU DES FREQUENCES DE DISCRETISATION   !  C
-C  ! DFREQ(-)    ! -->! TABLEAU DES PAS DE FREQUENCE               !  C
-C  ! TAILF       ! -->! FACTEUR DE QUEUE DU SPECTRE                !  C
-C  ! NF          ! -->! NOMBRE DE FREQUENCES DE DISCRETISATION     !  C
-C  ! NPLAN       ! -->! NOMBRE DE DIRECTIONS DE DISCRETISATION     !  C
-C  ! NPOIN2      ! -->! NOMBRE DE POINTS DU MAILLAGE SPATIAL 2D    !  C
-C  ! AUX1(-)     !<-->! TABLEAU DE TRAVAIL (DIMENSION NPOIN2)      !  C
-C  ! AUX2(-)     !<-->! TABLEAU DE TRAVAIL (DIMENSION NPOIN2)      !  C
-C  +-------------+----+--------------------------------------------+  C
-C  ! MODE   (-> : NON-MODIFIE)  (<-> : MODIFIE)  (<- : INITIALISE) !  C
-C  +---------------------------------------------------------------+  C
-C                                                                     C
-C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C
-C                                                                     C
-C  APPELS :    - PROGRAMME(S) APPELANT  :  DUMP2D, TERSOU             C
-C  ********    - PROGRAMME(S) APPELE(S) :                             C
-C                                                                     C
-C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C
-C                                                                     C
-C  REMARQUES :                                                        C
-C  ***********                                                        C
-C  - LA PARTIE HAUTES-FREQUENCES DU SPECTRE N'EST PRISE EN COMPTE QUE C
-C    SI LE FACTEUR DE QUEUE (TAILF) EST STRICTEMENT SUPERIEUR A 2.    C
-C                                                                     C
-C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C
-C
+!                    *****************
+                     SUBROUTINE FREMOY
+!                    *****************
+!
+     &( FMOY  , F     , FREQ  , DFREQ , TAILF , NF    , NPLAN , NPOIN2,
+     &  AUX1  , AUX2  )
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   15/06/2011
+!***********************************************************************
+!
+!brief    COMPUTES THE MEAN SPECTRAL FREQUENCY FMOY FOR ALL
+!+                THE NODES IN THE 2D MESH. (THIS MEAN FREQUENCY IS
+!+                IDENTICAL TO THAT COMPUTED IN FEMEAN - WAM CYCLE 4).
+!code
+!+                     SOMME(  F(FREQ,TETA) DFREQ DTETA  )
+!+             FMOY =  ----------------------------------------
+!+                     SOMME(  F(FREQ,TETA)/FREQ DFREQ DTETA  )
+!
+!note     THE HIGH-FREQUENCY PART OF THE SPECTRUM IS ONLY CONSIDERED
+!+         IF THE TAIL FACTOR (TAILF) IS STRICTLY GREATER THAN 2.
+!
+!history  P. THELLIER; M. BENOIT
+!+        09/02/95
+!+        V1P0
+!+   CREATED
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        15/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| AUX1           |<->| WORK TABLE
+!| AUX2           |<->| WORK TABLE
+!| DFREQ          |-->| FREQUENCY STEPS BETWEEN DISCRETIZED FREQUENCIES
+!| F              |-->| VARIANCE DENSITY DIRECTIONAL SPECTRUM
+!| FMOY           |<--| MEAN FREQUENCIES F-10
+!| FREQ           |-->| DISCRETIZED FREQUENCIES
+!| NF             |-->| NUMBER OF FREQUENCIES
+!| NPLAN          |-->| NUMBER OF DIRECTIONS
+!| NPOIN2         |-->| NUMBER OF POINTS IN 2D MESH
+!| TAILF          |-->| SPECTRUM QUEUE FACTOR
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
-C.....VARIABLES TRANSMISES
-C     """"""""""""""""""""
+!
+!.....VARIABLES IN ARGUMENT
+!     """"""""""""""""""""
       INTEGER  NF    , NPLAN , NPOIN2
       DOUBLE PRECISION TAILF
       DOUBLE PRECISION F(NPOIN2,NPLAN,NF)
       DOUBLE PRECISION FREQ(NF), DFREQ(NF), FMOY(NPOIN2)
       DOUBLE PRECISION AUX1(NPOIN2), AUX2(NPOIN2)
-C
-C.....VARIABLES LOCALES
-C     """""""""""""""""
+!
+!.....LOCAL VARIABLES
+!     """""""""""""""""
       INTEGER  JP    , JF    , IP
       DOUBLE PRECISION SEUIL , DTETAR, AUX3  , AUX4
-C
-C
+!
+!
       SEUIL = 1.D-20
       DTETAR= 2.D0*3.141592654D0/DBLE(NPLAN)
       DO 30 IP = 1,NPOIN2
         AUX1(IP) = 0.D0
         AUX2(IP) = 0.D0
    30 CONTINUE
-C
-C-----C-------------------------------------------------------C
-C-----C  SOMMATION SUR LA PARTIE DISCRETISEE DU SPECTRE       C
-C-----C-------------------------------------------------------C
+!
+!-----C-------------------------------------------------------C
+!-----C SUMS UP THE CONTRIBUTIONS FOR THE DISCRETISED PART OF THE SPECTRUM     C
+!-----C-------------------------------------------------------C
       DO 20 JF = 1,NF-1
         AUX3=DTETAR*DFREQ(JF)
         AUX4=AUX3/FREQ(JF)
@@ -94,10 +91,10 @@ C-----C-------------------------------------------------------C
     5     CONTINUE
    10   CONTINUE
    20 CONTINUE
-C
-C-----C-------------------------------------------------------------C
-C-----C  PRISE EN COMPTE EVENTUELLE DE LA PARTIE HAUTES-FREQUENCES  C
-C-----C-------------------------------------------------------------C
+!
+!-----C-------------------------------------------------------------C
+!-----C (OPTIONALLY) TAKES INTO ACCOUNT THE HIGH-FREQUENCY PART     C
+!-----C-------------------------------------------------------------C
       IF (TAILF.GT.1.D0) THEN
         AUX3=DTETAR*(DFREQ(NF)+FREQ(NF)/(TAILF-1.D0))
         AUX4=DTETAR*(DFREQ(NF)/FREQ(NF)+1.D0/TAILF)
@@ -111,10 +108,10 @@ C-----C-------------------------------------------------------------C
           AUX2(IP) = AUX2(IP) + F(IP,JP,NF)*AUX4
    45   CONTINUE
    40 CONTINUE
-C
-C-----C-------------------------------------------------------------C
-C-----C  CALCUL DE LA FREQUENCE MOYENNE PROPREMENT DIT              C
-C-----C-------------------------------------------------------------C
+!
+!-----C-------------------------------------------------------------C
+!-----C COMPUTES THE MEAN FREQUENCY                                 C
+!-----C-------------------------------------------------------------C
       DO 50 IP=1,NPOIN2
         IF (AUX1(IP).LT.SEUIL) THEN
           FMOY(IP) = SEUIL
@@ -122,6 +119,6 @@ C-----C-------------------------------------------------------------C
           FMOY(IP) = AUX1(IP)/AUX2(IP)
         ENDIF
    50 CONTINUE
-C
+!
       RETURN
       END

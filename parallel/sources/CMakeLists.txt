@@ -38,7 +38,7 @@ install(TARGETS parallel${TELEMAC_VERSION}
 add_executable(gretel.exe gretel_autop.f)
 #
 install(TARGETS gretel.exe
-            RUNTIME DESTINATION bin)
+            RUNTIME DESTINATION parallel$/${Fortran_COMPILER_NAME})
 #
 FIND_LIBRARY(METIS_LIBRARY metis
     /usr/local/lib
@@ -53,6 +53,6 @@ IF(METIS_LIBRARY)
   target_link_libraries(partel.exe ${METIS_LIBRARY})
 #
   install(TARGETS partel.exe
-            RUNTIME DESTINATION bin)
+            RUNTIME DESTINATION parallel$/${Fortran_COMPILER_NAME})
 #
 ENDIF(METIS_LIBRARY)

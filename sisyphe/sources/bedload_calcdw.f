@@ -1,51 +1,51 @@
-      ! ************************* !
-        SUBROUTINE BEDLOAD_CALCDW ! (_IMP_)
-      ! ************************* !
-
-     &  (UCW, UW, TW, NPOIN, PI, UW1, UW2, TW1, TW2)
-
-C**********************************************************************C
-C SISYPHE VERSION 5.4  Oct   2003  C. VILLARET                         C
-C**********************************************************************C
-
-
-               ! ================================ !
-               ! Calcul des vitesse qudratique et !
-               !   des periodes en cas de houle   !
-               ! ================================ !
-
-
-C COPYRIGHT EDF-BAW-IFH
-C**********************************************************************C
-C                                                                      C
-C                 SSSS I   SSSS Y   Y PPPP  H   H EEEEE                C
-C                S     I  S      Y Y  P   P H   H E                    C
-C                 SSS  I   SSS    Y   PPPP  HHHHH EEEE                 C
-C                    S I      S   Y   P     H   H E                    C
-C                SSSS  I  SSSS    Y   P     H   H EEEEE                C
-C                                                                      C
-C----------------------------------------------------------------------C
-C                             ARGUMENTS                                C
-C .________________.____.______________________________________________C
-C |      NOM       |MODE|                   ROLE                       C
-C |________________|____|______________________________________________C
-C |________________|____|______________________________________________C
-C                    <=  Can't be change by the user                   C
-C                    =>  Can be changed by the user                    C 
-C ---------------------------------------------------------------------C
-!                                                                      !
-! CALLED BY BEDLOAD_DIBWAT                                             !
-!                                                                      !
-! CALL      ------                                                     !
-!                                                                      !
-!======================================================================!
-!======================================================================!
-!                    DECLARATION DES TYPES ET DIMENSIONS               !
-!======================================================================!
-!======================================================================!
+!                    ***********************************
+                     SUBROUTINE BEDLOAD_CALCDW ! (_IMP_)
+!                    ***********************************
 !
-!     1/ MODULES
-! 
+     &  (UCW, UW, TW, NPOIN, PI, UW1, UW2, TW1, TW2)
+!
+!***********************************************************************
+! SISYPHE   V6P1                                   21/07/2011
+!***********************************************************************
+!
+!brief    COMPUTES QUADRATIC VELOCITIES AND PERIODS
+!+               (CASE WITH WAVES).
+!
+!history  C. VILLARET
+!+        **/10/2003
+!+        V5P4
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  C.VILLARET (EDF-LNHE), P.TASSI (EDF-LNHE)
+!+        19/07/2011
+!+        V6P1
+!+  Name of variables   
+!+   
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| NPOIN          |-->| NUMBER OF POINTS
+!| PI             |-->| PI
+!| TW             |-->| WAVE PERIOD
+!| TW1            |<->| MID WAVE PERIOD, CURRENT IN THE WAVE DIRECTION
+!| TW2            |<->| MID WAVE PERIOD, CURRENT IN THE OPPOSITE DIRECTION
+!| UCW            |-->| CURRENT PROJECTED IN THE WAVE DIRECTION
+!| UW             |-->| ORBITAL WAVE VELOCITY
+!| UW1            |<->| WORK ARRAY
+!| UW2            |<->| WORK ARRAY
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE INTERFACE_SISYPHE,EX_BEDLOAD_CALCDW => BEDLOAD_CALCDW
       USE BIEF
       IMPLICIT NONE
@@ -60,7 +60,7 @@ C ---------------------------------------------------------------------C
       TYPE(BIEF_OBJ),   INTENT(INOUT) :: UW1, UW2, TW1, TW2
 !
 !     3/ LOCAL VARIABLES
-! 
+!
       INTEGER                     :: I
       DOUBLE PRECISION            :: UCMOY, RAP
       DOUBLE PRECISION            :: ACOSMRAP, ACOSPRAP, SQRTRAP
@@ -68,24 +68,24 @@ C ---------------------------------------------------------------------C
 !
 !======================================================================!
 !======================================================================!
-!                               PROGRAMME                              !
+!                               PROGRAM                                !
 !======================================================================!
 !======================================================================!
 !
       DO I = 1,NPOIN
          UCMOY = ABS(UCW%R(I))
          ! ****************** !
-         !    I - HOULE SEULE ! (_IMP_)
+         !    I - WAVES ONLY  ! (_IMP_)
          ! ****************** !
          IF (UCMOY <= ZERO) THEN
             UW1%R(I) = UW%R(I)
-            UW2%R(I) = UW%R(I) 
+            UW2%R(I) = UW%R(I)
             TW1%R(I) = TW%R(I) / 2.D0
             TW2%R(I) = TW%R(I) / 2.D0
          ELSE
             RAP = UW%R(I) / UCMOY
             ! ******************** !
-            ! II - HOULE DOMINANTE ! (_IMP_)
+            ! II - WAVES ARE PREDOMINANT ! (_IMP_)
             ! ******************** !
             IF (RAP > 1.D0) THEN
                ACOSMRAP = ACOS(-1.D0/RAP)
@@ -99,9 +99,8 @@ C ---------------------------------------------------------------------C
                UW2%R(I) = 2.D0*UCMOY**2 + UW%R(I)**2
      &                  - 3.D0*UCMOY*UW%R(I)*SQRTRAP/ACOSPRAP
                UW2%R(I) = SQRT(UW2%R(I))
-
             ! ********************** !
-            ! III - COURANT DOMINANT ! (_IMP_)
+            ! III - CURRENTS ARE PREDOMINANT ! (_IMP_)
             ! ********************** !
             ELSE
                UW1%R(I) = UCW%R(I)*SQRT(2.D0 + RAP**2)

@@ -1,43 +1,63 @@
-C		       ********************* 
-                       SUBROUTINE PRE4_MUMPS
-C		       *********************
-C 
+!                    *********************
+                     SUBROUTINE PRE4_MUMPS
+!                    *********************
+!
      &(NPOIN,NSEGB,GLOSEGB,DAB1,DAB2,DAB3,DAB4,XAB1,XAB2,XAB3,XAB4,
      & XX1,XX2,CVB1,CVB2,INFOGR,TYPEXT)
-C
-C***********************************************************************
-C BIEF VERSION 5.9     20/11/06   E. RAZAFINDRAKOTO (LNH) 01 30 87 74 03
-C                      14/10/09   C. DENIS (SINETICS)
-C***********************************************************************
-CFONCTION : ROUTINE D'APPEL DU SOLVEUR DIRECT MUMPS
-C              ROUTINES VIDES UTILISEES EN CAS DE NON INSTALLATION DE MUMPS
-C                             
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |   NPOIN        | -->| NOMBRE D'INCONNUES
-C |   NSEGB        | -->| NOMBRE DE SEGMENTS 
-C |   GLOSEG       | -->| NUMEROS GLOBAUX DES POINTS DES SEGMENTS
-C |   DA,XA        | -->| DIAGONALES ET TERMES EXTRA-DIAGONAUX DES
-C |                |    | MATRICES
-C |   XX1,XX2      |<-- | SOLUTIONS
-C |   CVB1,CVB2    | -->| SECONDS MEMBRES
-C |   INFOGR       | -->| IF, YES INFORMATIONS ON LISTING
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C
-C***********************************************************************
-C
-c      USE BIEF, EX_PRE4_MUMPS => PRE4_MUMPS
-C
+!
+!***********************************************************************
+! MUMPSVOID   V6P0                                   21/08/2010
+!***********************************************************************
+!
+!brief    CALLS THE DIRECT SOLVER MUMPS.
+!+                IF MUMPS IS NOT INSTALLED : EMPTY SUBROUTINES ARE USED INSTEAD.
+!
+!history  E. RAZAFINDRAKOTO (LNH)
+!+        20/11/2006
+!+
+!+
+!
+!history  C. DENIS (SINETICS)
+!+        14/10/2009
+!+        V5P9
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CVB1,CVB2      |-->| SECONDS MEMBRES
+!| DAB1           |---|
+!| DAB2           |---|
+!| DAB3           |---|
+!| DAB4           |---|
+!| GLOSEGB        |---|
+!| INFOGR         |-->| IF, YES INFORMATIONS ON LISTING
+!| NPOIN          |-->| NOMBRE D'INCONNUES
+!| NSEGB          |-->| NOMBRE DE SEGMENTS
+!| TYPEXT         |---|
+!| XAB1           |---|
+!| XAB2           |---|
+!| XAB3           |---|
+!| XAB4           |---|
+!| XX1,XX2        |<--| SOLUTIONS
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN) :: NPOIN,NSEGB
       INTEGER, INTENT(IN) :: GLOSEGB(NSEGB*2)
       LOGICAL, INTENT(IN) :: INFOGR
@@ -46,25 +66,22 @@ C
       DOUBLE PRECISION, INTENT(IN)    :: XAB1(NSEGB),XAB2(NSEGB)
       DOUBLE PRECISION, INTENT(IN)    :: XAB3(NSEGB),XAB4(NSEGB)
       DOUBLE PRECISION, INTENT(INOUT) :: XX1(NPOIN),XX2(NPOIN)
-      DOUBLE PRECISION, INTENT(IN)    :: CVB1(NPOIN),CVB2(NPOIN)    
+      DOUBLE PRECISION, INTENT(IN)    :: CVB1(NPOIN),CVB2(NPOIN)
       CHARACTER(LEN=1), INTENT(IN)    :: TYPEXT
-C
-
+!
       IF(LNG.EQ.1) WRITE(LU,2018)
       IF(LNG.EQ.2) WRITE(LU,2019)
 2018  FORMAT(1X,'MUMPS NON INSTALLE SUR CE SYSTEME,',/,1X,
-     *     'CHOISIR UNE AUTRE METHODE',///)
+     &     'CHOISIR UNE AUTRE METHODE',///)
 2019  FORMAT(1X,'MUMPS NOT INSTALLED IN THIS SYSTEM',/,1X,
-     *     'CHOOSE OTHER METHOD ',///)
+     &     'CHOOSE OTHER METHOD ',///)
       CALL PLANTE(1)
       STOP
-      
-
-C
-C-----------------------------------------------------------------------
-C
-   
-C-----------------------------------------------------------------------
-C 
-      RETURN              
+!
+!
+!-----------------------------------------------------------------------
+!
+!-----------------------------------------------------------------------
+!
+      RETURN
       END

@@ -1,50 +1,65 @@
-C                       *********************
-                        SUBROUTINE FLUX_EF_VF
-C                       *********************
-C
-     *(FLOW,PHIEL,NSEG,NELEM,ELTSEG,ORISEG,IKLE,INIFLO,IOPT,FN)
-C
-C***********************************************************************
-C BIEF VERSION 6.0           27/10/2009            LEO POSTMA (DELTARES)
-C
-C 06/05/2009 JMH : OPTIMIZATION
-C 01/10/2009 JMH : OPTION -1 ADDED, ARGUMENT FN ADDED, PSI SCHEME ADDED
-C
-C***********************************************************************
-C
-C  FONCTION  : MODIFICATION DES FLUX POUR SCHEMA VOLUMES FINIS
-C                           
-C              METHODE DE LEO POSTMA COMME DANS DELWAQ
-C
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|_______________________________________________
-C |    FLOW        |<-- | FLUXES PER SEGMENTS
-C |    PHIEL       | -->| PER ELEMENT, FLUXES LEAVING POINTS
-C |    NSEG        | -->| NOMBRE DE SEGMENTS DANS LE MAILLAGE.
-C |    ELTSEG      | -->| SEGMENTS OF EVERY TRIANGLE.
-C |    ORISEG      | -->| ORIENTATION OF SEGMENTS OF EVERY TRIANGLE.
-C |    INIFLO      | -->| IF(YES) FLOW WILL BE INITIALISED AT 0.
-C |    IOPT        | -->| OPTION FOR THE CONSTANT PER ELEMENT
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMME APPELANT : CVDFTR
-C PROGRAMMES APPELES : RIEN EN STANDARD
-C
-C***********************************************************************
-C
+!                    *********************
+                     SUBROUTINE FLUX_EF_VF
+!                    *********************
+!
+     &(FLOW,PHIEL,NSEG,NELEM,ELTSEG,ORISEG,IKLE,INIFLO,IOPT,FN)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    MODIFIES THE FLUXES FOR THE FINITE VOLUME SCHEME.
+!+
+!+           (LEO POSTMA'S METHOD, SAME AS IN DELWAQ).
+!
+!history  JMH
+!+        06/05/2009
+!+
+!+   Optimisation
+!
+!history  JMH
+!+        01/10/2009
+!+
+!+   Option -1 added, Argument FN added, PSI SCHEME ADDED
+!
+!history  LEO POSTMA (DELTARES)
+!+        27/10/2009
+!+        V6P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| ELTSEG         |-->| SEGMENTS OF EVERY TRIANGLE
+!| FLOW           |<--| FLUXES PER SEGMENTS
+!| FN             |-->| OPTIONAL ARGUMENT FOR PSI SCHEME
+!| IKLE           |-->| CONNECTIVITY TABLE
+!| INIFLO         |-->| IF(YES) FLOW WILL BE INITIALISED AT 0
+!| IOPT           |-->| OPTION FOR THE CONSTANT PER ELEMENT
+!| NELEM          |-->| NUMBER OF ELEMENTS
+!| NSEG           |-->| NUMBER OF SEGMENTS
+!| ORISEG         |-->| ORIENTATION OF SEGMENTS OF EVERY TRIANGLE
+!| PHIEL          |-->| PER ELEMENT, FLUXES LEAVING POINTS
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_FLUX_EF_VF => FLUX_EF_VF
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN)                  :: NSEG,IOPT,NELEM
       INTEGER, INTENT(IN)                  :: ELTSEG(NELEM,3)
       INTEGER, INTENT(IN)                  :: ORISEG(NELEM,3)
@@ -53,57 +68,53 @@ C
       DOUBLE PRECISION, INTENT(IN)         :: PHIEL(NELEM,3)
       LOGICAL, INTENT(IN)                  :: INIFLO
       TYPE(BIEF_OBJ), INTENT(IN), OPTIONAL :: FN
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER IELEM,ISEG
       DOUBLE PRECISION A1,A2,A3,F1,F2,F3,THIRD,CSTE,F12,F23,F31
-      DOUBLE PRECISION FP,FPLUS,FMINUS,FN1,FN2,FN3,F21,F32,F13,ALFA
-      DOUBLE PRECISION FLU12,FLU21,FLU23,FLU32,FLU13,FLU31
+      DOUBLE PRECISION FN1,FN2,FN3,F21,F32,F13
       DOUBLE PRECISION BETA1FI,BETA2FI,BETA3FI,FI
-C      
-      DOUBLE PRECISION FIMAX1,FIMAX2
-      INTEGER IELMAX      
-C
+!
       INTRINSIC ABS,MIN,MAX
-C
+!
       THIRD=1.D0/3.D0
-C
-C-----------------------------------------------------------------------
-C
-C     INITIALISATION OF FLOW TO 0.D0
-C
+!
+!-----------------------------------------------------------------------
+!
+!     INITIALISES FLOW TO 0.D0
+!
       IF(INIFLO) THEN
         DO ISEG = 1,NSEG
           FLOW(ISEG) = 0.D0
         ENDDO
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(IOPT.EQ.-1) THEN
-C
-C-----------------------------------------------------------------------
-C
-C     FLUXES ALREADY COMPUTED BEFORE CALLING THIS SUBROUTINE
-C     THEY ARE JUST ASSEMBLED HERE
-C
+!
+!-----------------------------------------------------------------------
+!
+!     FLUXES ALREADY COMPUTED BEFORE CALLING THIS SUBROUTINE
+!     THEY ARE JUST ASSEMBLED HERE
+!
       DO IELEM = 1,NELEM
-C       SEGMENT 1
+!       SEGMENT 1
         ISEG  = ELTSEG(IELEM,1)
         IF(ORISEG(IELEM,1).EQ.1) THEN
           FLOW(ISEG) = FLOW(ISEG) + PHIEL(IELEM,1)
         ELSE
           FLOW(ISEG) = FLOW(ISEG) - PHIEL(IELEM,1)
         ENDIF
-C       SEGMENT 2
+!       SEGMENT 2
         ISEG  = ELTSEG(IELEM,2)
         IF(ORISEG(IELEM,2).EQ.1) THEN
           FLOW(ISEG) = FLOW(ISEG) + PHIEL(IELEM,2)
         ELSE
           FLOW(ISEG) = FLOW(ISEG) - PHIEL(IELEM,2)
         ENDIF
-C       SEGMENT 3
+!       SEGMENT 3
         ISEG  = ELTSEG(IELEM,3)
         IF(ORISEG(IELEM,3).EQ.1) THEN
           FLOW(ISEG) = FLOW(ISEG) + PHIEL(IELEM,3)
@@ -111,34 +122,34 @@ C       SEGMENT 3
           FLOW(ISEG) = FLOW(ISEG) - PHIEL(IELEM,3)
         ENDIF
       ENDDO
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       ELSEIF(IOPT.EQ.0) THEN
-C
-C-----------------------------------------------------------------------
-C
-C     WITH NO CONSTANT
-C
+!
+!-----------------------------------------------------------------------
+!
+!     WITH NO CONSTANT
+!
       DO IELEM = 1,NELEM
         F1 = PHIEL(IELEM,1)
         F2 = PHIEL(IELEM,2)
         F3 = PHIEL(IELEM,3)
-C       SEGMENT 1
+!       SEGMENT 1
         ISEG  = ELTSEG(IELEM,1)
         IF(ORISEG(IELEM,1).EQ.1) THEN
           FLOW(ISEG) = FLOW(ISEG) + THIRD*(F1-F2)
         ELSE
           FLOW(ISEG) = FLOW(ISEG) - THIRD*(F1-F2)
         ENDIF
-C       SEGMENT 2
+!       SEGMENT 2
         ISEG  = ELTSEG(IELEM,2)
         IF(ORISEG(IELEM,2).EQ.1) THEN
           FLOW(ISEG) = FLOW(ISEG) + THIRD*(F2-F3)
         ELSE
           FLOW(ISEG) = FLOW(ISEG) - THIRD*(F2-F3)
         ENDIF
-C       SEGMENT 3
+!       SEGMENT 3
         ISEG  = ELTSEG(IELEM,3)
         IF(ORISEG(IELEM,3).EQ.1) THEN
           FLOW(ISEG) = FLOW(ISEG) + THIRD*(F3-F1)
@@ -146,35 +157,35 @@ C       SEGMENT 3
           FLOW(ISEG) = FLOW(ISEG) - THIRD*(F3-F1)
         ENDIF
       ENDDO
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       ELSEIF(IOPT.EQ.1) THEN
-C
-C-----------------------------------------------------------------------
-C
-C     MINIMISING MAX ( ABS(FLOW) )
-C
+!
+!-----------------------------------------------------------------------
+!
+!     MINIMISES MAX ( ABS(FLOW) )
+!
       DO IELEM = 1,NELEM
         F1 = PHIEL(IELEM,1)
         F2 = PHIEL(IELEM,2)
         F3 = PHIEL(IELEM,3)
         CSTE=-0.5D0*(MIN(F1-F2,F2-F3,F3-F1)+MAX(F1-F2,F2-F3,F3-F1))
-C       SEGMENT 1
+!       SEGMENT 1
         ISEG  = ELTSEG(IELEM,1)
         IF(ORISEG(IELEM,1).EQ.1) THEN
           FLOW(ISEG) = FLOW(ISEG) + THIRD*(F1-F2+CSTE)
         ELSE
           FLOW(ISEG) = FLOW(ISEG) - THIRD*(F1-F2+CSTE)
         ENDIF
-C       SEGMENT 2
+!       SEGMENT 2
         ISEG  = ELTSEG(IELEM,2)
         IF(ORISEG(IELEM,2).EQ.1) THEN
           FLOW(ISEG) = FLOW(ISEG) + THIRD*(F2-F3+CSTE)
         ELSE
           FLOW(ISEG) = FLOW(ISEG) - THIRD*(F2-F3+CSTE)
         ENDIF
-C       SEGMENT 3
+!       SEGMENT 3
         ISEG  = ELTSEG(IELEM,3)
         IF(ORISEG(IELEM,3).EQ.1) THEN
           FLOW(ISEG) = FLOW(ISEG) + THIRD*(F3-F1+CSTE)
@@ -182,15 +193,15 @@ C       SEGMENT 3
           FLOW(ISEG) = FLOW(ISEG) - THIRD*(F3-F1+CSTE)
         ENDIF
       ENDDO
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       ELSEIF(IOPT.EQ.2) THEN
-C
-C-----------------------------------------------------------------------
-C
-C     LEO POSTMA METHOD (EQUIVALENT TO FLUXES GIVEN BY N-SCHEME)
-C
+!
+!-----------------------------------------------------------------------
+!
+!     LEO POSTMA'S METHOD (EQUIVALENT TO FLUXES GIVEN BY N-SCHEME)
+!
       DO IELEM = 1,NELEM
         F1 = PHIEL(IELEM,1)
         F2 = PHIEL(IELEM,2)
@@ -199,7 +210,7 @@ C
         A2 = ABS(F2)
         A3 = ABS(F3)
         IF(A1.GE.A2.AND.A1.GE.A3) THEN
-C         ALL FLOW TO AND FROM NODE 1
+!         ALL FLOW TO AND FROM NODE 1
           ISEG  = ELTSEG(IELEM,1)
           IF(ORISEG(IELEM,1).EQ.1) THEN
             FLOW(ISEG) = FLOW(ISEG) - F2
@@ -213,7 +224,7 @@ C         ALL FLOW TO AND FROM NODE 1
             FLOW(ISEG) = FLOW(ISEG) + F3
           ENDIF
         ELSEIF(A2.GE.A1.AND.A2.GE.A3) THEN
-C         ALL FLOW TO AND FROM NODE 2
+!         ALL FLOW TO AND FROM NODE 2
           ISEG = ELTSEG(IELEM,1)
           IF(ORISEG(IELEM,1).EQ.2) THEN
             FLOW(ISEG) = FLOW(ISEG) - F1
@@ -223,15 +234,15 @@ C         ALL FLOW TO AND FROM NODE 2
           ISEG = ELTSEG(IELEM,2)
           IF(ORISEG(IELEM,2).EQ.1) THEN
             FLOW(ISEG) = FLOW(ISEG) - F3
-          ELSE 
+          ELSE
             FLOW(ISEG) = FLOW(ISEG) + F3
-          ENDIF 
+          ENDIF
         ELSE
-C         ALL FLOW TO AND FROM NODE 3
+!         ALL FLOW TO AND FROM NODE 3
           ISEG = ELTSEG(IELEM,2)
           IF(ORISEG(IELEM,2).EQ.2) THEN
             FLOW(ISEG) = FLOW(ISEG) - F2
-          ELSE  
+          ELSE
             FLOW(ISEG) = FLOW(ISEG) + F2
           ENDIF
           ISEG = ELTSEG(IELEM,3)
@@ -242,15 +253,15 @@ C         ALL FLOW TO AND FROM NODE 3
           ENDIF
         ENDIF
       ENDDO
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       ELSEIF(IOPT.EQ.3.AND.PRESENT(FN)) THEN
-C
-C-----------------------------------------------------------------------
-C
-C     PSI-SCHEME
-C
+!
+!-----------------------------------------------------------------------
+!
+!     PSI-SCHEME
+!
       DO IELEM = 1,NELEM
         F1 = PHIEL(IELEM,1)
         F2 = PHIEL(IELEM,2)
@@ -260,7 +271,7 @@ C
         FN2=FN%R(IKLE(IELEM,2))
         FN3=FN%R(IKLE(IELEM,3))
 !
-!       STARTING WITH N-SCHEME (EQUIVALENT TO LEO POSTMA IMPLEMENTATION)
+!       STARTS WITH N-SCHEME (EQUIVALENT TO LEO POSTMA'S IMPLEMENTATION)
 !
         F12=MAX(MIN(F1,-F2),0.D0)
         F23=MAX(MIN(F2,-F3),0.D0)
@@ -332,24 +343,24 @@ C
           F32=0.D0
           F13=0.D0
         ENDIF
-C
-C       ASSEMBLING
-C
-C       SEGMENT 1
+!
+!       ASSEMBLES
+!
+!       SEGMENT 1
         ISEG  = ELTSEG(IELEM,1)
         IF(ORISEG(IELEM,1).EQ.1) THEN
           FLOW(ISEG) = FLOW(ISEG) + F12 - F21
         ELSE
           FLOW(ISEG) = FLOW(ISEG) - F12 + F21
         ENDIF
-C       SEGMENT 2
+!       SEGMENT 2
         ISEG  = ELTSEG(IELEM,2)
         IF(ORISEG(IELEM,2).EQ.1) THEN
           FLOW(ISEG) = FLOW(ISEG) + F23 - F32
         ELSE
           FLOW(ISEG) = FLOW(ISEG) - F23 + F32
         ENDIF
-C       SEGMENT 3
+!       SEGMENT 3
         ISEG  = ELTSEG(IELEM,3)
         IF(ORISEG(IELEM,3).EQ.1) THEN
           FLOW(ISEG) = FLOW(ISEG) + F31 - F13
@@ -357,11 +368,11 @@ C       SEGMENT 3
           FLOW(ISEG) = FLOW(ISEG) - F31 + F13
         ENDIF
       ENDDO
-C
-C-----------------------------------------------------------------------
-C 
+!
+!-----------------------------------------------------------------------
+!
       ELSE
-C
+!
        IF(LNG.EQ.1) THEN
           WRITE(LU,*) 'FLUX_EF_VF :'
           WRITE(LU,*) 'OPTION INCONNUE : ',IOPT
@@ -378,10 +389,10 @@ C
         ENDIF
         CALL PLANTE(1)
         STOP
-C
+!
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

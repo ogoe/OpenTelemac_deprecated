@@ -1,63 +1,83 @@
-C                           *****************      
-                            SUBROUTINE INVMTX
-C                           *****************
-C
-     *(AM,BM,NP) 
-C
-C***********************************************************************
-C  TELEMAC 2D VERSION 5.7    28/07/2006                        Chun WANG
-C
-C***********************************************************************
-C
-C      FONCTION: This subroutine inverts a matrix of np by np. BM is
-C                the inversion of AM. 
-C      NOTE::    This subroutine calls LUDCMP and LUBKSB, which were
-C                copied from "Numeric recipes"-- a well-known book.     
-C
-C      This subroutine is called by SPECTRE
-C
-C-----------------------------------------------------------------------
-C
+!                    *****************
+                     SUBROUTINE INVMTX
+!                    *****************
+!
+     &(AM,BM,NP)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    INVERTS A MATRIX OF NP BY NP.
+!+
+!+            BM IS THE INVERSION OF AM.
+!
+!note     THIS SUBROUTINE CALLS LUDCMP AND LUBKSB, WHICH WERE
+!+         COPIED FROM "NUMERIC RECIPES" -- A WELL-KNOWN BOOK.
+!
+!history  CHUN WANG
+!+        28/07/2006
+!+        V5P7
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| AM             |-->| MATRIX TO BE INVERTED
+!| BM             |<--| INVERTED MATRIX
+!| NP             |-->| RANK OF MATRICES AM AND BM.
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-      INTEGER LNG,LU             
+      INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN)             :: NP
       DOUBLE PRECISION, INTENT(INOUT) :: AM(NP,NP),BM(NP,NP)
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C       
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER INDX(500),N,I,J
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(NP.GT.500) THEN
         WRITE(LU,*) 'NP MUST BE LESS THAN 500 IN INVMTX'
         CALL PLANTE(1)
         STOP
       ENDIF
-C       
+!
       N = NP
-      DO I=1,N !Set up identity matrix. 
-        DO J=1,N 
-          BM(I,J)=0.D0 
-        ENDDO 
-        BM(I,I)=1.D0 
+      DO I=1,N !SET UP IDENTITY MATRIX
+        DO J=1,N
+          BM(I,J)=0.D0
+        ENDDO
+        BM(I,I)=1.D0
       ENDDO
-C
-C     Decompose the matrix just once.
-C             
+!
+!     DECOMPOSES THE MATRIX JUST ONCE
+!
       CALL LUDCMP(AM,N,NP,INDX)
-C
-C     Find inverse by columns.
-C 
-      DO J=1,N  
-        CALL LUBKSB(AM,N,NP,INDX,BM(1,J)) 
-      ENDDO 
-C
-C-----------------------------------------------------------------------
-C
+!
+!     FINDS INVERSE BY COLUMNS
+!
+      DO J=1,N
+        CALL LUBKSB(AM,N,NP,INDX,BM(1,J))
+      ENDDO
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

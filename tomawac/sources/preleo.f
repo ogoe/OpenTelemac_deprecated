@@ -1,49 +1,60 @@
-C                       *****************
-                        SUBROUTINE PRELEO
-C                       *****************
-C
-     *(XLEO,YLEO,NLEO,X,Y,NPOIN2,NOLEO)
-C
-C***********************************************************************
-C  COWADIS  VERSION 1.0     1/02/95    F. MARCOS (LNH) 30 87 72 66
-C***********************************************************************
-C
-C     FONCTION  : CHOISI LES POINTS DE CALCUL LES PLUS PROCHES
-C                 DES POINTS DE SORTIE DEMANDES
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C !      NOM       !MODE!                   ROLE                       !
-C !________________!____!______________________________________________!
-C !   XLEO         ! -->! TABLEAU DES ABSCISSES DES POINTS DE SORTIE   !
-C !   YLEO         ! -->! TABLEAU DES ORDONNEES DES POINTS DE SORTIE   !
-C !   NLEO         ! -->! NOMBRE DE POINTS DE SORTIE                   !
-C !   X            ! -->! ABSCISSES DES POINTS                         !
-C !   Y            ! -->! ORDONNEES DES POINTS                         !
-C !   NPOIN2       ! -->! NOMBRE DE POINTS 2D                          !
-C !   NOLEO        !<-- ! TABLEAU DES NUMERO DES POINTS CHOISIS        !
-C !________________!____!______________________________________________!
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C  APPELE PAR : COW
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE PRELEO
+!                    *****************
+!
+     &(XLEO,YLEO,NLEO,X,Y,NPOIN2,NOLEO)
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   22/06/2011
+!***********************************************************************
+!
+!brief    SELECTS THE COMPUTATION NODES CLOSEST
+!+                TO THE REQUESTED OUTPUT POINTS.
+!
+!history  F. MARCOS (LNH)
+!+        01/02/95
+!+        V1P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        22/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| NLEO           |-->| NUMBER OF SPECTRUM PRINTOUT POINTS
+!| NOLEO          |<--| NUMBERS OF THE SPECTRUM PRINTOUT POINTS
+!| NPOIN2         |-->| NUMBER OF POINTS IN 2D MESH
+!| X              |-->| ABSCISSAE OF POINTS IN THE MESH
+!| XLEO           |-->| ABSCISSAE OF SPECTRUM PRINTOUT POINTS
+!| Y              |-->| ORDINATES OF POINTS IN THE MESH
+!| YLEO           |-->| ORDINATES OF SPECTRUM PRINTOUT POINTS
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
+!
       INTEGER I,ILEO,NLEO,NPOIN2
-C
+!
       DOUBLE PRECISION X(NPOIN2)  , Y(NPOIN2)
       DOUBLE PRECISION XLEO(NLEO)  , YLEO(NLEO)
       DOUBLE PRECISION DIST,DIST2
-C
+!
       INTEGER NOLEO(NLEO)
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       DO 10 ILEO=1,NLEO
         DIST=1.D99
         DO 20 I=1,NPOIN2
@@ -54,8 +65,8 @@ C
          ENDIF
 20      CONTINUE
 10    CONTINUE
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

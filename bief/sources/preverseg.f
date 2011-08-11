@@ -1,74 +1,91 @@
-C                       ********************
-                        SUBROUTINE PREVERSEG
-C                       ********************
-C
-     *(XAUX,AD,AX,TYPDIA,TYPEXT,NPOIN,MESH,NSEG3D)
-C
-C***********************************************************************
-C BIEF VERSION 6.0        11/08/09    J-M HERVOUET (LNHE) 01 30 87 80 18
-C
-C 11/08/09 JMH : CROSSED AND VERTICAL SEGMENTS SWAPPED (SEE STOSEG41)
-C                                       
-C***********************************************************************
-C
-C FONCTION : BUILDING, BY LUMPING A MATRIX DEFINED ON PRISMS,
-C            TRIDIAGONAL SYSTEMS FOR EVERY VERTICAL.
-C
-C-----------------------------------------------------------------------
-C
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |                | -->| 
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES : AUCUN
-C
-C**********************************************************************
-C     -------------
-C     | ATTENTION | : LE JACOBIEN DOIT ETRE POSITIF .
-C     -------------
-C**********************************************************************
-C
+!                    ********************
+                     SUBROUTINE PREVERSEG
+!                    ********************
+!
+     &(XAUX,AD,AX,TYPDIA,TYPEXT,NPOIN,MESH,NSEG3D)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    BUILDS TRIDIAGONAL SYSTEMS FOR EVERY VERTICAL,
+!+                BY LUMPING A MATRIX DEFINED ON PRISMS.
+!
+!warning  THE JACOBIAN MUST BE POSITIVE
+!
+!history  JMH
+!+        11/08/09
+!+
+!+   CROSSED AND VERTICAL SEGMENTS SWAPPED (SEE STOSEG41)
+!
+!history  J-M HERVOUET (LNHE)
+!+        11/08/09
+!+        V6P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| AD             |-->| MATRIX DIAGONAL
+!| AX             |-->| MATRIX OFF-DIAGONAL TERMS
+!| MESH           |-->| MESH STRUCTURE
+!| NPOIN          |-->| NUMBER OF POINTS
+!| NSEG3D         |-->| NUMBER OF SEGMENTS IN 3D MESH
+!| TYPDIA         |-->| TYPE OF DIAGONAL:
+!|                |   | TYPDIA = 'Q' : ANY VALUE
+!|                |   | TYPDIA = 'I' : IDENTITY
+!|                |   | TYPDIA = '0' : ZERO
+!| TYPEXT         |-->| TYPE OF OFF-DIAGONAL TERMS
+!|                |   | TYPEXT = 'Q' : ANY VALUE
+!|                |   | TYPEXT = 'S' : SYMMETRIC
+!|                |   | TYPEXT = '0' : ZERO
+!| XAUX           |<--| TRIDIAGONAL MATRIX
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_PREVERSEG => PREVERSEG
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN) :: NPOIN,NSEG3D
-C
-      DOUBLE PRECISION, INTENT(IN)    :: AD(NPOIN)
-      DOUBLE PRECISION, INTENT(INOUT) :: XAUX(NPOIN,*),AX(NSEG3D,2)
-C
+!
+      DOUBLE PRECISION, INTENT(IN)    :: AD(NPOIN),AX(NSEG3D,2)
+      DOUBLE PRECISION, INTENT(INOUT) :: XAUX(NPOIN,*)
+!
       CHARACTER(LEN=1), INTENT(IN) :: TYPDIA,TYPEXT
-C
+!
       TYPE(BIEF_MESH), INTENT(INOUT) :: MESH
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER I2,I3,NPLAN,IAN,ICOM,NPOIN2,SEGUP,SEGDOWN,NSEG2D
       INTEGER IPLAN,NSEGH
-C
-C-----------------------------------------------------------------------
-C
-C     HERE WE CONSIDER THAT NPOIN < NELMAX TO USE XAUX AS XAUX(NPOIN,3)
-C
-C     XAUX(I,1) IS COEFFICIENT OF POINT BELOW I IN EQUATION OF POINT I
-C     XAUX(I,2) IS THE DIAGONAL
-C     XAUX(I,3) IS COEFFICIENT OF POINT ABOVE I IN EQUATION OF POINT I
-C
-C-----------------------------------------------------------------------
-C     INITIALIZING THE DIAGONAL 
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
+!     HERE WE CONSIDER THAT NPOIN < NELMAX TO USE XAUX AS XAUX(NPOIN,3)
+!
+!     XAUX(I,1) IS COEFFICIENT OF POINT BELOW I IN EQUATION OF POINT I
+!     XAUX(I,2) IS THE DIAGONAL
+!     XAUX(I,3) IS COEFFICIENT OF POINT ABOVE I IN EQUATION OF POINT I
+!
+!-----------------------------------------------------------------------
+!     INITIALISES THE DIAGONAL
+!-----------------------------------------------------------------------
+!
       IF(TYPDIA(1:1).EQ.'0') THEN
         CALL OV('X=C     ',XAUX(1,2),AD,AD,0.D0,NPOIN)
       ELSEIF(TYPDIA(1:1).EQ.'I') THEN
@@ -82,33 +99,33 @@ C
         CALL PLANTE(1)
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C     LUMPING THE OFF-DIAGONAL TERMS CORRESPONDING TO VERTICAL SEGMENTS
-C-----------------------------------------------------------------------
-C 
-      NPOIN2 = NBPTS(11)
+!
+!-----------------------------------------------------------------------
+!     LUMPS THE OFF-DIAGONAL TERMS CORRESPONDING TO VERTICAL SEGMENTS
+!-----------------------------------------------------------------------
+!
+      NPOIN2 = BIEF_NBPTS(11,MESH)
       NPLAN  = NPOIN/NPOIN2
-      NSEG2D = NBSEG(11)
+      NSEG2D = BIEF_NBSEG(11,MESH)
       NSEGH  = NSEG2D*NPLAN
-C     
+!
       IF(TYPEXT.EQ.'Q') THEN
-C       PLANE ON THE BOTTOM
+!       PLANE ON THE BOTTOM
         DO I2=1,NPOIN2
           SEGUP=NSEGH+I2
           XAUX(I2,1)=0.D0
           XAUX(I2,3)=AX(SEGUP,1)
         ENDDO
-C       PLANE AT THE FREE SURFACE
+!       PLANE AT THE FREE SURFACE
         DO I2=1,NPOIN2
           I3=I2+(NPLAN-1)*NPOIN2
           SEGDOWN=NSEGH+NPOIN2*(NPLAN-2)+I2
           XAUX(I3,1)=AX(SEGDOWN,2)
           XAUX(I3,3)=0.D0
         ENDDO
-C       OTHER PLANES
+!       OTHER PLANES
         IF(NPLAN.GT.2) THEN
-        DO IPLAN=2,NPLAN-1     
+        DO IPLAN=2,NPLAN-1
           DO I2=1,NPOIN2
             I3=I2+(IPLAN-1)*NPOIN2
             SEGDOWN=NSEGH+NPOIN2*(IPLAN-2)+I2
@@ -119,22 +136,22 @@ C       OTHER PLANES
         ENDDO
         ENDIF
       ELSEIF(TYPEXT.EQ.'S') THEN
-C       PLANE ON THE BOTTOM
+!       PLANE ON THE BOTTOM
         DO I2=1,NPOIN2
           SEGUP=NSEGH+I2
           XAUX(I2,1)=0.D0
           XAUX(I2,3)=AX(SEGUP,1)
         ENDDO
-C       PLANE AT THE FREE SURFACE
+!       PLANE AT THE FREE SURFACE
         DO I2=1,NPOIN2
           I3=I2+(NPLAN-1)*NPOIN2
           SEGDOWN=NSEGH+NPOIN2*(NPLAN-2)+I2
           XAUX(I3,1)=AX(SEGDOWN,1)
           XAUX(I3,3)=0.D0
         ENDDO
-C       OTHER PLANES
+!       OTHER PLANES
         IF(NPLAN.GT.2) THEN
-        DO IPLAN=2,NPLAN-1     
+        DO IPLAN=2,NPLAN-1
           DO I2=1,NPOIN2
             I3=I2+(IPLAN-1)*NPOIN2
             SEGDOWN=NSEGH+NPOIN2*(IPLAN-2)+I2
@@ -145,7 +162,7 @@ C       OTHER PLANES
         ENDDO
         ENDIF
       ELSEIF(TYPEXT.EQ.'0') THEN
-C       NOTHING TO DO (BUT WHAT IS THE USE OF AN ITERATIVE SOLVER ?)
+!       NOTHING TO DO (BUT WHAT'S THE USE OF AN ITERATIVE SOLVER ?)
       ELSE
         WRITE(LU,*) TYPEXT
         IF(LNG.EQ.1) WRITE(LU,*) 'TYPE DE TERMES EXTRA-DIAGONAUX'
@@ -155,19 +172,19 @@ C       NOTHING TO DO (BUT WHAT IS THE USE OF AN ITERATIVE SOLVER ?)
         CALL PLANTE(1)
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C     PARALLELISM
-C
+!
+!-----------------------------------------------------------------------
+!
+!     PARALLEL MODE
+!
       IF(NCSIZE.GT.1) THEN
         IAN    = 3
         ICOM   = 2
         CALL PARCOM2(XAUX(1,1),XAUX(1,2),XAUX(1,3),
-     *               NPOIN2,NPLAN,ICOM,IAN,MESH)
-      ENDIF    
-C
-C-----------------------------------------------------------------------
-C
+     &               NPOIN2,NPLAN,ICOM,IAN,MESH)
+      ENDIF
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

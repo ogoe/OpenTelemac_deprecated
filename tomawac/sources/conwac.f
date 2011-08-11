@@ -1,63 +1,72 @@
-C                       *****************
-                        SUBROUTINE CONWAC
-C                       *****************
-C
-     *( CX    , CY    , CT    , XK    , CG    , COSF  , TGF   , DEPTH ,
-     *  DZX   , DZY   , FREQ  , COSTET, SINTET, NPOIN2, NPLAN , JF    ,
-     *  NF    , PROINF, SPHE  , PROMIN, TRA01 , TRA02 )
-C
-C***********************************************************************
-C TOMAWAC  V5.4      19/01/2004     M. BENOIT (EDF LNHE) 01 30 87 83 51
-C***********************************************************************
-C
-C      FONCTION:
-C      =========
-C
-C    CALCULE LE CHAMP CONVECTEUR (3D SANS COURANT)
-C                 -->                            -->
-C    ATTENTION ICI X EST VERTICAL VERS LE HAUT ET Y EST HORIZONTAL
-C      VERS LA DROITE ET TETA EST LA DIRECTION / NORD COMPTE DANS LE
-C      SENS INVERSE DU SENS TRIGO
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C !      NOM       !MODE!                   ROLE                       !
-C !________________!____!______________________________________________!
-C !    CX,CY,CT    !<-- !  CHAMP CONVECTEUR SELON X(OU PHI),           !
-C !                !    !  Y(OU LAMBDA) ET TETA                        !
-C !    XK          ! -->!  NOMBRE D'ONDE DISCRETISE                    !
-C !    CG          ! -->!  VITESSE DE GROUPE DISCRETISEE               !
-C !    COSF        ! -->!  COSINUS DES LATITUDES DES POINTS 2D         !
-C !    TGF         ! -->!  TANGENTES DES LATITUDES DES POINTS 2D       !
-C !    DEPTH       ! -->!  PROFONDEUR                                  !
-C !    DZX         ! -->!  GRADIENT DE FOND SELON X                    !
-C !    DZY         ! -->!  GRADIENT DE FOND SELON Y                    !
-C !    FREQ        ! -->!  FREQUENCES DISCRETISEES                     !
-C !    COSTET      ! -->!  COSINUS TETA                                !
-C !    SINTET      ! -->!  SINUS TETA                                  !
-C !    NPOIN2      ! -->!  NOMBRE DE POINTS DU MAILLAGE 2D             !
-C !    NPLAN       ! -->!  NOMBRE DE PLANS OU DE DIRECTIONS            !
-C !    JF          ! -->!  FREQUENCES COURANTE                         !
-C !    NF          ! -->!  NOMBRE DE FREQUENCES                        !
-C !    PROINF      ! -->!  LOGIQUE INDIQUANT SI ON EST EN PROF INFINIE !
-C !    SPHE        ! -->!  LOGIQUE INDIQUANT SI ON EST EN COORD. SPHER.!
-C !    PROMIN      ! -->!  VALEUR MINIMALE DE LA PROFONDEUR D'EAU      !
-C !    TRA01       !<-->!  TABLEAU DE TRAVAIL                          !
-C !    TRA02       !<-->!  TABLEAU DE TRAVAIL                          !
-C !________________!____!______________________________________________!
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C SOUS-PROGRAMME APPELE PAR : WAC
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE CONWAC
+!                    *****************
+!
+     &( CX    , CY    , CT    , XK    , CG    , COSF  , TGF   , DEPTH ,
+     &  DZX   , DZY   , FREQ  , COSTET, SINTET, NPOIN2, NPLAN , JF    ,
+     &  NF    , PROINF, SPHE  , PROMIN, TRA01 , TRA02 )
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   14/068/2011
+!***********************************************************************
+!
+!brief    COMPUTES THE ADVECTION FIELD (3D WITHOUT CURRENT).
+!
+!warning  IN THIS CASE THE X AXIS IS VERTICAL ORIENTED UPWARDS AND
+!+            THE Y AXIS IS HORIZONTAL ORIENTED TOWARDS THE RIGHT;
+!+            TETA IS THE DIRECTION WRT NORTH, CLOCKWISE
+!
+!history  M. BENOIT (EDF LNHE)
+!+        19/01/2004
+!+        V5P4
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        14/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CG             |-->| DISCRETIZED GROUP VELOCITY
+!| COSF           |-->| COSINE OF THE LATITUDES OF THE POINTS 2D
+!| COSTET         |-->| COSINE OF TETA ANGLE
+!| CX             |<--| ADVECTION FIELD ALONG X(OR PHI)
+!| CY             |<--| ADVECTION FIELD ALONG Y(OR LAMBDA)
+!| CT             |<--| ADVECTION FIELD ALONG TETA
+!| DEPTH          |-->| WATER DEPTH
+!| DZX            |-->| SEA BOTTOM SLOPE ALONG X
+!| DZY            |-->| SEA BOTTOM SLOPE ALONG Y
+!| FREQ           |-->| DISCRETIZED FREQUENCIES
+!| JF             |-->| INDEX OF THE FREQUENCY
+!| NF             |-->| NUMBER OF FREQUENCIES
+!| NPLAN          |-->| NUMBER OF DIRECTIONS
+!| NPOIN2         |-->| NUMBER OF POINTS IN 2D MESH
+!| PROINF         |-->| LOGICAL INDICATING INFINITE DEPTH ASSUMPTION
+!| PROMIN         |-->| MINIMUM VALUE OF WATER DEPTH
+!| SINTET         |-->| SINE OF TETA ANGLE
+!| SPHE           |-->| LOGICAL INDICATING SPHERICAL COORD ASSUMPTION
+!| TGF            |-->| TANGENT OF THE LATITUDES OF THE POINTS 2D
+!| TRA01          |<->| WORK TABLE
+!| TRA02          |<->| WORK TABLE
+!| XK             |-->| DISCRETIZED WAVE NUMBER
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
-C.....VARIABLES TRANSMISES.
-C     """""""""""""""""""""
+!
+!.....VARIABLES IN ARGUMENT
+!     """""""""""""""""""""
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
       INTEGER          NF    , NPLAN , NPOIN2, JF
@@ -70,32 +79,32 @@ C     """""""""""""""""""""
       DOUBLE PRECISION CX(NPOIN2,NPLAN),CY(NPOIN2,NPLAN)
       DOUBLE PRECISION CT(NPOIN2,NPLAN)
       LOGICAL          PROINF, SPHE
-C
-C.....VARIABLES LOCALES.
-C     """"""""""""""""""
+!
+!.....LOCAL VARIABLES
+!     """"""""""""""""""
       INTEGER          JP    , IP
       DOUBLE PRECISION GSQP  , SR    , R     , SRCF  , TFSR
       DOUBLE PRECISION DDDN  , DSDNSK, GRADEG, DEUKD , DEUPI
-C
-C
+!
+!
       GSQP=0.780654996D0
       R=6400.D3
       DEUPI=6.283185307D0
-C
+!
       IF (PROINF) THEN
-C-----------------------------------------------------------------------
-C     EN PROFONDEUR INFINIE ...
-C-----------------------------------------------------------------------
-C
+!-----------------------------------------------------------------------
+!     INFINITE WATER DEPTH ...
+!-----------------------------------------------------------------------
+!
         DO JP=1,NPLAN
           TRA01(JP)=GSQP/FREQ(JF)*COSTET(JP)
           TRA02(JP)=GSQP/FREQ(JF)*SINTET(JP)
         ENDDO
-C
+!
         IF (.NOT.SPHE) THEN
-C       ----------------------------------------------------------------
-C       ... ET COORDONNEES CARTESIENNES
-C       ----------------------------------------------------------------
+!       ----------------------------------------------------------------
+!       ... AND IN CARTESIAN COORDINATE SYSTEM
+!       ----------------------------------------------------------------
           DO IP=1,NPOIN2
             DO JP=1,NPLAN
               CX(IP,JP)=TRA01(JP)
@@ -103,11 +112,11 @@ C       ----------------------------------------------------------------
               CT(IP,JP)=0.D0
             ENDDO
           ENDDO
-C
+!
         ELSE
-C       ----------------------------------------------------------------
-C       ... ET COORDONNEES SPHERIQUES
-C       ----------------------------------------------------------------
+!       ----------------------------------------------------------------
+!       ... AND IN SPHERICAL COORDINATE SYSTEM
+!       ----------------------------------------------------------------
           SR=1.D0/R
           GRADEG=180.D0/3.1415926D0
           DO IP=1,NPOIN2
@@ -119,19 +128,19 @@ C       ----------------------------------------------------------------
               CT(IP,JP)=TRA02(JP)*TFSR
             ENDDO
           ENDDO
-C
+!
         ENDIF
-C
-C
+!
+!
       ELSE
-C-----------------------------------------------------------------------
-C     EN PROFONDEUR FINIE ....
-C-----------------------------------------------------------------------
-C
+!-----------------------------------------------------------------------
+!     FINITE WATER DEPTH ....
+!-----------------------------------------------------------------------
+!
         IF (.NOT.SPHE) THEN
-C       ----------------------------------------------------------------
-C       ... ET COORDONNEES CARTESIENNES
-C       ----------------------------------------------------------------
+!       ----------------------------------------------------------------
+!       ... AND IN CARTESIAN COORDINATE SYSTEM
+!       ----------------------------------------------------------------
           DO IP=1,NPOIN2
             IF (DEPTH(IP).GT.PROMIN) THEN
               DO JP=1,NPLAN
@@ -154,11 +163,11 @@ C       ----------------------------------------------------------------
               ENDDO
             ENDIF
           ENDDO
-C
+!
         ELSE
-C       ----------------------------------------------------------------
-C       ... ET COORDONNEES SPHERIQUES
-C       ----------------------------------------------------------------
+!       ----------------------------------------------------------------
+!       ... AND IN SPHERICAL COORDINATE SYSTEM
+!       ----------------------------------------------------------------
           SR=1.D0/R
           GRADEG=180.D0/3.1415926D0
           DO IP=1,NPOIN2
@@ -185,11 +194,11 @@ C       ----------------------------------------------------------------
               ENDDO
             ENDIF
           ENDDO
-C
+!
         ENDIF
-C
+!
       ENDIF
-C-----------------------------------------------------------------------
-C
+!-----------------------------------------------------------------------
+!
       RETURN
       END

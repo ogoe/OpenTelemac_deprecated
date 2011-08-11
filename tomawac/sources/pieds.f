@@ -1,85 +1,94 @@
-C                       *****************
-                        SUBROUTINE PIEDS
-C                       *****************
-C
-     *  (U , V , W , DT , NRK , X , Y , TETA , IKLE2 , IFABOR , ETAS ,
-     *   XPLOT , YPLOT , ZPLOT , DX , DY , DZ , SHP1 , SHP2 , SHP3 ,
-     *   SHZ , ELT , ETA , NSP , NPLOT , NPOIN2 , NELEM2 , NPLAN ,
-     *   IFF , SURDET , SENS , ISO )
-C
-C***********************************************************************
-C  TOMAWAC  VERSION 1.0       01/02/95        F MARCOS (LNH) 30 87 72 66
-C***********************************************************************
-C
-C  FONCTION :
-C
-C     REMONTEE OU DESCENTE
-C     DES COURBES CARACTERISTIQUES
-C     SUR DES PRISMES DE TELEMAC-3D
-C     DANS L'INTERVALLE DE TEMPS DT
-C     AVEC UNE DISCRETISATION ELEMENTS FINIS
-C
-C
-C  DISCRETISATION :
-C
-C     LE DOMAINE EST APPROCHE PAR UNE DISCRETISATION ELEMENTS FINIS
-C     UNE APPROXIMATION LOCALE EST DEFINIE POUR LE VECTEUR VITESSE :
-C     LA VALEUR EN UN POINT D'UN ELEMENT NE DEPEND QUE DES VALEURS
-C     AUX NOEUDS DE CET ELEMENT
-C
-C
-C  RESTRICTIONS ET HYPOTHESES :
-C
-C     LE CHAMP CONVECTEUR U EST SUPPOSE INDEPENDANT DU TEMPS
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C !      NOM       !MODE!                   ROLE                       !
-C !________________!____!______________________________________________!
-C !    U,V,W       ! -->! COMPOSANTE DE LA VITESSE DU CONVECTEUR       !
-C !    DT          ! -->! PAS DE TEMPS.                                !
-C !    NRK         ! -->! NOMBRE DE SOUS-PAS DE RUNGE-KUTTA.           !
-C !    X,Y,TETA    ! -->! COORDONNEES DES POINTS DU MAILLAGE.          !
-C !    IKLE2       ! -->! TRANSITION ENTRE LES NUMEROTATIONS LOCALE    !
-C !                !    ! ET GLOBALE DU MAILLAGE 2D.                   !
-C !    IFABOR      ! -->! NUMEROS 2D DES ELEMENTS AYANT UNE FACE COMMUNE
-C !                !    ! AVEC L'ELEMENT .  SI IFABOR<0 OU NUL         !
-C !                !    ! ON A UNE FACE LIQUIDE,SOLIDE,OU PERIODIQUE   !
-C !    ETAS        !<-->! TABLEAU DE TRAVAIL DONNANT LE NUMERO DE      !
-C !                !    ! L'ETAGE SUPERIEUR                            !
-C !  X..,Y..,ZPLOT !<-->! POSITIONS SUCCESSIVES DES DERIVANTS.         !
-C !    DX,DY,DZ    ! -- ! STOCKAGE DES SOUS-PAS .                      !
-C !    SHP1-2-3    !<-->! COORDONNEES BARYCENTRIQUES 2D AU PIED DES    !
-C !                !    ! COURBES CARACTERISTIQUES.                    !
-C !    SHZ         !<-->! COORDONNEES BARYCENTRIQUES SUIVANT Z DES     !
-C !                !    ! NOEUDS DANS LEURS ETAGES "ETA" ASSOCIES.     !
-C !    ELT         !<-->! NUMEROS DES ELEMENTS 2D CHOISIS POUR CHAQUE  !
-C !                !    ! NOEUD.                                       !
-C !    ETA         !<-->! NUMEROS DES ETAGES CHOISIS POUR CHAQUE NOEUD.!
-C !    NSP         ! -- ! NOMBRE DE SOUS-PAS DE RUNGE KUTTA.           !
-C !    NPLOT       ! -->! NOMBRE DE DERIVANTS.                         !
-C !    NPOIN2      ! -->! NOMBRE DE POINTS DU MAILLAGE 2D.             !
-C !    NELEM2      ! -->! NOMBRE D'ELEMENTS DU MAILLAGE 2D.            !
-C !    NPLAN       ! -->! NOMBRE DE DIRECTIONS                         !
-C !    SURDET      ! -->! VARIABLE UTILISEE PAR LA TRANSFORMEE ISOPARAM.
-C !    SENS        ! -->! DESCENTE OU REMONTEE DES CARACTERISTIQUES.   !
-C !    ISO         !<-->! INDIQUE PAR BIT LA FACE DE SORTIE DE l'ELEMEN!
-C !________________!____!______________________________________________!
-C  MODE: -->(DONNEE NON MODIFIEE),<--(RESULTAT),<-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C     - APPELE PAR : WAC
-C     - PROGRAMMES APPELES : NEANT
-C
-C***********************************************************************
-C
+!                    ****************
+                     SUBROUTINE PIEDS
+!                    ****************
+!
+     &  (U , V , W , DT , NRK , X , Y , TETA , IKLE2 , IFABOR , ETAS ,
+     &   XPLOT , YPLOT , ZPLOT , DX , DY , DZ , SHP1 , SHP2 , SHP3 ,
+     &   SHZ , ELT , ETA , NSP , NPLOT , NPOIN2 , NELEM2 , NPLAN ,
+     &   IFF , SURDET , SENS , ISO )
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   22/06/2011
+!***********************************************************************
+!
+!brief    TRACES IN TIME THE CHARACTERISTICS CURVES FOR TELEMAC-3D
+!+                PRISMS, WITHIN THE TIME INTERVAL DT, USING A FINITE
+!+                ELEMENTS DISCRETISATION.
+!
+!note     DISCRETISATION : THE DOMAIN IS APPROXIMATED USING A FINITE
+!+         ELEMENT DISCRETISATION. A LOCAL APPROXIMATION IS USED FOR THE
+!+         VELOCITY : THE VALUE IN ONE POINT OF AN ELEMENT ONLY DEPENDS
+!+         ON THE VALUES AT THE NODES OF THIS ELEMENT.
+!note  RESTRICTIONS AND ASSUMPTIONS : THE ADVECTION FIELD U IS
+!+         ASSUMED NOT TO VARY WITH TIME.
+!
+!history  F MARCOS (LNH)
+!+        01/02/95
+!+        V1P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        21/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| DT             |-->| TIME STEP
+!| DX,DY,DZ       |<--| STORED SUB-INCREMENTS TIME STEPS
+!| ELT            |<->| NUMBERS OF THE ELEMENTS 2D OF THE
+!|                |   | POINTS TO BE ADVECTED
+!| ETA            |<->| NUMBERS OF THE LAYERS OF THE
+!|                |   | POINTS TO BE ADVECTED
+!| ETAS           |<->| WORK TABLE INDICATING THE NUMBER OF THE HIGHER
+!|                |   | LAYER
+!| IFABOR         |-->| ELEMENTS BEHIND THE EDGES OF A TRIANGLE
+!|                |   | IF NEGATIVE OR ZERO, THE EDGE IS A LIQUID,
+!|                |   | SOLID OR PERIODIC BOUNDARY
+!| IFF            |-->| FREQUENCY INDEX
+!| IKLE2          |-->| TRANSITION BETWEEN LOCAL AND GLOBAL NUMBERING
+!|                |   | OF THE 2D MESH
+!| ISO            |<->| BINARY STORING OF THE EXIT FACE OF THE ELEMENT
+!| NELEM2         |-->| NUMBER OF ELEMENTS IN 2D MESH
+!| NPLAN          |-->| NUMBER OF DIRECTIONS
+!| NPLOT          |-->| NUMBER OF POINTS TO BE ADVECTED
+!| NPOIN2         |-->| NUMBER OF POINTS IN 2D MESH
+!| NRK            |-->| NUMBER OF RUNGE-KUTTA SUB-ITERATIONS
+!| NSP            |<--| NUMBER OF RUNGE-KUTTA SUB-ITERATIONS
+!| SENS           |-->| DESCENTE OU REMONTEE DES CARACTERISTIQUES.
+!| SHP1,SHP2,SHP3 |<->| BARYCENTRIC COORDINATES OF THE NODES IN
+!|                |   | THEIR ASSOCIATED 2D ELEMENT "ELT"
+!| SHZ            |<->| BARYCENTRIC COORDINATES ALONG TETA OF THE 
+!|                |   | NODES IN THEIR ASSOCIATED LAYER "ETA"
+!| SURDET         |-->| 1/DET. OF ELEMENTS 2D FOR ISOPARAM. TRANSF.
+!| U,V,W          |-->| COMPONENTS OF THE ADVECTION VELOCITY
+!| X,Y,TETA       |-->| COORDINATES OF THE MESH
+!| XPLOT          |<->| STARTING ABSCISSAE OF THE POINTS TO BE
+!|                |   | ADVECTED
+!| YPLOT          |<->| STARTING ORDINATES OF THE POINTS TO BE
+!|                |   | ADVECTED
+!| ZPLOT          |<->| STARTING DIRECTIONS OF THE POINTS TO BE
+!|                |   | ADVECTED
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
+!
       INTEGER LNG,LU
       COMMON/INFO/ LNG,LU
-C
+!
       INTEGER NPOIN2,NELEM2,NPLAN,NPLOT,NSPMAX,NRK,SENS,IFF
-C
+!
       DOUBLE PRECISION U(NPOIN2,NPLAN),V(NPOIN2,NPLAN)
       DOUBLE PRECISION W(NPOIN2,NPLAN)
       DOUBLE PRECISION XPLOT(NPLOT),YPLOT(NPLOT),ZPLOT(NPLOT)
@@ -89,179 +98,179 @@ C
       DOUBLE PRECISION DX(NPLOT),DY(NPLOT),DZ(NPLOT)
       DOUBLE PRECISION PAS,DT,A1,DX1,DY1,DXP,DYP,DZP,XP,YP,ZP
       DOUBLE PRECISION EPSILO, EPSI, EPM1
-C
+!
       INTEGER IKLE2(NELEM2,3),IFABOR(NELEM2,5),ETAS(NPLAN)
       INTEGER ELT(NPLOT),ETA(NPLOT),NSP(NPLOT),ISO(NPLOT)
       INTEGER IPLOT,ISP,I1,I2,I3,IEL,IET,ISOH,ISOV,IFA,ISUI(3)
-C
+!
       INTRINSIC ABS , INT , MAX , SQRT
-C
+!
       DATA ISUI   / 2 , 3 , 1 /
       DATA EPSILO / -1.D-6 /
       DATA EPSI   / 1.D-12 /
-C
-C-----------------------------------------------------------------------
-C  CALCUL DU NOMBRE DE SOUS PAS, LE MEME POUR TOUS LES POINTS POUR UNE
-C    FREQUENCE DONNEE
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!    COMPUTES THE NUMBER OF SUB-ITERATIONS
+!    (THE SAME AT ALL THE NODES FOR A GIVEN FREQUENCY)
+!-----------------------------------------------------------------------
+!
       NSPMAX = 1
       EPM1=1.D0-EPSI
-C
+!
       DO 10 IPLOT = 1 , NPLOT
-C
+!
          NSP(IPLOT) = 0
          IEL = ELT(IPLOT)
-C
+!
          IF (IEL.GT.0) THEN
-C
+!
             IET = ETA(IPLOT)
-C
+!
             I1 = IKLE2(IEL,1)
             I2 = IKLE2(IEL,2)
             I3 = IKLE2(IEL,3)
-C
+!
          DXP = U(I1,IET  )*SHP1(IPLOT)*(1.D0-SHZ(IPLOT))
-     *       + U(I2,IET  )*SHP2(IPLOT)*(1.D0-SHZ(IPLOT))
-     *       + U(I3,IET  )*SHP3(IPLOT)*(1.D0-SHZ(IPLOT))
-     *       + U(I1,ETAS(IET))*SHP1(IPLOT)*SHZ(IPLOT)
-     *       + U(I2,ETAS(IET))*SHP2(IPLOT)*SHZ(IPLOT)
-     *       + U(I3,ETAS(IET))*SHP3(IPLOT)*SHZ(IPLOT)
-C
+     &       + U(I2,IET  )*SHP2(IPLOT)*(1.D0-SHZ(IPLOT))
+     &       + U(I3,IET  )*SHP3(IPLOT)*(1.D0-SHZ(IPLOT))
+     &       + U(I1,ETAS(IET))*SHP1(IPLOT)*SHZ(IPLOT)
+     &       + U(I2,ETAS(IET))*SHP2(IPLOT)*SHZ(IPLOT)
+     &       + U(I3,ETAS(IET))*SHP3(IPLOT)*SHZ(IPLOT)
+!
          DYP = V(I1,IET  )*SHP1(IPLOT)*(1.D0-SHZ(IPLOT))
-     *       + V(I2,IET  )*SHP2(IPLOT)*(1.D0-SHZ(IPLOT))
-     *       + V(I3,IET  )*SHP3(IPLOT)*(1.D0-SHZ(IPLOT))
-     *       + V(I1,ETAS(IET))*SHP1(IPLOT)*SHZ(IPLOT)
-     *       + V(I2,ETAS(IET))*SHP2(IPLOT)*SHZ(IPLOT)
-     *       + V(I3,ETAS(IET))*SHP3(IPLOT)*SHZ(IPLOT)
-C
+     &       + V(I2,IET  )*SHP2(IPLOT)*(1.D0-SHZ(IPLOT))
+     &       + V(I3,IET  )*SHP3(IPLOT)*(1.D0-SHZ(IPLOT))
+     &       + V(I1,ETAS(IET))*SHP1(IPLOT)*SHZ(IPLOT)
+     &       + V(I2,ETAS(IET))*SHP2(IPLOT)*SHZ(IPLOT)
+     &       + V(I3,ETAS(IET))*SHP3(IPLOT)*SHZ(IPLOT)
+!
          DZP = W(I1,IET  )*SHP1(IPLOT)*(1.D0-SHZ(IPLOT))
-     *       + W(I2,IET  )*SHP2(IPLOT)*(1.D0-SHZ(IPLOT))
-     *       + W(I3,IET  )*SHP3(IPLOT)*(1.D0-SHZ(IPLOT))
-     *       + W(I1,ETAS(IET))*SHP1(IPLOT)*SHZ(IPLOT)
-     *       + W(I2,ETAS(IET))*SHP2(IPLOT)*SHZ(IPLOT)
-     *       + W(I3,ETAS(IET))*SHP3(IPLOT)*SHZ(IPLOT)
-C
+     &       + W(I2,IET  )*SHP2(IPLOT)*(1.D0-SHZ(IPLOT))
+     &       + W(I3,IET  )*SHP3(IPLOT)*(1.D0-SHZ(IPLOT))
+     &       + W(I1,ETAS(IET))*SHP1(IPLOT)*SHZ(IPLOT)
+     &       + W(I2,ETAS(IET))*SHP2(IPLOT)*SHZ(IPLOT)
+     &       + W(I3,ETAS(IET))*SHP3(IPLOT)*SHZ(IPLOT)
+!
          NSP(IPLOT)= MAX(INT(NRK*DT*ABS(DZP/(TETA(IET)-TETA(IET+1)))),
-     *         INT(NRK*DT*SQRT((DXP*DXP+DYP*DYP)*SURDET(IEL))) )
-C
+     &         INT(NRK*DT*SQRT((DXP*DXP+DYP*DYP)*SURDET(IEL))) )
+!
             NSP(IPLOT) = MAX (1,NSP(IPLOT))
-C
+!
             NSPMAX = MAX ( NSPMAX , NSP(IPLOT) )
-C
-         ENDIF 
-C
+!
+         ENDIF
+!
 10    CONTINUE
       IF (LNG.EQ.1) THEN
         WRITE(LU,*)
-     *     '   FREQUENCE',IFF,', NOMBRE DE SOUS PAS RUNGE KUTTA :'
-     *        ,NSPMAX
+     &     '   FREQUENCE',IFF,', NOMBRE DE SOUS PAS RUNGE KUTTA :'
+     &        ,NSPMAX
       ELSE
         WRITE(LU,*)
-     *     '   FREQUENCY',IFF,', NUMBER OF RUNGE KUTTA SUB TIME-STEP
-     *S :',NSPMAX
+     &     '   FREQUENCY',IFF,', NUMBER OF RUNGE KUTTA SUB TIME-STEP
+     &S :',NSPMAX
       ENDIF
-C
-C-----------------------------------------------------------------------
-C  POUR TOUT PAS DE R-K REPETER
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!  LOOP ON NUMBER OF SUB-ITERATIONS
+!-----------------------------------------------------------------------
+!
       DO 20 ISP = 1 , NSPMAX
-C
-C-----------------------------------------------------------------------
-C  LOCALISATION DU POINT D'ARRIVEE DE TOUTES LES CARACTERISTIQUES
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!  LOCATES THE END POINT OF ALL THE CHARACTERISTICS
+!-----------------------------------------------------------------------
+!
          DO 30 IPLOT = 1 , NPLOT
-C
+!
             ISO(IPLOT) = 0
             IF (ISP.LE.NSP(IPLOT)) THEN
-C
+!
                IEL = ELT(IPLOT)
                IET = ETA(IPLOT)
-C
+!
                I1 = IKLE2(IEL,1)
                I2 = IKLE2(IEL,2)
                I3 = IKLE2(IEL,3)
                PAS = SENS * DT / NSP(IPLOT)
-C
+!
                DX(IPLOT) =
-     * ( U(I1,IET  )*SHP1(IPLOT)*(1.D0-SHZ(IPLOT))
-     * + U(I2,IET  )*SHP2(IPLOT)*(1.D0-SHZ(IPLOT))
-     * + U(I3,IET  )*SHP3(IPLOT)*(1.D0-SHZ(IPLOT))
-     * + U(I1,ETAS(IET))*SHP1(IPLOT)*SHZ(IPLOT)
-     * + U(I2,ETAS(IET))*SHP2(IPLOT)*SHZ(IPLOT)
-     * + U(I3,ETAS(IET))*SHP3(IPLOT)*SHZ(IPLOT) ) * PAS
-C
+     & ( U(I1,IET  )*SHP1(IPLOT)*(1.D0-SHZ(IPLOT))
+     & + U(I2,IET  )*SHP2(IPLOT)*(1.D0-SHZ(IPLOT))
+     & + U(I3,IET  )*SHP3(IPLOT)*(1.D0-SHZ(IPLOT))
+     & + U(I1,ETAS(IET))*SHP1(IPLOT)*SHZ(IPLOT)
+     & + U(I2,ETAS(IET))*SHP2(IPLOT)*SHZ(IPLOT)
+     & + U(I3,ETAS(IET))*SHP3(IPLOT)*SHZ(IPLOT) ) * PAS
+!
                DY(IPLOT) =
-     * ( V(I1,IET  )*SHP1(IPLOT)*(1.D0-SHZ(IPLOT))
-     * + V(I2,IET  )*SHP2(IPLOT)*(1.D0-SHZ(IPLOT))
-     * + V(I3,IET  )*SHP3(IPLOT)*(1.D0-SHZ(IPLOT))
-     * + V(I1,ETAS(IET))*SHP1(IPLOT)*SHZ(IPLOT)
-     * + V(I2,ETAS(IET))*SHP2(IPLOT)*SHZ(IPLOT)
-     * + V(I3,ETAS(IET))*SHP3(IPLOT)*SHZ(IPLOT) ) * PAS
-C
+     & ( V(I1,IET  )*SHP1(IPLOT)*(1.D0-SHZ(IPLOT))
+     & + V(I2,IET  )*SHP2(IPLOT)*(1.D0-SHZ(IPLOT))
+     & + V(I3,IET  )*SHP3(IPLOT)*(1.D0-SHZ(IPLOT))
+     & + V(I1,ETAS(IET))*SHP1(IPLOT)*SHZ(IPLOT)
+     & + V(I2,ETAS(IET))*SHP2(IPLOT)*SHZ(IPLOT)
+     & + V(I3,ETAS(IET))*SHP3(IPLOT)*SHZ(IPLOT) ) * PAS
+!
                DZ(IPLOT) =
-     * ( W(I1,IET  )*SHP1(IPLOT)*(1.D0-SHZ(IPLOT))
-     * + W(I2,IET  )*SHP2(IPLOT)*(1.D0-SHZ(IPLOT))
-     * + W(I3,IET  )*SHP3(IPLOT)*(1.D0-SHZ(IPLOT))
-     * + W(I1,ETAS(IET))*SHP1(IPLOT)*SHZ(IPLOT)
-     * + W(I2,ETAS(IET))*SHP2(IPLOT)*SHZ(IPLOT)
-     * + W(I3,ETAS(IET))*SHP3(IPLOT)*SHZ(IPLOT) ) * PAS
-C
+     & ( W(I1,IET  )*SHP1(IPLOT)*(1.D0-SHZ(IPLOT))
+     & + W(I2,IET  )*SHP2(IPLOT)*(1.D0-SHZ(IPLOT))
+     & + W(I3,IET  )*SHP3(IPLOT)*(1.D0-SHZ(IPLOT))
+     & + W(I1,ETAS(IET))*SHP1(IPLOT)*SHZ(IPLOT)
+     & + W(I2,ETAS(IET))*SHP2(IPLOT)*SHZ(IPLOT)
+     & + W(I3,ETAS(IET))*SHP3(IPLOT)*SHZ(IPLOT) ) * PAS
+!
                XP = XPLOT(IPLOT) + DX(IPLOT)
                YP = YPLOT(IPLOT) + DY(IPLOT)
                ZP = ZPLOT(IPLOT) + DZ(IPLOT)
-C
+!
                SHP1(IPLOT) = ((X(I3)-X(I2))*(YP-Y(I2))
-     *                        -(Y(I3)-Y(I2))*(XP-X(I2))) * SURDET(IEL)
+     &                        -(Y(I3)-Y(I2))*(XP-X(I2))) * SURDET(IEL)
                SHP2(IPLOT) = ((X(I1)-X(I3))*(YP-Y(I3))
-     *                        -(Y(I1)-Y(I3))*(XP-X(I3))) * SURDET(IEL)
+     &                        -(Y(I1)-Y(I3))*(XP-X(I3))) * SURDET(IEL)
                SHP3(IPLOT) = ((X(I2)-X(I1))*(YP-Y(I1))
-     *                        -(Y(I2)-Y(I1))*(XP-X(I1))) * SURDET(IEL)
+     &                        -(Y(I2)-Y(I1))*(XP-X(I1))) * SURDET(IEL)
                SHZ(IPLOT) = (ZP-TETA(IET)) / (TETA(IET+1)-TETA(IET))
-C               IF (ABS(SHZ(IPLOT)).GT.2.5D0 ) THEN
-C                  WRITE(LU,*)'SHZ***',IPLOT,IET,SHZ(IPLOT)
-C                  WRITE(LU,*)TETA(IET),TETA(IET+1),ZP
-C                  WRITE(LU,*)DZ(IPLOT),ZPLOT(IPLOT)
-C                  STOP
-C              ENDIF
-C
+!               IF (ABS(SHZ(IPLOT)).GT.2.5D0 ) THEN
+!                  WRITE(LU,*)'SHZ***',IPLOT,IET,SHZ(IPLOT)
+!                  WRITE(LU,*)TETA(IET),TETA(IET+1),ZP
+!                  WRITE(LU,*)DZ(IPLOT),ZPLOT(IPLOT)
+!                  STOP
+!              ENDIF
+!
                XPLOT(IPLOT) = XP
                YPLOT(IPLOT) = YP
                ZPLOT(IPLOT) = ZP
-C
+!
                IF (SHP1(IPLOT).LT.EPSILO)
-     *              ISO(IPLOT)=IBSET(ISO(IPLOT),2)
+     &              ISO(IPLOT)=IBSET(ISO(IPLOT),2)
                IF (SHP2(IPLOT).LT.EPSILO)
-     *              ISO(IPLOT)=IBSET(ISO(IPLOT),3)
+     &              ISO(IPLOT)=IBSET(ISO(IPLOT),3)
                IF (SHP3(IPLOT).LT.EPSILO)
-     *              ISO(IPLOT)=IBSET(ISO(IPLOT),4)
-C
+     &              ISO(IPLOT)=IBSET(ISO(IPLOT),4)
+!
                IF  (SHZ(IPLOT).LT.EPSILO)
-     *              ISO(IPLOT)=IBSET(ISO(IPLOT),0)
+     &              ISO(IPLOT)=IBSET(ISO(IPLOT),0)
                IF  (SHZ(IPLOT).GT.1.D0-EPSILO)
-     *              ISO(IPLOT)=IBSET(ISO(IPLOT),1)
-C
-            ENDIF 
-C
+     &              ISO(IPLOT)=IBSET(ISO(IPLOT),1)
+!
+            ENDIF
+!
 30       CONTINUE
-C
-C-----------------------------------------------------------------------
-C  TRAITEMENT PARTICULIER POUR LES CARACTERISTIQUES SORTIES
-C  DE L'ELEMENT DE DEPART
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!  TREATS DIFFERENTLY THE CHARACTERISTICS ISSUED FROM
+!  THE START ELEMENT
+!-----------------------------------------------------------------------
+!
          DO 40 IPLOT = 1 , NPLOT
-C
+!
 50          CONTINUE
-C
+!
             IF (ISO(IPLOT).NE.0) THEN
-C
-C-----------------------------------------------------------------------
-C  LA, ON SAIT QU'ON EST SORTI DE L'ELEMENT
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!  HERE: LEFT THE ELEMENT
+!-----------------------------------------------------------------------
+!
                ISOH = IAND(ISO(IPLOT),28)
                ISOV = IAND(ISO(IPLOT), 3)
                IEL = ELT(IPLOT)
@@ -269,9 +278,9 @@ C
                XP = XPLOT(IPLOT)
                YP = YPLOT(IPLOT)
                ZP = ZPLOT(IPLOT)
-C
+!
                IF (ISOH.NE.0) THEN
-C
+!
                   IF (ISOH.EQ.4) THEN
                      IFA = 2
                   ELSEIF (ISOH.EQ.8) THEN
@@ -281,68 +290,67 @@ C
                   ELSEIF (ISOH.EQ.12) THEN
                      IFA = 2
                      IF (DX(IPLOT)*(Y(IKLE2(IEL,3))-YP).LT.
-     *                   DY(IPLOT)*(X(IKLE2(IEL,3))-XP)) IFA = 3
+     &                   DY(IPLOT)*(X(IKLE2(IEL,3))-XP)) IFA = 3
                   ELSEIF (ISOH.EQ.24) THEN
                      IFA = 3
                      IF (DX(IPLOT)*(Y(IKLE2(IEL,1))-YP).LT.
-     *                   DY(IPLOT)*(X(IKLE2(IEL,1))-XP)) IFA = 1
+     &                   DY(IPLOT)*(X(IKLE2(IEL,1))-XP)) IFA = 1
                   ELSE
                      IFA = 1
                      IF (DX(IPLOT)*(Y(IKLE2(IEL,2))-YP).LT.
-     *                   DY(IPLOT)*(X(IKLE2(IEL,2))-XP)) IFA = 2
+     &                   DY(IPLOT)*(X(IKLE2(IEL,2))-XP)) IFA = 2
                   ENDIF
-C
+!
                   IF (ISOV.GT.0) THEN
                      A1 = (ZP-TETA(IET+ISOV-1)) / DZ(IPLOT)
                      I1 = IKLE2(IEL,IFA)
                      I2 = IKLE2(IEL,ISUI(IFA))
                      IF ((X(I2)-X(I1))*(YP-A1*DY(IPLOT)-Y(I1)).GT.
-     *                 (Y(I2)-Y(I1))*(XP-A1*DX(IPLOT)-X(I1))) IFA=ISOV+3
+     &                 (Y(I2)-Y(I1))*(XP-A1*DX(IPLOT)-X(I1))) IFA=ISOV+3
                   ENDIF
-C
+!
                ELSE
-C
+!
                   IFA = ISOV + 3
-C
+!
                ENDIF
-C
+!
                IEL = IFABOR(IEL,IFA)
-C
+!
                IF (IFA.LE.3) THEN
-
-C
-C-----------------------------------------------------------------------
-C  LA, ON SAIT QUE LA FACE DE SORTIE DU PRISME EST UNE FACE QUADRAN.
-C  =================================================================
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!  HERE: THE EXIT FACE OF THE PRISM IS A RECTANGULAR FACE
+!  =================================================================
+!-----------------------------------------------------------------------
+!
                   IF (IEL.GT.0) THEN
-C
-C-----------------------------------------------------------------------
-C  LA, ON SAIT QUE LA FACE DE SORTIE EST INTERNE AU DOMAINE
-C  ON SE RELOCALISE DANS L'ELEMENT ADJACENT
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!  HERE: THE EXIT FACE IS AN INTERIOR FACE
+!  MOVES TO THE ADJACENT ELEMENT
+!-----------------------------------------------------------------------
+!
                      I1 = IKLE2(IEL,1)
                      I2 = IKLE2(IEL,2)
                      I3 = IKLE2(IEL,3)
-C
+!
                      ELT(IPLOT) = IEL
                      SHP1(IPLOT) = ((X(I3)-X(I2))*(YP-Y(I2))
-     *                           -(Y(I3)-Y(I2))*(XP-X(I2)))*SURDET(IEL)
+     &                           -(Y(I3)-Y(I2))*(XP-X(I2)))*SURDET(IEL)
                      SHP2(IPLOT) = ((X(I1)-X(I3))*(YP-Y(I3))
-     *                           -(Y(I1)-Y(I3))*(XP-X(I3)))*SURDET(IEL)
+     &                           -(Y(I1)-Y(I3))*(XP-X(I3)))*SURDET(IEL)
                      SHP3(IPLOT) = ((X(I2)-X(I1))*(YP-Y(I1))
-     *                           -(Y(I2)-Y(I1))*(XP-X(I1)))*SURDET(IEL)
-C
+     &                           -(Y(I2)-Y(I1))*(XP-X(I1)))*SURDET(IEL)
+!
                      ISO(IPLOT) = ISOV
-C
+!
          IF (SHP1(IPLOT).LT.EPSILO) ISO(IPLOT)=IBSET(ISO(IPLOT),2)
          IF (SHP2(IPLOT).LT.EPSILO) ISO(IPLOT)=IBSET(ISO(IPLOT),3)
          IF (SHP3(IPLOT).LT.EPSILO) ISO(IPLOT)=IBSET(ISO(IPLOT),4)
-C
+!
                      GOTO 50
-C
+!
                   ENDIF
                   DXP = DX(IPLOT)
                   DYP = DY(IPLOT)
@@ -350,34 +358,34 @@ C
                   I2  = IKLE2(ELT(IPLOT),ISUI(IFA))
                   DX1 = X(I2) - X(I1)
                   DY1 = Y(I2) - Y(I1)
-C
+!
                   IF (IEL.EQ.-1) THEN
-C
-C-----------------------------------------------------------------------
-C  LA, ON SAIT QUE LA FACE DE SORTIE EST UNE FRONTIERE SOLIDE
-C  ON MET LES SHP A 0, FIN DE LA REMONTEE
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!  HERE: THE EXIT FACE IS A SOLID BOUNDARY
+!  SETS SHP TO 0, END OF TRACING BACK
+!-----------------------------------------------------------------------
+!
                      SHP1(IPLOT) = 0.D0
                      SHP2(IPLOT) = 0.D0
                      SHP3(IPLOT) = 0.D0
                      ELT(IPLOT) = - SENS * ELT(IPLOT)
                      NSP(IPLOT) = ISP
                      GOTO 40
-C
-                  ENDIF 
-C
-C-----------------------------------------------------------------------
-C  LA, ON SAIT QUE LA FACE DE SORTIE EST UNE FRONTIERE LIQUIDE
-C  ON ARRETE LA REMONTEE DES CARACTERISTIQUE (SIGNE DE ELT)
-C-----------------------------------------------------------------------
-C
+!
+                  ENDIF
+!
+!-----------------------------------------------------------------------
+!  HERE: THE EXIT FACE IS A LIQUID BOUNDARY
+!  ENDS TRACING BACK (SIGN OF ELT)
+!-----------------------------------------------------------------------
+!
                   A1 = (DXP*(YP-Y(I1))-DYP*(XP-X(I1)))/(DXP*DY1-DYP*DX1)
-CFBG                  IF (A1.GT.1.D0) A1 = 1.D0
-CFBG                  IF (A1.LT.0.D0) A1 = 0.D0
+!FBG                  IF (A1.GT.1.D0) A1 = 1.D0
+!FBG                  IF (A1.LT.0.D0) A1 = 0.D0
                   IF (A1.GT.EPM1) A1 = 1.D0
                   IF (A1.LT.EPSI) A1 = 0.D0
-CFGB
+!FGB
                   IF (IFA.EQ.1) THEN
                     SHP1(IPLOT) = 1.D0 - A1
                     SHP2(IPLOT) = A1
@@ -402,26 +410,26 @@ CFGB
                   IF (A1.LT.EPSI) A1 = 0.D0
                   ZPLOT(IPLOT) = ZP - A1*DZ(IPLOT)
                   SHZ(IPLOT) = (ZPLOT(IPLOT)-TETA(IET))
-     *                       / (TETA(IET+1)-TETA(IET))
+     &                       / (TETA(IET+1)-TETA(IET))
                   ELT(IPLOT) = - SENS * ELT(IPLOT)
                   NSP(IPLOT) = ISP
-C
+!
                ELSE
-C
-C-----------------------------------------------------------------------
-C  LA, ON SAIT QUE LA FACE DE SORTIE DU PRISME EST UNE FACE TRIAN.
-C  ===============================================================
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!  HERE: THE EXIT FACE OF THE PRISM IS A TRIANGULAR FACE
+!  ===============================================================
+!-----------------------------------------------------------------------
+!
                   IFA = IFA - 4
-C
+!
                   IF (IEL.EQ.1) THEN
-C
-C-----------------------------------------------------------------------
-C  LA, ON SAIT QUE LA FACE DE SORTIE EST INTERNE AU DOMAINE
-C  ON SE RELOCALISE DANS L'ELEMENT ADJACENT
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!  HERE: THE EXIT FACE IS AN INTERIOR FACE
+!  MOVES TO THE ADJACENT ELEMENT
+!-----------------------------------------------------------------------
+!
                      ETA(IPLOT) = IET + IFA + IFA - 1
                      IF (ETA(IPLOT).EQ.NPLAN+1) THEN
                          ETA(IPLOT)=1
@@ -434,37 +442,36 @@ C
                          ZPLOT(IPLOT)=ZP
                      ENDIF
                      SHZ(IPLOT) = (ZP-TETA(ETA(IPLOT)))
-     *                   / (TETA(ETA(IPLOT)+1)-TETA(ETA(IPLOT)))
-C
+     &                   / (TETA(ETA(IPLOT)+1)-TETA(ETA(IPLOT)))
+!
                      ISO(IPLOT) = ISOH
-C
+!
                IF (SHZ(IPLOT).LT.EPSILO)
-     *             ISO(IPLOT)=IBSET(ISO(IPLOT),0)
+     &             ISO(IPLOT)=IBSET(ISO(IPLOT),0)
                IF (SHZ(IPLOT).GT.1.D0-EPSILO)
-     *             ISO(IPLOT)=IBSET(ISO(IPLOT),1)
-C
+     &             ISO(IPLOT)=IBSET(ISO(IPLOT),1)
+!
                      GOTO 50
-C
+!
                   ELSE
-C
-C         WRITE(LU,*)'YA UN PROBLEME',IEL,IPLOT
-C         WRITE(LU,*)'SHP',SHP1(IPLOT),SHP2(IPLOT),SHP3(IPLOT)
-C         WRITE(LU,*)'SHZ',SHZ(IPLOT)
-C         WRITE(LU,*)'DXYZ',DX(IPLOT),DY(IPLOT),DZ(IPLOT)
-C         WRITE(LU,*)'XYZ',XPLOT(IPLOT),YPLOT(IPLOT),ZPLOT(IPLOT)
-
+!
+!         WRITE(LU,*)'YA UN PROBLEME',IEL,IPLOT
+!         WRITE(LU,*)'SHP',SHP1(IPLOT),SHP2(IPLOT),SHP3(IPLOT)
+!         WRITE(LU,*)'SHZ',SHZ(IPLOT)
+!         WRITE(LU,*)'DXYZ',DX(IPLOT),DY(IPLOT),DZ(IPLOT)
+!         WRITE(LU,*)'XYZ',XPLOT(IPLOT),YPLOT(IPLOT),ZPLOT(IPLOT)
                   STOP
                   ENDIF
-C
+!
                ENDIF
-C
+!
             ENDIF
-C
+!
 40       CONTINUE
-C
+!
 20    CONTINUE
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

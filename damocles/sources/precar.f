@@ -1,97 +1,90 @@
-                       INTEGER FUNCTION PRECAR
-C                      ***********************
-C
-     *( ICOL , LIGNE , CAR1 , CAR2 , CAR3 )
-C
-C***********************************************************************
-C DAMOCLES VERSION 5.1     16/08/94   J.M. HERVOUET (LNH)   30 87 80 18
-C                                       A. YESSAYAN
-C                          15/12/93     O. QUIQUEMPOIX (LNH) 30 87 78 70
-C
-C Copyright EDF 1994
-C
-C
-C***********************************************************************
-C
-C FONCTION  : RETOURNE L'INDICE DE COLONNE DU PREMIER CARACTERE CAR
-C             DE LA LIGNE (MEME APRES UN / DE COMMENTAIRE).
-C             RETOURNE LA LONGUEUR MAXIMALE DE LA LIGNE SI LE CARACTERE
-C             N'EST PAS TROUVE.
-C
-C             CETTE FONCTION EST UTILISEE POUR TROUVER LA FIN D'UNE
-C             CHAINE DE CARACTERES . CETTE CHAINE PEUT CONTENIR DES
-C             SIGNES '/', C'EST POURQUOI ON N'UTILISE PAS PREVAL
-C             QUI SAUTE LES ZONES DE COMMENTAIRES.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C !      NOM       !MODE!                   ROLE                       !
-C !________________!____!______________________________________________!
-C !                !    !                                              !
-C !  ICOL          ! -->! POSITION COURANTE DU POINTEUR DANS LA LIGNE  !
-C !  LIGNE         ! -->! LIGNE EN COURS DE DECODAGE                   !
-C !  CAR1,CAR2,CAR3! -->! CARACTERES RECHERCHES DANS LA LIGNE          !
-C !                !    !                                              !
-C !________________!____!______________________________________________!
-C !                !    !                                              !
-C !   /COMMON/     !    !                                              !
-C !                !    !                                              !
-C !    DCMLIG      !    !                                              !
-C !  . NLIGN       ! -->! NUMERO DE LA LIGNE TRAITEE DANS LE FICHIER LU!
-C !  . LONGLI      ! -->! LONGUEUR DES LIGNES                          !
-C !________________!____!______________________________________________!
-C
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C     - PORTABILITE : IBM,CRAY,HP,SUN
-C
-C     - APPELE PAR :  AIDELU,CARLU,IGNORE,INFLU,LOGLU
-C
-C     - REMARQUE :    OPTIMISATION EN ENVOYANT CAR1, CAR2, CAR3 DANS
-C                     L'ORDRE LE PLUS PROBABLE
-C
-C-----------------------------------------------------------------------
-C
+!                    ***********************
+                     INTEGER FUNCTION PRECAR
+!                    ***********************
+!
+     &( ICOL , LIGNE , CAR1 , CAR2 , CAR3 )
+!
+!***********************************************************************
+! DAMOCLES   V6P0                                   21/08/2010
+!***********************************************************************
+!
+!brief    RETURNS THE COLUMN INDEX OF THE 1ST CHARACTER CAR
+!+             IN THE LINE (EVEN IF IT FOLLOWS '/')
+!+             RETURNS THE MAXIMUM LENGTH OF THE LINE IF THIS CHARACTER
+!+             IS NOT FOUND.
+!+
+!+             THIS FUNCTION IS USED TO FIND THE END OF A STRING OF
+!+             CHARACTERS. THIS STRING CAN CONTAIN THE CHARACTER '/',
+!+             WHICH IS WHY PREVAL IS NOT USED IN THIS CASE (PREVAL
+!+             SKIPS COMMENTED LINES).
+!
+!note     PORTABILITY : IBM,CRAY,HP,SUN
+!note      OPTIMISED: SENDS CAR1, CAR2, CAR3 IN THE MOST PROBABLE ORDER
+!
+!history  O. QUIQUEMPOIX (LNH)
+!+        15/12/1993
+!+
+!+
+!
+!history  J.M. HERVOUET (LNH); A. YESSAYAN
+!+        16/08/1994
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CAR1,CAR2,CAR3 |-->| CARACTERES RECHERCHES DANS LA LIGNE
+!| ICOL           |-->| POSITION COURANTE DU POINTEUR DANS LA LIGNE
+!| LIGNE          |-->| LIGNE EN COURS DE DECODAGE
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
+!
       INTEGER       ICOL
       CHARACTER*1   CAR1,CAR2,CAR3
       CHARACTER*(*) LIGNE
-C
+!
       INTEGER       LONGLI,NLIGN
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       INTEGER       K
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       COMMON / DCMLIG / NLIGN,LONGLI
-C
-C***********************************************************************
-C                                    MARQUAGE RCS ET SCCS
-C
-C***********************************************************************
-C
+!
+!***********************************************************************
+!                                    RCS AND SCCS MARKING
+!
+!***********************************************************************
+!
       PRECAR = LONGLI
-C
+!
       DO 100 K = ICOL,LONGLI
       IF (LIGNE(K:K).EQ.CAR1.OR.LIGNE(K:K).EQ.CAR2.OR.
-     *    LIGNE(K:K).EQ.CAR3) THEN
+     &    LIGNE(K:K).EQ.CAR3) THEN
         PRECAR = K
         GO TO 1000
       ENDIF
 100   CONTINUE
-C
+!
       PRECAR=LONGLI+1
-C
+!
 1000  CONTINUE
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END
- 

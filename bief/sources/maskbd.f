@@ -1,88 +1,94 @@
-C                       *****************
-                        SUBROUTINE MASKBD
-C                       *****************
-C
-     *(MASKEL,ZFE,ZF,HN,HMIN,IKLE,IFABOR,ITRA01,NELEM,NPOIN)
-C
-C***********************************************************************
-C  BIEF VERSION 5.1            11/08/94      J-M JANIN (LNH) 30 87 72 84
-C
-C***********************************************************************
-C
-C     FONCTION :
-C
-C    MASQUAGE DES ELEMENTS DECOUVERTS OU PARTIELLEMENT DECOUVERTS
-C
-C
-C     ALGORITHME :
-C
-C    - UN ELEMENT EST MASQUE SI SA COTE DU FOND ZFE EST SUPERIEURE A LA
-C      COTE DE SURFACE LIBRE DE SON CENTRE DE GRAVITE
-C
-C    - TOUT ELEMENT DONT LA COTE ZFE EST SUPERIEURE A LA COTE ZFE D'UN
-C      VOISIN MASQUE EST MASQUE
-C
-C      LORSQU'ON TOURNE AUTOUR D'UN NOEUD LA FONCTION ZFE NE COMPORTE
-C      QU'UN MINIMUM ET UN MAXIMUM (VOIR TOPOGR). LA SECONDE PHASE DE
-C      L'ALGORITHME ASSURE DONC QU'IL N'Y A PAS 2 PARTIES DU DOMAINE
-C      CONNECTEES UNIQUEMENT PAR UN SOMMET. CE TRAITEMENT EVITE
-C      EGALEMENT DES MASQUAGES-DEMASQUAGES INTEMPESTIFS EN PARTICULIER
-C      DANS LES ZONES PLATES DECOUVRANTES.
-C
-C     INCONVENIENTS :
-C
-C      CET ALGORITHME SUPPOSE LA SURFACE LIBRE QUASI HORIZONTALE.
-C      IL EST BIEN ADAPTE POUR TRAITER DES EVOLUTIONS LIEES A LA MAREE
-C      MAIS PAS POUR TRAITER UNE RUPTURE DE BARRAGE.
-C
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |   MASKEL       |<-- | TABLEAU DE MASQUAGE DES ELEMENTS             |
-C |                |    |  =1. : NORMAL   =0. : ELEMENT MASQUE.        |
-C |   ZFE          | -->| COTE DU FOND PAR ELEMENT.                    |
-C |   ZF           | -->| COTE DU FOND PAR NOEUD.                      |
-C |   IKLE         | -->| TABLE DE CONNECTIVITE.                       |
-C |   IFABOR       | -->| NUMEROS DES ELEMENTS VOISINS.                |
-C |   ITRA01       | -->| TABLEAU DE TRAVAIL D'ENTIERS.                |
-C |   NELEM        | -->| NOMBRE D'ELEMENTS.                           |
-C |   NPOIN        | -->| NOMBRE DE NOEUDS.                            |
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C***********************************************************************
-C                                                                      *
-C APPELE PAR: TELMAC ET MITRID
-C                                                                      *
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE MASKBD
+!                    *****************
+!
+     &(MASKEL,ZFE,ZF,HN,HMIN,IKLE,IFABOR,ITRA01,NELEM,NPOIN)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    MASKS DRY OR PARTIALLY DRY ELEMENTS.
+!code
+!+     ALGORITHM:
+!+
+!+    - AN ELEMENT IS MASKED IF THE BOTTOM ELEVATION ZFE IS HIGHER THAN
+!+      THE FREE SURFACE ELEVATION AT ITS BARYCENTRE
+!+
+!+    - ANY ELEMENT WHICH BOTTOM ELEVATION ZFE IS HIGHER THAN THE
+!+      ELEVATION ZFE OF A MASKED NEIGHBOUR IS IN TURN MASKED
+!+
+!+      WHEN TURNING AROUND A NODE, FUNCTION ZFE ONLY HAS A MIN AND
+!+      A MAX (SEE TOPOGR). THE SECOND PHASE OF THE ALGORITHM THUS
+!+      ENSURES THAT NO 2 PARTS OF THE DOMAIN ARE ONLY CONNECTED BY
+!+      1 VERTEX. THIS TREATMENT ALSO PREVENTS INOPPORTUNE MASKING-
+!+      DEMASKING, IN PARTICULAR IN TIDAL FLAT AREAS.
+!+
+!+
+!+      DISADVANTAGES:
+!+
+!+      THIS ALGORITHM ASSUMES THAT THE FREE SURFACE IS QUASI HORIZONTAL.
+!+      IT IS WELL SUITED TO STUDY EVOLUTIONS DUE TO TIDAL EFFECTS, BUT
+!+      NOT TO STUDY DAM BREAKS.
+!
+!history  J-M JANIN (LNH)
+!+        11/08/94
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| HMIN           |-->| MINIMUM VALUE OF DEPTH
+!| HN             |-->| WATER DEPTH AT TIME N
+!| IFABOR         |-->| ELEMENTS BEHIND THE EDGES OF A TRIANGLE
+!|                |   | IF NEGATIVE OR ZERO, THE EDGE IS A LIQUID
+!|                |   | BOUNDARY
+!| IKLE           |-->| CONNECTIVITY TABLE.
+!| ITRA01         |-->| WORK ARRAY OF INTEGERS
+!| MASKEL         |<--| MASKING OF ELEMENTS
+!|                |   | =1. : NORMAL   =0. : MASKED ELEMENT
+!| NELEM          |-->| NUMBER OF ELEMENTS
+!| NPOIN          |-->| NUMBER OF POINTS
+!| ZF             |-->| ELEVATION OF BOTTOM
+!| ZFE            |-->| ELEVATION OF BOTTOM, PER ELEMENT
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN)             :: NELEM,NPOIN
       INTEGER, INTENT(IN)             :: IKLE(NELEM,3),IFABOR(NELEM,3)
       INTEGER, INTENT(INOUT)          :: ITRA01(NELEM)
       DOUBLE PRECISION, INTENT(IN)    :: ZFE(NELEM),ZF(NPOIN),HN(NPOIN)
       DOUBLE PRECISION, INTENT(IN)    :: HMIN
       DOUBLE PRECISION, INTENT(INOUT) :: MASKEL(NELEM)
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-      INTEGER IELEM,I1,I2,I3,N      
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+      INTEGER IELEM,I1,I2,I3,N
+!
       DOUBLE PRECISION EPSILO,ZSE
-C
+!
       LOGICAL FLAG
-C
+!
       DATA EPSILO / 1.D-6 /
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       FLAG = .FALSE.
-C
+!
       DO 10 IELEM = 1,NELEM
          I1 = IKLE(IELEM,1)
          I2 = IKLE(IELEM,2)
@@ -93,50 +99,49 @@ C
             MASKEL(IELEM) = 0.D0
          ENDIF
 10    CONTINUE
-C
+!
 20    CONTINUE
-C
+!
       IF (FLAG) THEN
-C
+!
          FLAG = .FALSE.
          DO 30 IELEM = 1,NELEM
-C
+!
             ITRA01(IELEM) = 0
             IF (MASKEL(IELEM).GT.0.5D0) THEN
-C
+!
                N=IFABOR(IELEM,1)
                IF (N.GT.0) THEN
                   IF (MASKEL(N).LT.0.5D0.AND.ZFE(IELEM).GT.
-     *                ZFE(N)-EPSILO) ITRA01(IELEM) = 1
+     &                ZFE(N)-EPSILO) ITRA01(IELEM) = 1
                ENDIF
                N=IFABOR(IELEM,2)
                IF (N.GT.0) THEN
                   IF (MASKEL(N).LT.0.5D0.AND.ZFE(IELEM).GT.
-     *                ZFE(N)-EPSILO) ITRA01(IELEM) = 1
+     &                ZFE(N)-EPSILO) ITRA01(IELEM) = 1
                ENDIF
                N=IFABOR(IELEM,3)
                IF (N.GT.0) THEN
                   IF (MASKEL(N).LT.0.5D0.AND.ZFE(IELEM).GT.
-     *                ZFE(N)-EPSILO) ITRA01(IELEM) = 1
+     &                ZFE(N)-EPSILO) ITRA01(IELEM) = 1
                ENDIF
-C
+!
             ENDIF
-C
+!
 30       CONTINUE
-C
+!
          DO 40 IELEM = 1,NELEM
             IF (ITRA01(IELEM).EQ.1) THEN
                FLAG = .TRUE.
                MASKEL(IELEM) = 0.D0
             ENDIF
 40       CONTINUE
-C
+!
          GOTO 20
-C
+!
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END
- 

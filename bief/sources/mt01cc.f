@@ -1,83 +1,105 @@
-C                       *****************
-                        SUBROUTINE MT01CC
-C                       *****************
-C
-     *( A11 , A12 , A13 , A14 , A15 , A16 ,
-     *        A22 , A23 , A24 , A25 , A26 ,
-     *              A33 , A34 , A35 , A36 ,
-     *                    A44 , A45 , A46 ,
-     *                          A55 , A56 ,
-     *                                A66 ,
-     *  XMUL,SURFAC,NELEM,NELMAX )
-C
-C***********************************************************************
-C BIEF VERSION 5.9   29/02/08   ALGIANE FROEHLY (MATMECA) 01 30 87 80 18
-C                                           
-C***********************************************************************
-C
-C FONCTION : CONSTRUCTION DE LA MATRICE DE MASSE POUR LES
-C            TRIANGLES P2
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |     A11,A12... |<-- |  ELEMENTS DE LA MATRICE
-C |     XMUL       | -->|  FACTEUR MULTIPLICATIF
-C |     SURFAC     | -->|  SURFACE DES TRIANGLES.
-C |     NELEM      | -->|  NOMBRE D'ELEMENTS DU MAILLAGE
-C |     NELMAX     | -->|  NOMBRE MAXIMUM D'ELEMENTS DU MAILLAGE
-C |                |    |  (CAS D'UN MAILLAGE ADAPTATIF)
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES : AUCUN
-C
-C**********************************************************************
-C     -------------
-C     | ATTENTION | : LE JACOBIEN DOIT ETRE POSITIF .
-C     -------------
-C**********************************************************************
-C
+!                    *****************
+                     SUBROUTINE MT01CC
+!                    *****************
+!
+     &( A11 , A12 , A13 , A14 , A15 , A16 ,
+     &        A22 , A23 , A24 , A25 , A26 ,
+     &              A33 , A34 , A35 , A36 ,
+     &                    A44 , A45 , A46 ,
+     &                          A55 , A56 ,
+     &                                A66 ,
+     &  XMUL,SURFAC,NELEM,NELMAX )
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    BUILDS THE MASS MATRIX FOR P2 TRIANGLES.
+!
+!warning  THE JACOBIAN MUST BE POSITIVE
+!
+!history  ALGIANE FROEHLY (MATMECA)
+!+        29/02/08
+!+        V5P9
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| A11            |<--| ELEMENTS OF MATRIX
+!| A12            |<--| ELEMENTS OF MATRIX
+!| A13            |<--| ELEMENTS OF MATRIX
+!| A14            |<--| ELEMENTS OF MATRIX
+!| A15            |<--| ELEMENTS OF MATRIX
+!| A16            |<--| ELEMENTS OF MATRIX
+!| A22            |<--| ELEMENTS OF MATRIX
+!| A23            |<--| ELEMENTS OF MATRIX
+!| A24            |<--| ELEMENTS OF MATRIX
+!| A25            |<--| ELEMENTS OF MATRIX
+!| A26            |<--| ELEMENTS OF MATRIX
+!| A33            |<--| ELEMENTS OF MATRIX
+!| A34            |<--| ELEMENTS OF MATRIX
+!| A35            |<--| ELEMENTS OF MATRIX
+!| A36            |<--| ELEMENTS OF MATRIX
+!| A44            |<--| ELEMENTS OF MATRIX
+!| A45            |<--| ELEMENTS OF MATRIX
+!| A46            |<--| ELEMENTS OF MATRIX
+!| A55            |<--| ELEMENTS OF MATRIX
+!| A56            |<--| ELEMENTS OF MATRIX
+!| A66            |<--| ELEMENTS OF MATRIX
+!| NELEM          |-->| NUMBER OF ELEMENTS
+!| NELMAX         |-->| MAXIMUM NUMBER OF ELEMENTS
+!| SURFAC         |-->| AREA OF TRIANGLES
+!| XMUL           |-->| MULTIPLICATION FACTOR
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF !, EX_MT01CC => MT01CC
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN) :: NELEM,NELMAX
-C
+!
       DOUBLE PRECISION, INTENT(INOUT) :: A11(*),A12(*),A13(*),A14(*)
       DOUBLE PRECISION, INTENT(INOUT) :: A15(*),A16(*)
       DOUBLE PRECISION, INTENT(INOUT) ::        A22(*),A23(*),A24(*)
       DOUBLE PRECISION, INTENT(INOUT) :: A25(*),A26(*)
       DOUBLE PRECISION, INTENT(INOUT) :: A33(*),A34(*),A35(*),A36(*)
       DOUBLE PRECISION, INTENT(INOUT) :: A44(*),A45(*),A46(*)
-      DOUBLE PRECISION, INTENT(INOUT) :: A55(*),A56(*),A66(*)                   
-C
+      DOUBLE PRECISION, INTENT(INOUT) :: A55(*),A56(*),A66(*)
+!
       DOUBLE PRECISION, INTENT(IN) :: XMUL
-C
+!
       DOUBLE PRECISION, INTENT(IN) :: SURFAC(NELMAX)
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-C     DECLARATIONS SPECIFIQUES A CE SOUS-PROGRAMME
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+!     DECLARATIONS SPECIFIC TO THIS SUBROUTINE
+!
       INTEGER IELEM
       DOUBLE PRECISION XSUR180
-C
-C=======================================================================
-C
+!
+!=======================================================================
+!
       XSUR180 = XMUL / 180.D0
-C
+!
       DO IELEM = 1 , NELEM
-C
-C  TERMES EXTRADIAGONAUX
-C
+!
+!  EXTRADIAGONAL TERMS
+!
          A12(IELEM) = - SURFAC(IELEM) * XSUR180
          A13(IELEM) =          A12(IELEM)
          A14(IELEM) =   0.D0
@@ -93,19 +115,19 @@ C
          A45(IELEM) = - 4.D0 * A15(IELEM)
          A46(IELEM) =          A45(IELEM)
          A56(IELEM) =          A45(IELEM)
-C
-C  TERMES DIAGONAUX
-C
+!
+!  DIAGONAL TERMS
+!
          A11(IELEM) = - 6.D0 * A12(IELEM)
          A22(IELEM) =          A11(IELEM)
          A33(IELEM) =          A11(IELEM)
          A44(IELEM) = - 8.D0 * A15(IELEM)
          A55(IELEM) =          A44(IELEM)
          A66(IELEM) =          A44(IELEM)
-C
+!
       ENDDO
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-      END  
+      END

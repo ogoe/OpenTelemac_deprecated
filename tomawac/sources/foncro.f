@@ -1,56 +1,60 @@
-C                       ***************
-                        FUNCTION FONCRO
-C                       ***************
-C
-     *( X     , B     , N     , A     , XM    )
-C
-C**********************************************************************
-C  TOMAWAC - V1.1    F. BECQ                 (EDF/DER/LNH)  -  26/03/96
-C**********************************************************************
-C
-C  FONCTION : CALCUL DE LA VALEUR DE LA FONCTION A INTEGRER POUR LE
-C  ********** DEFERLEMENT PAR LA METHODE DE ROELVINK (1993).
-C
-C  ARGUMENTS :
-C  ***********
-C +-------------+----+--------------------------------------------+
-C ! NOM         !MODE! SIGNIFICATION - OBSERVATIONS               !
-C +-------------+----+--------------------------------------------+
-C ! FONCRO      !<-- ! VALEUR DE LA FONCTION                      !
-C ! X           ! -->! VALEUR A LAQUELLE LA FONCTION EST EVALUEE  !
-C ! B           ! -->! PARAMETRE B DE LA FONCTION A EVALUER       !
-C ! N           ! -->! EXPOSANT N  DE LA FONCTION A EVALUER       !
-C ! A           ! -->! PARAMETRE A DE LA FONCTION A EVALUER       !
-C ! XM          ! -->! PARAMETRE M DE LA FONCTION A EVALUER       !
-C +-------------+----+--------------------------------------------+
-C ! MODE   (-> : NON-MODIFIE)  (<-> : MODIFIE)  (<- : INITIALISE) !
-C +---------------------------------------------------------------+
-C
-C  APPELS :    - PROGRAMME(S) APPELANT  :  QGAUSS, BORNES
-C  ********    - PROGRAMME(S) APPELE(S) :  - 
-C
-C  REMARQUES :
-C  ***********
-C
-C  REFERENCES :
-C  ************
-C
-C**********************************************************************
-C
+!                    ***************
+                     FUNCTION FONCRO
+!                    ***************
+!
+     &( X     , B     , N     , A     , XM    )
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   14/06/2011
+!***********************************************************************
+!
+!brief    COMPUTES THE VALUE OF THE FUNCTION TO BE INTEGRATED
+!+                FOR WAVE BREAKING (ROELVINK, 1993).
+!
+!history  F. BECQ (EDF/DER/LNH)
+!+        26/03/96
+!+        V1P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        15/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| A              |-->| PARAMETER A OF THE FUNCTION TO BE INTEGRATED
+!| B              |-->| PARAMETER B OF THE FUNCTION TO BE INTEGRATED
+!| N              |-->| EXPONENT N OF THE FUNCTION TO BE INTEGRATED
+!| X              |-->| VALUE AT WHICH THE FUNCTION IS EVALUATED
+!| XM             |-->| PARAMETER M OF THE FUNCTION TO BE INTEGRATED
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
-C     VARIABLES TRANSMISES.
-C     """""""""""""""""""""
+!
+!     VARIABLES IN ARGUMENT
+!     """""""""""""""""""""
       INTEGER  N
       DOUBLE PRECISION X      , B     , A     , XM    , FONCRO
-C
-C     VARIABLES LOCALES.
-C     """"""""""""""""""
+!
+!     LOCAL VARIABLES
+!     """"""""""""""""""
       DOUBLE PRECISION AUX
-C
-C
+!
+!
       AUX   = A*X**XM
       FONCRO= XM*AUX*DEXP(-AUX)*(1.D0-DEXP(-(B*X)**N))
-C
+!
       RETURN
       END

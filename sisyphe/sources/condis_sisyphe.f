@@ -1,76 +1,63 @@
-C                *************************
-                 SUBROUTINE CONDIS_SISYPHE
-C                *************************
-C
-     *(CONSTFLOW)
-C
-C**********************************************************************
-C SISYPHE VERSION 5.5                             B. MINH DUC
-C                                                 F. HUVELIN
-C
-C
-C BUI MINH DUC AOUT 2003
-C Creation de la subroutine 
-C
-C F. HUVELIN FEV. 2004 
-C Ajout de la subroutine a sisyphe v5p4
-C
-C COPYRIGHT EDF-BAW
-C**********************************************************************C
-C                                                                      C
-C                 SSSS I   SSSS Y   Y PPPP  H   H EEEEE                C
-C                S     I  S      Y Y  P   P H   H E                    C
-C                 SSS  I   SSS    Y   PPPP  HHHHH EEEE                 C
-C                    S I      S   Y   P     H   H E                    C
-C                SSSS  I  SSSS    Y   P     H   H EEEEE                C
-C                                                                      C
-C----------------------------------------------------------------------C
-C                             ARGUMENTS                                C
-C .________________.____.______________________________________________C
-C |      NOM       |MODE|                   ROLE                       C
-C |________________|____|______________________________________________C
-C |                |    |                                              C
-C |                |    |                                              C
-C |________________|____|______________________________________________C
-C                                                                      C
-C ---------------------------------------------------------------------C
-C
-C ORGANISATION
-C ------------
+!                    *************************
+                     SUBROUTINE CONDIS_SISYPHE
+!                    *************************
 !
-! PROGRAMME APPELANT :
-! --------------------
-! SISYPHE
+     &(CONSTFLOW)
 !
-! PROGRAMMES APPELES : 
-! --------------------
+!***********************************************************************
+! SISYPHE   V6P1                                   21/07/2011
+!***********************************************************************
 !
-!=======================================================================!
-!=======================================================================!
-!                    DECLARATION DES TYPES ET DIMENSIONS                !
-!=======================================================================!
-!=======================================================================!
+!brief
 !
-!1/ MODULES
-!----------
+!history  BUI MINH DUC
+!+        **/08/2003
+!+
+!+   DEVELOPED THE SUBROUTINE
+!
+!history  F. HUVELIN
+!+        **/02/2004
+!+        V5P4
+!+
+!
+!history  B. MINH DUC; F. HUVELIN
+!+
+!+        V5P5
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CONSTFLOW      |<->|LOGICAL, CONSTANT FLOW DISCHARGE OR NOT 
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       USE BIEF
       USE DECLARATIONS_TELEMAC
       USE DECLARATIONS_SISYPHE
-!
+      !
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       LOGICAL, INTENT(INOUT) :: CONSTFLOW
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, EXTERNAL      :: P_ISUM
 !
-!3/ VARIABLES LOCALES
+!3/ LOCAL VARIABLES
 !--------------------
 !
       INTEGER          :: NZFMAX, I
@@ -78,7 +65,7 @@ C
 !
 !=======================================================================!
 !=======================================================================!
-!                               PROGRAMME                               !
+!                               PROGRAM                                 !
 !=======================================================================!
 !=======================================================================!
 !
@@ -86,12 +73,12 @@ C
 !
       IF(CONSTFLOW) THEN
          CALL OS('X=X+Y   ', ECPL, E, S, C)
-!  
+!
          DO I=1,NPOIN
             ZFMAX = ABS(ECPL%R(I)) - CRIT_CFD*HCPL%R(I)
             IF (ZFMAX.GT.1.D-8) NZFMAX=NZFMAX+1
          ENDDO
-!  
+!
          IF (NCSIZE.GT.1) THEN
             NZFMAX=P_ISUM(NZFMAX)
             CALL PARCOM(ECPL,2,MESH)

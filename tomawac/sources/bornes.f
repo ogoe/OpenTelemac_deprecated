@@ -1,63 +1,68 @@
-C                       *****************
-                        SUBROUTINE BORNES
-C                       *****************
-C
-     *( B     , N     , A     , XM    , X0    , X1    )
-C
-C**********************************************************************
-C  TOMAWAC - V1.1    F. BECQ                 (EDF/DER/LNH)  -  26/03/96
-C**********************************************************************
-C
-C  FONCTION : CALCUL DES BORNES D'INTEGRATION POUR L'INTEGRATION DE LA
-C  ********** FONCTION "FONCRO", A L'AIDE DES QUADRATURES DE GAUSS.
-C
-C  ARGUMENTS :
-C  ***********
-C +-------------+----+--------------------------------------------+
-C ! NOM         !MODE! SIGNIFICATION - OBSERVATIONS               !
-C +-------------+----+--------------------------------------------+
-C ! B           ! -->! PARAMETRE B DE LA FONCTION A INTEGRER      !
-C ! N           ! -->! EXPOSANT N  DE LA FONCTION A INTEGRER      !
-C ! A           ! -->! PARAMETRE A DE LA FONCTION A INTEGRER      !
-C ! XM          ! -->! PARAMETRE M DE LA FONCTION A INTEGRER      !
-C ! X0          !<-- ! BORNE INFERIEURE DE L'INTERVALLE           !
-C ! X1          !<-- ! BORNE SUPERIEURE DE L'INTERVALLE           !
-C +-------------+----+--------------------------------------------+
-C ! MODE   (-> : NON-MODIFIE)  (<-> : MODIFIE)  (<- : INITIALISE) !
-C +---------------------------------------------------------------+
-C
-C  APPELS :    - PROGRAMME(S) APPELANT  :  QGAUSS
-C  ********    - PROGRAMME(S) APPELE(S) :  FONCRO
-C
-C  REMARQUES :
-C  ***********
-C
-C  REFERENCES :
-C  ************
-C
-C**********************************************************************
-C
+!                    *****************
+                     SUBROUTINE BORNES
+!                    *****************
+!
+     &( B     , N     , A     , XM    , X0    , X1    )
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   08/06/2011
+!***********************************************************************
+!
+!brief    COMPUTES THE INTEGRATION BOUNDS FOR THE INTEGRATION
+!+                OF  THE FUNCTION "FONCRO", USING GAUSS QUADRATURES.
+!
+!history  F. BECQ (EDF/DER/LNH)
+!+        26/03/96
+!+        V1P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        08/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| A              |-->| PARAMETER A OF THE FUNCTION TO INTGRATE
+!| B              |-->| PARAMETER B OF THE FUNCTION TO INTGRATE
+!| N              |-->| EXPONENT N OF THE FUNCTION TO INTGRATE
+!| X0             |<--| LOWER BOUND OF THE INTERVAL
+!| X1             |<--| UPPER BOUND OF THE INTERVAL
+!| XM             |-->| PARAMETER XM OF THE FUNCTION TO INTGRATE
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
+!
       INTEGER LNG,LU
       COMMON/INFO/ LNG,LU
-C
-C     VARIABLES TRANSMISES.
-C     """""""""""""""""""""
+!
+!     VARIABLES IN ARGUMENT
+!     """""""""""""""""""""
       INTEGER  N
       DOUBLE PRECISION B     , A     , XM    , X0    , X1
-C
-C     VARIABLES LOCALES.
-C     """"""""""""""""""
+!
+!     LOCAL VARIABLES
+!     """"""""""""""""""
       INTEGER  I0    , I1    , II    , JJ    , IMAX  , INP
       DOUBLE PRECISION X(11) , Y(11) , EPS   , EPS1  , DX
-C
-C.....FONCTIONS EXTERNES
-C     """"""""""""""""""
+!
+!.....EXTERNAL FUNCTIONS
+!     """"""""""""""""""
       DOUBLE PRECISION  FONCRO
       EXTERNAL          FONCRO
-C
-C
+!
+!
       I1  = 11
       I0  = 1
       X(I0)= 0.D0
@@ -66,7 +71,7 @@ C
       EPS1 = 0.01D0
       EPS  = 0.0001D0
       INP  = 0
-C
+!
       DO 10 II=1,20
          DX = (X(I1)-X(I0))/10.D0
          X(1) = X(I0)
@@ -101,11 +106,11 @@ C
             GOTO 20
          END IF
    10 CONTINUE
-C
+!
    20 CONTINUE
-C
+!
       X0 = X(I0)
       X1 = X(I1)
-C
+!
       RETURN
       END

@@ -1,71 +1,73 @@
-C                       *****************
-                        SUBROUTINE FSPRD2
-C                       *****************
-C
-     *( FRA   , DIREC , NPLAN , SPRED1, TETA1 , SPRED2, TETA2 , XLAMDA,
-     *  DEUPI )
-C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C
-C                                                                     C
-C  EDF/DER - LABORATOIRE NATIONAL D'HYDRAULIQUE  -  CHATOU (FRANCE)   C
-C                                                                     C
-C  CODE TOMAWAC DE MODELISATION DES ETATS DE MER EN ELEMENTS FINIS    C
-C                       ---- VERSION 1.2 ----                         C
-C                                                                     C
-C  FSPRD2 : CALCUL DE LA FONCTION DE REPARTITION ANGULAIRE BIMODALE   C
-C  ******** POUR UNE SERIE DE DIRECTIONS.                             C
-C                                                                     C
-C           MODELE EN EXP -0.5((T-T0)/S)**2  T DANS (T0-PI/2;T0+PI/2) C
-C                                                                     C
-C   - CREE POUR VERSION 1.0  LE 10/01/96 PAR M. BENOIT                C
-C   - MOD. POUR VERSION 1.2  LE 07/11/96 PAR M. BENOIT                C
-C                                                                     C
-C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C
-C                                                                     C
-C  ARGUMENTS D'APPEL :                                                C
-C  *******************                                                C
-C  +-------------+----+--------------------------------------------+  C
-C  ! NOM         !MODE! SIGNIFICATION - OBSERVATIONS               !  C
-C  +-------------+----+--------------------------------------------+  C
-C  ! FRA(-)      !<-- ! VALEURS DE LA FONCTION DE REPARTITION ANG. !  C
-C  ! DIREC(-)    ! -->! DIRECTIONS DE DISCRETISATION               !  C
-C  ! NPLAN       ! -->! NOMBRE DE DIRECTIONS DE DISCRETISATION     !  C
-C  ! SPRED1      ! -->! ETALEMENT DIRECTIONNEL 1 POUR FRA          !  C
-C  ! TETA1       ! -->! DIRECTION PRINCIPALE 1 POUR FRA            !  C
-C  ! SPRED2      ! -->! ETALEMENT DIRECTIONNEL 2 POUR FRA          !  C
-C  ! TETA2       ! -->! DIRECTION PRINCIPALE 2 POUR FRA            !  C
-C  ! XLAMDA      ! -->! FACTEUR DE PONDERATION POUR LA FRA         !  C
-C  ! DEUPI       ! -->! 2.PI                                       !  C
-C  +-------------+----+--------------------------------------------+  C
-C  ! MODE   (-> : NON-MODIFIE)  (<-> : MODIFIE)  (<- : INITIALISE) !  C
-C  +---------------------------------------------------------------+  C
-C                                                                     C
-C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C
-C                                                                     C
-C  APPELS :    - PROGRAMME(S) APPELANT  :  SPEINI, LIMWAC, ...        C
-C  ********    - PROGRAMME(S) APPELE(S) :                             C
-C                                                                     C
-C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C
-C                                                                     C
-C  REMARQUES :                                                        C
-C  ***********                                                        C
-C                                                                     C
-C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C
-C
+!                    *****************
+                     SUBROUTINE FSPRD2
+!                    *****************
+!
+     &( FRA   , DIREC , NPLAN , SPRED1, TETA1 , SPRED2, TETA2 , XLAMDA,
+     &  DEUPI )
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   15/06/2011
+!***********************************************************************
+!
+!brief    COMPUTES THE BIMODAL DIRECTIONAL SPREADING FUNCTION
+!+                FOR A RANGE OF DIRECTIONS.
+!code
+!+           EXP -0.5((T-T0)/S)**2  WHERE T IN (T0-PI/2;T0+PI/2)
+!
+!history  M. BENOIT
+!+        10/01/96
+!+        V1P0
+!+   CREATED
+!
+!history  M. BENOIT
+!+        07/11/96
+!+        V1P2
+!+   MODIFIED
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        15/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| DEUPI          |-->| 2.PI
+!| DIREC          |-->| DISCRETIZED DIRECTION
+!| FRA            |<--| DIRECTIONAL SPREADING FUNCTION VALUES
+!| NPLAN          |-->| NUMBER OF DIRECTIONS
+!| SPRED1         |-->| DIRECTIONAL SPREAD 1
+!| SPRED2         |-->| DIRECTIONAL SPREAD 1
+!| TETA1          |-->| MAIN DIRECTION 1
+!| TETA2          |-->| MAIN DIRECTION 2
+!| XLAMDA         |-->| WEIGHTING FACTOR FOR FRA
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
-C.....VARIABLES TRANSMISES
-C     """"""""""""""""""""
+!
+!.....VARIABLES IN ARGUMENT
+!     """"""""""""""""""""
       INTEGER  NPLAN
       DOUBLE PRECISION SPRED1, TETA1 , SPRED2, TETA2 , XLAMDA, DEUPI
       DOUBLE PRECISION FRA(NPLAN)    , DIREC(NPLAN)
-C
-C.....VARIABLES LOCALES 
-C     """""""""""""""""
+!
+!.....LOCAL VARIABLES
+!     """""""""""""""""
       INTEGER  JP
       DOUBLE PRECISION DELT1 , DELT2 , FTH   , FRA1  , FRA2  , ARGUM
       DOUBLE PRECISION PI    , C1    , C2
-C
-C
+!
+!
       PI=DEUPI/2.D0
       IF (SPRED1.GT.1.D-4) THEN
         DELT1 = 1.D0/(SPRED1*SQRT(DEUPI))
@@ -81,10 +83,10 @@ C
         DELT2 = 0.D0
         C2    = 0.D0
       ENDIF
-C
+!
       DO 110 JP=1,NPLAN
         FTH = DIREC(JP)
-C
+!
         ARGUM = FTH-TETA1
    50   CONTINUE
         IF (ARGUM.LT.-PI) THEN
@@ -97,7 +99,7 @@ C
           GOTO 60
         ENDIF
         FRA1=DELT1*EXP(MAX(-10.D0,C1*ARGUM*ARGUM))
-C
+!
         ARGUM = FTH-TETA2
    70   CONTINUE
         IF (ARGUM.LT.-PI) THEN
@@ -110,10 +112,10 @@ C
           GOTO 80
         ENDIF
         FRA2=DELT2*EXP(MAX(-10.D0,C2*ARGUM*ARGUM))
-C
+!
         FRA(JP)=XLAMDA*FRA1+(1.D0-XLAMDA)*FRA2
         IF (FRA(JP).LT.1.D-10) FRA(JP)=0.D0
   110 CONTINUE
-C
+!
       RETURN
       END

@@ -1,116 +1,120 @@
-C                       *****************
-                        SUBROUTINE MXPTEL
-C                       *****************
-C
-     *(MXPTVS,MXELVS,IKLES,IELM,NPOIN,NELEM,NDP,IPOBO,LISTIN)
-C
-CCCCCCCCCCCCCCCCCCCCCCCCCCC
-C Pour le changement prevu, on va faire l'allocation de ITRAV ici en 
-C interne, de toute facon il s'agit d'une variable de travail LOCALE.
-C On peut passer en plus en argument le type de l'element pour faire
-C le traitement specifique 3D.
-CCCCCCCCCCCCCCCCCCCCCCCCCCC
-C
-C***********************************************************************
-C BIEF VERSION 5.1           24/08/95    J-M HERVOUET (LNH) 30 71 80 18
-C
-C***********************************************************************
-C
-C     CALCULE LE NOMBRE MAXIMUM DE POINTS ET D'ELEMENTS VOISINS D'UN
-C     POINT POUR UN MAILLAGE DE TRIANGLES DONNE.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |   MXPTVS       |<-- | NOMBRE MAXIMUM DE POINTS VOISINS.
-C |   MXELVS       |<-- | NOMBRE MAXIMUM D'ELEMENTS VOISINS.
-C |   IKLES        | -->| TABLE DE CONNECTIVITE (DU FORMAT SELAFIN)
-C |   ITRAV        | -->| TABLEAU DE TRAVAIL ENTIER DE DIMENSION NPOIN
-C |   NPOIN        | -->| NOMBRE DE POINTS DU MAILLAGE.
-C |   NELEM        | -->| NOMBRE D'ELEMENTS DU MAILLAGE.
-C |   NDP          | -->| NOMBRE DE POINTS PAR ELEMENT.
-C |   IPOBO        | -->| TABLEEAU QUI VAUT 0 POUR LES POINTS INTERIEURS
-C |                |    | ET NON NUL POUR LES POINTS DE BORD.
-C |                |    | POUR SE PLACER SUR LES ENREGISTREMENTS DES
-C |   LISTIN       | -->| LOGIQUE : IMPRESSION DE MXELVS ET MXPTVS
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES : NEANT
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE MXPTEL
+!                    *****************
+!
+     &(MXPTVS,MXELVS,IKLES,IELM,NPOIN,NELEM,NDP,IPOBO,LISTIN)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    COMPUTES THE MAXIMUM NUMBER OF POINTS AND ELEMENTS
+!+                NEIGHBOURING A POINT FOR A GIVEN TRIANGULAR MESH.
+!
+!note     ALLOCATES ITRAV HERE, INTERNALLY.
+!+         IT'S A LOCAL WORKING VARIABLE ANYWAY.
+!+         COULD ALSO PASS THE ELEMENT TYPE IN ARGUMENT TO TREAT
+!+         THE 3D SPECIFICALLY.
+!
+!history  J-M HERVOUET (LNH)
+!+        24/08/95
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| IELM           |-->| TYPE OF ELEMENT
+!| IKLES          |-->| LIKE CONNECTIVITY TABLE BUT IN SELAFIN FORMAT
+!|                |   | IKLES(3,NELEM) INSTEAD OF IKLE(NELEM,3)
+!| IPOBO          |-->| 0 FOR INNER POINTS
+!|                |   | NOT 0 FOR BOUNDARY POINTS (THEIR RANK ACTUALLY)
+!| LISTIN         |-->| IF YES : MXELVS AND MXPTVS WILL BE PRINTED
+!| MXELVS         |-->| MAXIMUM NUMBER OF NEIGHBOURING ELEMENTS
+!| MXPTVS         |-->| MAXIMUM NUMBER OF NEIGHBOURS OF A POINT
+!| NDP            |-->| NUMBER OF POINTS PER ELEMENT
+!| NELEM          |-->| NUMBER OF ELEMENTS
+!| NPOIN          |-->| NUMBER OF POINTS
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(INOUT) :: MXPTVS,MXELVS
       INTEGER, INTENT(IN)    :: IELM,NDP,NPOIN,NELEM
       INTEGER, INTENT(IN)    :: IKLES(NDP,NELEM),IPOBO(NPOIN)
       LOGICAL, INTENT(IN)    :: LISTIN
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-C                       ITRAV(NPOIN) : TABLEAU AUTOMATIQUE
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+!                       ITRAV(NPOIN): AUTOMATIC ARRAY
       INTEGER I,J,IELEM,ITRAV(NPOIN)
-C
-C-----------------------------------------------------------------------
-C
-C 1) INITIALISATION DU NOMBRE D'ELEMENTS VOISINS A 0 :
-C
-      DO 10 I = 1 , NPOIN
+!
+!-----------------------------------------------------------------------
+!
+! 1) INITIALISES THE NUMBER OF NEIGHBOURING ELEMENTS TO 0:
+!
+      DO I = 1 , NPOIN
         ITRAV(I) = 0
-10    CONTINUE
-C
-C 2) DECOMPTE DU NOMBRE D'ELEMENTS VOISINS PAR OPERATION D'ASSEMBLAGE :
-C
-      DO 22 J = 1, NDP
-        DO 20 IELEM = 1 , NELEM
-          ITRAV(IKLES(j,ielem)) = ITRAV(IKLES(j,ielem)) + 1
-20      CONTINUE
-22    CONTINUE
-C
-C 3) RECHERCHE DU MAXIMUM :
-C
+      ENDDO
+!
+! 2) COUNTS THE NUMBER OF NEIGHBOURING ELEMENTS PER ASSEMBLY OPERATION:
+!
+      DO J = 1, NDP
+        DO IELEM = 1 , NELEM
+          ITRAV(IKLES(J,IELEM)) = ITRAV(IKLES(J,IELEM)) + 1
+        ENDDO
+      ENDDO
+!
+! 3) LOOKS FOR THE MAXIMUM :
+!
       MXELVS = ITRAV(1)
-      DO 30 I = 2 , NPOIN
+      DO I = 2 , NPOIN
         MXELVS = MAX(MXELVS,ITRAV(I))
-30    CONTINUE
-C
-C 4) NOMBRE DE POINTS VOISINS : IL FAUT AJOUTER 1 AU NOMBRE DE POINTS
-C                               VOISINS POUR LES POINTS DE BORD.
-C    ET RECHERCHE SIMULTANEE DU MAXIMUM
-C      
+      ENDDO
+!
+! 4) NUMBER OF NEIGHBOURING POINTS: NEED TO ADD 1 TO THIS NUMBER
+!                                   FOR BOUNDARY NODES.
+!    SIMULTANEOUSLY LOOKS FOR THE MAXIMUM
+!
       IF (IELM.EQ.31) THEN
         CALL MXPTEL31(NELEM,NPOIN,MXELVS,IKLES,MXPTVS)
       ELSE
         MXPTVS = MXELVS
-        DO 40 I = 1 , NPOIN
+        DO I = 1 , NPOIN
           IF(IPOBO(I).NE.0) MXPTVS = MAX(MXPTVS,ITRAV(I)+1)
-40      CONTINUE   
-      ENDIF  
-C
-C-----------------------------------------------------------------------
-C
+        ENDDO
+      ENDIF
+!
+!-----------------------------------------------------------------------
+!
       IF(LISTIN) THEN
         IF(LNG.EQ.1) WRITE(LU,97) MXELVS,MXPTVS
         IF(LNG.EQ.2) WRITE(LU,98) MXELVS,MXPTVS
       ENDIF
 97    FORMAT(1X,'MXPTEL (BIEF) : NOMBRE MAXIMUM D''ELEMENTS VOISINS D''
-     *UN POINT : ',1I3,/,1X,
-     *          '                NOMBRE MAXIMUM DE POINTS VOISINS D''UN
-     *POINT : ',1I3)
+     &UN POINT : ',1I3,/,1X,
+     &          '                NOMBRE MAXIMUM DE POINTS VOISINS D''UN
+     &POINT : ',1I3)
 98    FORMAT(1X,'MXPTEL (BIEF) : MAXIMUM NUMBER OF ELEMENTS AROUND A POI
-     *NT: ',1I3,/,1X,
-     *          '                MAXIMUM NUMBER OF POINTS AROUND A POINT
-     *: ',1I3)   
-C
-C-----------------------------------------------------------------------
-C
+     &NT: ',1I3,/,1X,
+     &          '                MAXIMUM NUMBER OF POINTS AROUND A POINT
+     &: ',1I3)
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

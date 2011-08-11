@@ -1,68 +1,76 @@
-C                       ***********************
-                        LOGICAL FUNCTION CMPOBJ
-C                       ***********************
-C
-     *( OBJ1 , OBJ2 )
-C
-C***********************************************************************
-C BIEF VERSION 5.1            01/03/90    J-M HERVOUET (LNH) 30 87 80 18
-C***********************************************************************
-C
-C  FONCTION  : COMPARAISON DE DEUX OBJETS
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |   OBJ1,2       |<-->| LES DEUX STRUCTURES A COMPARER
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES : AUCUN
-C
-C***********************************************************************
-C
+!                    ***********************
+                     LOGICAL FUNCTION CMPOBJ
+!                    ***********************
+!
+     &( OBJ1 , OBJ2 )
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    COMPARES 2 OBJECTS.
+!
+!history  J-M HERVOUET (LNH)
+!+        01/03/90
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| OBJ1           |-->| BIEF_OBJ STRUCTURE TO BE COMPARED WITH THE OTHER
+!| OBJ2           |-->| BIEF_OBJ STRUCTURE TO BE COMPARED WITH THE OTHER
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_CMPOBJ => CMPOBJ
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       TYPE(BIEF_OBJ), INTENT(IN) ::  OBJ1,OBJ2
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER IELM1,IELM2,TYP1,TYP2
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       CMPOBJ = .FALSE.
-C
+!
       TYP1 = OBJ1%TYPE
       TYP2 = OBJ2%TYPE
-C
+!
       IF(TYP1.EQ.TYP2) THEN
-C
+!
         IF(TYP1.EQ.2) THEN
-C
-C         VECTEURS : ON VERIFIE LA DISCRETISATION
-C
+!
+!         VECTORS: CHECKS THE DISCRETISATION
+!
           IELM1 = OBJ1%ELM
           IELM2 = OBJ2%ELM
           IF(IELM1.EQ.IELM2) CMPOBJ = .TRUE.
-C
+!
         ELSEIF(TYP1.EQ.4) THEN
-C
-C         BLOCS : ON VERIFIE LE NOMBRE D'OBJETS
-C
+!
+!         BLOCKS: CHECKS THE NUMBER OF OBJECTS
+!
           IF(OBJ1%N.EQ.OBJ2%N) CMPOBJ=.TRUE.
-C
+!
         ELSE
-C
+!
           IF(LNG.EQ.1) WRITE(LU,100)
           IF(LNG.EQ.2) WRITE(LU,101)
 100       FORMAT(1X,'CMPOBJ (BIEF) : POUR BLOCS ET VECTEURS SEULEMENT')
@@ -70,11 +78,10 @@ C
           CALL PLANTE(0)
           STOP
         ENDIF
-C
+!
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END
- 

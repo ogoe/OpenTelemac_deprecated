@@ -1,73 +1,72 @@
-C                    *************************************
+!                    *************************************
                      DOUBLE PRECISION FUNCTION STA_DIS_CUR
-C                    *************************************
-C
-     *(IFRLIQ,FLUX,PTS,QZ,NFRLIQ,ZN)
-C
-C***********************************************************************
-C  TELEMAC 2D VERSION 5.9   17/08/94  J-M HERVOUET (LNHE) 01 30 87 80 18
-C
-C***********************************************************************
-C
-C FONCTION  : DONNE LA VALEUR DE LA COTE DE LA SURFACE LIBRE
-C             EN FONCTION DU DEBIT EN INTERPOLANT DANS UNE
-C             COURBE DE TARAGE
-C
-C-----------------------------------------------------------------------
-C
-C FUNCTION  : GIVES THE PRESCRIBED VALUE OF FREE SURFACE AT
-C             A LIQUID BOUNDARY BY INTERPOLATING IN A STAGE-DISCHARGE
-C             CURVE
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |   IFRLIQ       | -->| LIQUID BOUNDARY NUMBER
-C |   FLUX         | -->| ACTUAL FLUX AT THIS BOUNDARY
-C |   PTS          | -->| NUMBER OF POINTS IN THE STAGE-DISCHARGE CURVE
-C |   QZ           | -->| ARRAY WITH STAGE-DISCHARGE CURVES
-C |   NFRLIQ       | -->| NUMBER OF LIQUID BOUNDARIES
-C |   ZN           | -->| PREVIOUS ELEVATION (FOR RELAXATION)
-C |________________|____|_______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C  APPELE PAR : BORD
-C
-C***********************************************************************
-C
+!                    *************************************
+!
+     &(IFRLIQ,FLUX,PTS,QZ,NFRLIQ,ZN)
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    PRESCRIBES THE FREE SURFACE ELEVATION AS A FUNCTION OF
+!+                THE DISCHARGE BY INTERPOLATING FROM A STAGE-DISCHARGE
+!+                CURVE.
+!
+!history  J-M HERVOUET (LNHE)
+!+        17/08/1994
+!+        V5P9
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| FLUX           |-->| ACTUAL FLUX AT THIS BOUNDARY
+!| IFRLIQ         |-->| LIQUID BOUNDARY NUMBER
+!| NFRLIQ         |-->| NUMBER OF LIQUID BOUNDARIES
+!| PTS            |-->| NUMBER OF POINTS IN THE STAGE-DISCHARGE CURVE
+!| QZ             |-->| ARRAY WITH STAGE-DISCHARGE CURVES
+!| ZN             |-->| PREVIOUS ELEVATION (FOR RELAXATION)
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN) :: IFRLIQ,NFRLIQ,PTS
       DOUBLE PRECISION, INTENT(IN) :: ZN,FLUX,QZ(2,NFRLIQ,PTS)
-C                                                         PTS AT LEAST
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!                                                         PTS AT LEAST
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER I
       DOUBLE PRECISION GOAL,TETA,Q1,Q2
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       Q1=QZ(1,IFRLIQ,1)
       Q2=QZ(1,IFRLIQ,PTS)
       IF(FLUX.LE.Q1) THEN
-C       OUTSIDE THE CURVE WITH LOWER DISCHARGE
+!       OUTSIDE THE CURVE WITH LOWER DISCHARGE
         GOAL=QZ(2,IFRLIQ,1)
       ELSEIF(FLUX.GE.Q2) THEN
-C       OUTSIDE THE CURVE WITH HIGHER DISCHARGE
+!       OUTSIDE THE CURVE WITH HIGHER DISCHARGE
         GOAL=QZ(2,IFRLIQ,PTS)
       ELSE
-C       IN BETWEEN: CASE WITH INTERPOLATION
+!       IN BETWEEN: CASE WITH INTERPOLATION
         I=1
 1       CONTINUE
         Q2=QZ(1,IFRLIQ,I+1)
@@ -80,14 +79,14 @@ C       IN BETWEEN: CASE WITH INTERPOLATION
           GO TO 1
         ENDIF
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C     RELAXATION OF RESULT
-C
-      STA_DIS_CUR=ZN+0.02D0*(GOAL-ZN)                
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
+!     RELAXATION OF RESULT
+!
+      STA_DIS_CUR=ZN+0.02D0*(GOAL-ZN)
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

@@ -1,83 +1,88 @@
-C                       *****************
-                        SUBROUTINE WPOWER
-C                       *****************
-C
-     *( POWER , F     , FREQ  , DFREQ , CG    , TAILF , NF    , NPLAN ,
-     *  NPOIN2, ROEAU , GRAVIT)
-C
-C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C
-C                                                                     C
-C  EDF/DER - LABORATOIRE NATIONAL D'HYDRAULIQUE  -  CHATOU (FRANCE)   C
-C                                                                     C
-C  CODE TOMAWAC DE MODELISATION DES ETATS DE MER EN ELEMENTS FINIS    C
-C                       ---- VERSION 5.3 ----                         C
-C                                                                     C
-C  TOTNRJ : CALCUL DE LA VARIANCE DU SPECTRE DIRECTIONNEL EN TOUS     C
-C  ******** LES POINTS DU MAILLAGE SPATIAL 2D. CETTE VARIANCE EST     C
-C           OBTENUE PAR INTEGRATION SUR LES FREQUENCES ET DIRECTIONS  C
-C           ET PREND EVENTUELLEMENT EN COMPTE LA PARTIE HAUTES        C
-C           FREQUENCES DU SPECTRE.                                    C
-C                                                                     C
-C   - CREE POUR VERSION 5.3  LE 20/05/2003 PAR M. BENOIT              C
-C                                                                     C
-C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C
-C                                                                     C
-C  ARGUMENTS D'APPEL :                                                C
-C  *******************                                                C
-C  +-------------+----+--------------------------------------------+  C
-C  ! NOM         !MODE! SIGNIFICATION - OBSERVATIONS               !  C
-C  +-------------+----+--------------------------------------------+  C
-C  ! POWER(-)    !<-- ! TABLEAU DE PUISSANCE LINEIQUE              !  C
-C  ! F(-,-,-)    ! -->! SPECTRE DIRECTIONNEL DE VARIANCE           !  C
-C  ! FREQ(-)     ! -->! TABLEAU DES FREQUENCES DE DISCRETISATION   !  C
-C  ! DFREQ(-)    ! -->! TABLEAU DES PAS DE FREQUENCE               !  C
-C  ! CG(-,-)     ! -->! TABLEAU DES VITESSES DE GROUPE             !  C
-C  ! TAILF       ! -->! FACTEUR DE QUEUE DU SPECTRE                !  C
-C  ! NF          ! -->! NOMBRE DE FREQUENCES DE DISCRETISATION     !  C
-C  ! NPLAN       ! -->! NOMBRE DE DIRECTIONS DE DISCRETISATION     !  C
-C  ! NPOIN2      ! -->! NOMBRE DE POINTS DU MAILLAGE SPATIAL 2D    !  C
-C  +-------------+----+--------------------------------------------+  C
-C  ! MODE   (-> : NON-MODIFIE)  (<-> : MODIFIE)  (<- : INITIALISE) !  C
-C  +---------------------------------------------------------------+  C
-C                                                                     C
-C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C
-C                                                                     C
-C  APPELS :    - PROGRAMME(S) APPELANT  :  DUMP2D, TERSOU             C
-C  ********    - PROGRAMME(S) APPELE(S) :                             C
-C                                                                     C
-C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C
-C                                                                     C
-C  REMARQUES :                                                        C
-C  ***********                                                        C
-C  - LA PARTIE HAUTES-FREQUENCES DU SPECTRE N'EST PRISE EN COMPTE QUE C
-C    SI LE FACTEUR DE QUEUE (TAILF) EST STRICTEMENT SUPERIEUR A 1.    C
-C                                                                     C
-C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C=C
-C
+!                    *****************
+                     SUBROUTINE WPOWER
+!                    *****************
+!
+     &( POWER , F     , FREQ  , DFREQ , CG    , TAILF , NF    , NPLAN ,
+     &  NPOIN2, ROEAU , GRAVIT)
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   29/06/2011
+!***********************************************************************
+!
+!brief    COMPUTES THE VARIANCE OF THE DIRECTIONAL SPECTRUM FOR
+!+                ALL THE NODES IN THE 2D MESH. IT IS COMPUTED BY
+!+                INTEGRATION OVER FREQUENCIES AND DIRECTIONS AND CAN
+!+                TAKE THE HIGH FREQUENCY PART OF THE SPECTRUM INTO
+!+                ACCOUNT.
+!
+!note     THE HIGH-FREQUENCY PART OF THE SPECTRUM IS ONLY CONSIDERED
+!+         IF THE TAIL FACTOR (TAILF) IS STRICTLY GREATER THAN 1.
+!
+!history  M. BENOIT
+!+        20/05/2003
+!+        V5P3
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        29/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        29/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CG             |-->| DISCRETIZED GROUP VELOCITY
+!| DFREQ          |-->| FREQUENCY STEPS BETWEEN DISCRETIZED FREQUENCIES
+!| F              |-->| VARIANCE DENSITY DIRECTIONAL SPECTRUM
+!| FREQ           |-->| DISCRETIZED FREQUENCIES
+!| GRAVIT         |-->| GRAVITY ACCELERATION
+!| NF             |-->| NUMBER OF FREQUENCIES
+!| NPLAN          |-->| NUMBER OF DIRECTIONS
+!| NPOIN2         |-->| NUMBER OF POINTS IN 2D MESH
+!| POWER          |<--| WAVE POWER PER METER ALONG WAVE CREST
+!| ROEAU          |-->| WATER DENSITY
+!| TAILF          |-->| FACTEUR DE QUEUE DU SPECTRE
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
-C.....VARIABLES TRANSMISES
-C     """"""""""""""""""""
+!
+!.....VARIABLES IN ARGUMENT
+!     """"""""""""""""""""
       INTEGER          NF    , NPLAN , NPOIN2
       DOUBLE PRECISION TAILF , POWER(NPOIN2), FREQ(NF), DFREQ(NF)
       DOUBLE PRECISION F(NPOIN2,NPLAN,NF), CG(NPOIN2,NF)
       DOUBLE PRECISION GRAVIT, ROEAU
-C
-C.....VARIABLES LOCALES
-C     """""""""""""""""
+!
+!.....LOCAL VARIABLES
+!     """""""""""""""""
       INTEGER          IP    , JP    , JF
       DOUBLE PRECISION AUX1  , DTETAR, ROGER
-C
-C
+!
+!
       DTETAR=2.D0*3.14159265D0/DBLE(NPLAN)
       ROGER=ROEAU*GRAVIT/1000.D0
       DO IP=1,NPOIN2
         POWER(IP)=0.D0
       ENDDO
-C
-C-----C-------------------------------------------------------C
-C-----C  SOMMATION SUR LA PARTIE DISCRETISEE DU SPECTRE       C
-C-----C-------------------------------------------------------C
+!
+!-----C-------------------------------------------------------C
+!-----C  SUMS UP THE DISCRETISED PART OF THE SPECTRUM         C
+!-----C-------------------------------------------------------C
       DO JF=1,NF
         AUX1=DFREQ(JF)*DTETAR
         DO JP=1,NPLAN
@@ -86,10 +91,10 @@ C-----C-------------------------------------------------------C
           ENDDO
         ENDDO
       ENDDO
-C
-C-----C-------------------------------------------------------------C
-C-----C  PRISE EN COMPTE EVENTUELLE DE LA PARTIE HAUTES-FREQUENCES  C
-C-----C-------------------------------------------------------------C
+!
+!-----C-------------------------------------------------------------C
+!-----C  TAKES THE HIGH FREQUENCY PART INTO ACCOUNT (OPTIONAL)      C
+!-----C-------------------------------------------------------------C
       IF (TAILF.GT.1.D0) THEN
         AUX1=DTETAR*GRAVIT/(4.D0*3.14159265D0*TAILF)
         DO JP=1,NPLAN
@@ -98,13 +103,13 @@ C-----C-------------------------------------------------------------C
           ENDDO
         ENDDO
       ENDIF
-C
-C-----C-------------------------------------------------------------C
-C-----C  PASSAGE EN KW/m  (en mulitpliant par ro.g/1000)            C
-C-----C-------------------------------------------------------------C
+!
+!-----C-------------------------------------------------------------C
+!-----C  CONVERTS TO KW/M  (MULTIPLIES BY RO.G/1000)                C
+!-----C-------------------------------------------------------------C
       DO IP=1,NPOIN2
         POWER(IP)=POWER(IP)*ROGER
       ENDDO
-C
+!
       RETURN
       END

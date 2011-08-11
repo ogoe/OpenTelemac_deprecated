@@ -1,84 +1,84 @@
-!                       *****************
-                        SUBROUTINE ELEB3D                              
-!                       *****************
+!                    *****************
+                     SUBROUTINE ELEB3D
+!                    *****************
 !
-     *(IKLE3 , NBOR , KP1BOR , NELBOR, IKLBOR, NULONE,                              
-     * NELEM2, NPOIN2, NPLAN, NETAGE, NPTFR )
-!
-!***********************************************************************
-C BIEF VERSION 5.9      23/06/2008    J-M HERVOUET (LNHE) 01 30 87 80 18
-!                                                    
-!***********************************************************************
-!
-!      FONCTION:
-!      =========
-!
-!    CONSTRUCTION DU MAILLAGE 3D : A L'ENTREE, LES TABLEAUX DU MAILLAGE
-!    3D REMPLIS PAR UN APPEL PREALABLE DE ELEBD. A LA SORTIE, LES
-!    TABLEAUX COMPLETES EN 3D.
-!
-!----------------------------------------------------------------------
-!                             ARGUMENTS
-! .________________.____.______________________________________________.
-! !  NOM           !MODE!                  ROLE                        !
-! !________________!____!______________________________________________!
-! !  IKLE3         !<-- ! CORRESPONDANCE LOCALE - GLOBALE EN 3D        !
-! !  SURFAC        !<-->! SURFACE DES TRIANGLES ETENDUE EN 3D          !
-! !  NBOR3         !<-- ! CORRESPONDANCE ENTRE LA NUMEROTATION DE BORD !
-! !                !    ! ET LA NUMEROTATION GLOBALE (3D)              !
-! !  NBOR          ! -->! CORRESPONDANCE ENTRE LA NUMEROTATION DE BORD !
-! !                !    ! ET LA NUMEROTATION GLOBALE (2D)              !
-! !  KP1BOR        ! -->! PT FRONT. SUIVANT LE PT FRONT. CONSIDERE     !
-! !  NELBOR        ! -->! NUMERO GLOBAUX DES ELEMENTS DE BORD          !
-! !  IKLBOR        !<-- ! TABLE DE CONNECTIVITE ELEMENTS DE BORD       !
-! !  NELBO3        !<-- ! ASSOCIE A CHAQUE FACE DE BORD L'ELEMENT 3D   !
-! !                !    ! AUQUEL ELLE APPARTIENT                       !
-! !  NULONE        !<-- ! ASSOCIE LA NUMEROTATION LOCALE DE BORD A LA  !
-! !                !    ! NUMEROTATION LOCALE 3D                       !
-! !  IKLE2         ! -->! CORRESPONDANCE LOCALE - GLOGALE EN 2D        !
-! !  NELEM2        ! -->! NOMBRE D'ELEMENTS EN 2D                      !
-! !  NPOIN2        ! -->! NOMBRE DE POINTS 2D                          !
-! !  NPLAN         ! -->! NOMBRE DE PLANS HORIZONTAUX                  !
-! !  NETAGE        ! -->! NPLAN - 1                                    !
-! !  NPTFR         ! -->! NOMBRE DE POINTS DE BORD 2D                  !
-! !________________!____!______________________________________________!
-! MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-!
-!-----------------------------------------------------------------------
-!
-! SOUS-PROGRAMME APPELE PAR : MITRID
-! SOUS-PROGRAMMES APPELES : OV , PLANTE
+     &(IKLE3,NBOR,KP1BOR,NELBOR,IKLBOR,NULONE,
+     & NELEM2,NPOIN2,NPLAN,NETAGE,NPTFR)
 !
 !***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    BUILDS THE 3D MESH.
+!+
+!+            INPUT: 3D MESH ARRAYS FILLED BY A PRELIMINARY CALL
+!+                       TO ELEBD.
+!+
+!+            OUTPUT: ARRAYS COMPLETE IN 3D.
+!
+!history  J-M HERVOUET (LNHE)
+!+        23/06/2008
+!+        V5P9
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| IKLBOR         |-->| CONNECTIVITY TABLE OF BOUNDARY ELEMENTS
+!| IKLE3          |<--| CONNECTIVITY TABLE IN 3D
+!| KP1BOR         |-->| GIVES THE NEXT BOUNDARY POINT IN A CONTOUR
+!| NBOR           |-->| GLOBAL NUMBER OF BOUNDARY POINTS IN 2D
+!| NELBOR         |-->| FOR THE KTH BOUNDARY EDGE, GIVES THE CORRESPONDING
+!|                |   | ELEMENT.
+!| NELEM2         |-->| NUMBER OF ELEMENTS IN 2D
+!| NETAGE         |-->| NUMBER OF PLANES - 1
+!| NPLAN          |-->| NUMBER OF PLANES
+!| NPOIN2         |-->| NUMBER OF POINTS IN 2D
+!| NPTFR          |-->| NUMBER OF BOUNDARY POINTS
+!| NULONE         |-->| GOES WITH ARRAY NELBOR. NELBOR GIVES THE 
+!|                |   | ADJACENT ELEMENT, NULONE GIVES THE LOCAL
+!|                |   | NUMBER OF THE FIRST NODE OF THE BOUNDARY EDGE
+!|                |   | I.E. 1, 2 OR 3 FOR TRIANGLES.
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       USE BIEF, EX_ELEB3D => ELEB3D
 !
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN)    :: NELEM2, NPOIN2, NPLAN, NETAGE, NPTFR
       INTEGER, INTENT(INOUT) :: IKLE3(NELEM2,NETAGE,6)
       INTEGER, INTENT(INOUT) :: IKLBOR(NPTFR,NETAGE,4)
       INTEGER, INTENT(INOUT) :: NULONE(NPTFR,NETAGE,4)
       INTEGER, INTENT(INOUT) :: NELBOR(NPTFR*NETAGE), NBOR(NPTFR*NPLAN)
       INTEGER, INTENT(INOUT) :: KP1BOR(NPTFR)
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER IELEM,IPOIN
       INTEGER IETAGE,IPTFR
 !
 !***********************************************************************
 !
-! TABLES DE CONNECTIVITE POUR LES FACES DE BORDS --> IKLBOR , NBOR3 ,
-! CORRESPONDANCE NUMEROTATION LOCALE BORD NUMEROTATION LOCALE 3D
-! --> NULONE
-! ET CALCUL DE NELBO3
+! CONNECTIVITY TABLES FOR BOUNDARY FACES --> IKLBOR , NBOR3 ,
+! CORRESPONDENCE BETWEEN LOCAL BOUNDARY NUMBERS AND 3D LOCAL NUMBERS --> NULONE
 !
-!     BORDS LATERAUX
+! COMPUTES NELBO3
+!
+!     LATERAL BOUNDARIES
 !
       DO IETAGE = 1,NETAGE
         DO IPTFR = 1,NPTFR
@@ -116,18 +116,18 @@ C
             NULONE(IPTFR,IETAGE,1) = 0
             NULONE(IPTFR,IETAGE,2) = 0
             NULONE(IPTFR,IETAGE,3) = 0
-            NULONE(IPTFR,IETAGE,4) = 0 
+            NULONE(IPTFR,IETAGE,4) = 0
             NELBOR(IPTFR+(IETAGE-1)*NPTFR)=0
           ELSE
             IF(LNG.EQ.1) WRITE(LU,101) IPOIN
             IF(LNG.EQ.2) WRITE(LU,102) IPOIN
             CALL PLANTE(1)
-            STOP 
+            STOP
           ENDIF
         ENDDO
       ENDDO
 !
-!     COMPLETING NBOR IN VIEW OF 2D VALUES
+!     COMPLETES NBOR IN VIEW OF 2D VALUES
 !
       DO IPTFR = 1,NPTFR
          NBOR(IPTFR +(NPLAN-1)*NPTFR) = NBOR(IPTFR) + NETAGE*NPOIN2

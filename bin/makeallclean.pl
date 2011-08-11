@@ -4,7 +4,7 @@
 # Cleaning directories of the TELEMAC system
 # See makeallpar90.pl for parallel version
 #
-# Mis a jour pour TELEMAC V6P0 - F. Decung - 23/02/2010
+# Mis a jour pour TELEMAC v6p1 - F. Decung - 23/02/2010
 # Update                       - P. LANG - 01/07/2010
 #
 # Original version : DeltaCAD/SA - Mars 1999
@@ -15,32 +15,32 @@
 
 @dirs=(
 #Libs : Bief, Damocles, Paravoid, Special, MumpsVoid
-	"damocles|damo_v6p0|sources",
-	"mumpsvoid|mumpsvoid_v6p0|sources",
-	"paravoid|paravoid_v6p0|sources",
-	"parallel|parallel_v6p0|sources",
-	"bief|bief_v6p0|sources",
-	"special|special_v6p0|sources",
+	"damocles|damo_v6p1|sources",
+	"mumpsvoid|mumpsvoid_v6p1|sources",
+	"paravoid|paravoid_v6p1|sources",
+	"parallel|parallel_v6p1|sources",
+	"bief|bief_v6p1|sources",
+	"special|special_v6p1|sources",
 #Sisyphe
-	"sisyphe|sisyphe_v6p0|sources",
+	"sisyphe|sisyphe_v6p1|sources",
 #T2d
-	"telemac2d|tel2d_v6p0|sources",
+	"telemac2d|tel2d_v6p1|sources",
 #T3d
-	"telemac3d|tel3d_v6p0|sources",
+	"telemac3d|tel3d_v6p1|sources",
 #Artemis
-	"artemis|arte_v6p0|sources",
+	"artemis|arte_v6p1|sources",
 #Estel2d
-	"estel2d|estel2d_v6p0|sources",
+	"estel2d|estel2d_v6p1|sources",
 #Estel3d
-	"estel3d|estel3d_v6p0|sources",
+	"estel3d|estel3d_v6p1|sources",
 #Postel3d
-	"postel3d|postel3d_v6p0|sources",
+	"postel3d|postel3d_v6p1|sources",
 #Stbtel
-	"stbtel|stbtel_v6p0|sources",
+	"stbtel|stbtel_v6p1|sources",
 #Tomawac
-	"tomawac|toma_v6p0|sources",
+	"tomawac|toma_v6p1|sources",
 #Spartacus2d
-	"spartacus2d|spartacus2d_v6p0|sources",
+	"spartacus2d|spartacus2d_v6p1|sources",
 
 );
 

@@ -1,77 +1,86 @@
-C                       *****************
-                        SUBROUTINE KMOYEN
-C                       *****************
-C
-     *( XKMOY , XK    , F     , FREQ  , DFREQ , TAILF , NF    , NPLAN ,
-     *  NPOIN2, AUX1  , AUX2  , AUX3  )
-C
-C**********************************************************************
-C  TOMAWAC - V1.0    P. THELLIER & M. BENOIT (EDF/DER/LNH)  -  04/04/95
-C**********************************************************************
-C
-C  FONCTION : CALCUL DU NOMBRE D'ONDE MOYEN EN TOUS LES POINTS DU 
-C  ********   MAILLAGE SPATIAL 2D.
-C
-C  ARGUMENTS :
-C  ***********
-C  +-------------+----+--------------------------------------------+
-C  ! NOM         !MODE! SIGNIFICATION - OBSERVATIONS               !
-C  +-------------+----+--------------------------------------------+
-C  ! XKMOY(-)    !<-- ! TABLEAU DES NOMBRES D'ONDE MOYEN           !
-C  ! XK(-,-)     ! -->! TABLEAU DES NOMBRES D'ONDE                 !
-C  ! F(-,-,-)    ! -->! SPECTRE DIRECTIONNEL                       !
-C  ! FREQ(-)     ! -->! TABLEAU DES FREQUENCES DE DISCRETISATION   !
-C  ! DFREQ(-)    ! -->! TABLEAU DES PAS DE FREQUENCE               !
-C  ! TAILF       ! -->! FACTEUR DE QUEUE (TAILF = 4 OU 5)          !
-C  ! NF          ! -->! NOMBRE DE FREQUENCES DE DISCRETISATION     !
-C  ! NPLAN       ! -->! NOMBRE DE DIRECTIONS DE DISCRETISATION     !
-C  ! NPOIN2      ! -->! NOMBRE DE POINTS DU MAILLAGE SPATIAL       !
-C  ! AUX1(-)     !<-->! TABLEAU DE TRAVAIL (DIMENSION NPOIN2)      !
-C  ! AUX2(-)     !<-->! TABLEAU DE TRAVAIL (DIMENSION NPOIN2)      !
-C  ! AUX3(-)     !<-->! TABLEAU DE TRAVAIL (DIMENSION NPOIN2)      !
-C  +-------------+----+--------------------------------------------+
-C  ! MODE   (-> : NON-MODIFIE)  (<-> : MODIFIE)  (<- : INITIALISE) !
-C  +---------------------------------------------------------------+
-C
-C  APPELS :    - PROGRAMME(S) APPELANT  :  SEMIMP, PRE2D
-C  ********    - PROGRAMME(S) APPELE(S) :    -
-C
-C  REMARQUES :
-C  ***********
-C  - LA PARTIE HAUTES-FREQUENCES DU SPECTRE N'EST PRISE EN COMPTE QUE
-C    SI LE FACTEUR DE QUEUE (TAILF) EST STRICTEMENT SUPERIEUR A 1.
-C
-C**********************************************************************
-C
+!                    *****************
+                     SUBROUTINE KMOYEN
+!                    *****************
+!
+     &( XKMOY , XK    , F     , FREQ  , DFREQ , TAILF , NF    , NPLAN ,
+     &  NPOIN2, AUX1  , AUX2  , AUX3  )
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   20/06/2011
+!***********************************************************************
+!
+!brief    COMPUTES THE AVERAGE WAVE NUMBER FOR ALL THE NODES
+!+                IN THE 2D MESH.
+!
+!note     THE HIGH-FREQUENCY PART OF THE SPECTRUM IS ONLY CONSIDERED
+!+          IF THE TAIL FACTOR (TAILF) IS STRICTLY GREATER THAN 1.
+!
+!history  P. THELLIER; M. BENOIT (EDF/DER/LNH)
+!+        04/04/95
+!+        V1P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        20/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| AUX1           |<->| WORK TABLE
+!| AUX2           |<->| WORK TABLE
+!| AUX3           |<->| WORK TABLE
+!| DFREQ          |-->| FREQUENCY STEPS BETWEEN DISCRETIZED FREQUENCIES
+!| F              |---| VARIANCE DENSITY DIRECTIONAL SPECTRUM
+!| FREQ           |-->| DISCRETIZED FREQUENCIES
+!| NF             |-->| NUMBER OF FREQUENCIES
+!| NPLAN          |-->| NUMBER OF DIRECTIONS
+!| NPOIN2         |-->| NUMBER OF POINTS IN 2D MESH
+!| TAILF          |-->| SPECTRUM QUEUE FACTOR
+!| XK             |-->| DISCRETIZED WAVE NUMBER
+!| XKMOY          |<--| AVERAGE WAVE NUMBER
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
-C.....VARIABLES TRANSMISES
-C     """"""""""""""""""""
+!
+!.....VARIABLES IN ARGUMENT
+!     """"""""""""""""""""
       INTEGER  NF    , NPLAN , NPOIN2
       DOUBLE PRECISION TAILF
       DOUBLE PRECISION F(NPOIN2,NPLAN,NF), XK(NPOIN2,NF)
       DOUBLE PRECISION FREQ(NF)  , DFREQ(NF) , XKMOY(NPOIN2)
       DOUBLE PRECISION AUX1(NPOIN2) , AUX2(NPOIN2) , AUX3(NPOIN2)
-C
-C.....VARIABLES LOCALES
-C     """""""""""""""""
+!
+!.....LOCAL VARIABLES
+!     """""""""""""""""
       INTEGER  IPLAN , JF    , IP
       DOUBLE PRECISION COEFF , PI    , SEUIL , CTE1  , CTE2  , AUX4
-C
-C
+!
+!
       PI = 3.141592654D0
-      SEUIL = 1.D-20         
+      SEUIL = 1.D-20
       COEFF = SQRT(9.806D0)/(2.D0*PI)
       DO 30 IP = 1,NPOIN2
         AUX1(IP) = 0.D0
         AUX2(IP) = 0.D0
    30 CONTINUE
-C
-C.....SOMMATIONS SUR LA PARTIE DISCRETISEE DU SPECTRE.
-C     """"""""""""""""""""""""""""""""""""""""""""""""
+!
+!.....SUMS UP THE CONTRIBUTIONS FOR THE DISCRETISED PART OF THE SPECTRUM
+!     """"""""""""""""""""""""""""""""""""""""""""""""
       DO 20 JF = 1,NF
         AUX4=DFREQ(JF)
-C
+!
         DO 15 IP=1,NPOIN2
           AUX3(IP) = 0.D0
    15   CONTINUE
@@ -80,16 +89,16 @@ C
             AUX3(IP) = AUX3(IP) + F(IP,IPLAN,JF)
     5     CONTINUE
    10   CONTINUE
-C
+!
         DO 25 IP = 1,NPOIN2
           AUX1(IP)=AUX1(IP)+AUX3(IP)*AUX4
           AUX2(IP)=AUX2(IP)+AUX3(IP)/SQRT(XK(IP,JF))*AUX4
    25   CONTINUE
-C
+!
    20 CONTINUE
-C
-C.....PRISE EN COMPTE EVENTUELLE DE LA PARTIE HAUTES FREQUENCES.
-C     """"""""""""""""""""""""""""""""""""""""""""""""""""""""""
+!
+!.....(OPTIONALLY) TAKES INTO ACCOUNT THE HIGH-FREQUENCY PART
+!     """"""""""""""""""""""""""""""""""""""""""""""""""""""""""
       IF (TAILF.GT.1.D0) THEN
         CTE1=FREQ(NF)/(TAILF-1.D0)
         CTE2=COEFF/TAILF
@@ -101,9 +110,9 @@ C     """"""""""""""""""""""""""""""""""""""""""""""""""""""""""
         AUX1(IP) = AUX1(IP) + AUX3(IP)*CTE1
         AUX2(IP) = AUX2(IP) + AUX3(IP)*CTE2
    45 CONTINUE
-C
-C.....CALCUL DU NOMBRE D'ONDE MOYEN. 
-C     """"""""""""""""""""""""""""""
+!
+!.....COMPUTES THE AVERAGE WAVE NUMBER
+!     """"""""""""""""""""""""""""""
       DO 50 IP=1,NPOIN2
         IF (AUX2(IP).LT.SEUIL) THEN
           XKMOY(IP) = 1.D0
@@ -111,6 +120,6 @@ C     """"""""""""""""""""""""""""""
           XKMOY(IP) = (AUX1(IP)/AUX2(IP))**2
         ENDIF
    50 CONTINUE
-C
+!
       RETURN
       END

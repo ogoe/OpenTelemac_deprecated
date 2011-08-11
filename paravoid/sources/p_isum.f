@@ -1,49 +1,62 @@
-C                       ***********************
-                        INTEGER FUNCTION P_ISUM
-C                       ***********************
-C
-     *(MYPART)
-C
-C***********************************************************************
-C  PARA VERSION 5.1         08/01/97        J-M HERVOUET (LNH)
-C
-C***********************************************************************
-C
-C      FONCTIONS:
-C      ==========
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________|
-C |  MYPART        | -->| CONTRIBUTION DU PROCESSEUR APPELANT.
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR :
-C
-C SOUS-PROGRAMMES APPELES : NEANT
-C
-C**********************************************************************
-C
+!                    ***********************
+                     INTEGER FUNCTION P_ISUM
+!                    ***********************
+!
+     &(MYPART)
+!
+!***********************************************************************
+! PARAVOID   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    SUM OF VALUES FROM ALL THE PROCESSORS.
+!
+!warning  EMPTY SHELL IN SCALAR MODE FOR PARALLEL COMPATIBILITY
+!
+!history  RAINER JOHANNI (SGI MUNICH)
+!+        **/10/1999
+!+
+!+   ADAPTED FOR MPI
+!
+!history  J.A. JANKOWSKI (BAW KARLSRUHE)
+!+        28/12/1999
+!+
+!+   RELEASE 5.0 MODIFIED
+!
+!history  J-M HERVOUET (LNHE)
+!+        10/06/2005
+!+        V5P9
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| MYPART         |-->| SEND BUFFER
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
+!
       INTEGER MYPART
-C
+!
       IF(LNG.EQ.1) WRITE(LU,*) 'APPEL DE P_ISUM VERSION VIDE'
       IF(LNG.EQ.2) WRITE(LU,*) 'CALL OF P_ISUM IN ITS VOID VERSION'
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       P_ISUM=MYPART
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       STOP
       END
- 

@@ -1,75 +1,90 @@
-C                       *****************
-                        SUBROUTINE SPEINI
-C                       *****************
-C
-     *( F     , SPEC  , FRA   , UV    , VV    , FREQ  , TETA  , GRAVIT,
-     *  FREMAX, FETCH , SIGMAA, SIGMAB, GAMMA , FPIC  , HM0   , ALPHIL,
-     *  TETA1 , SPRED1, TETA2 , SPRED2, XLAMDA, NPOIN2, NPLAN , NF    ,
-     *  INISPE, E2FMIN, DEPTH , FRABI )
-C
-C**********************************************************************
-C  TOMAWAC - V1.0    M. BENOIT               (EDF/DER/LNH)  -  13/07/95
-C**********************************************************************
-C
-C  FONCTION : AFFECTATION DU SPECTRE DE VARIANCE SUR LE DOMAINE.
-C  ********** PLUSIEURS OPTIONS SONT PROPOSEES SELON LA VALEUR
-C             DE INISPE :
-C               0. SPECTRE NUL EN TOUS LES POINTS.
-C               1. SPECTRE DE TYPE JONSWAP FONCTION DU VENT ET NUL SI
-C                  LA VITESSE DU VENT EST NULLE.
-C               2. SPECTRE DE TYPE JONSWAP FONCTION DU VENT ET
-C                  PARAMETRIQUE SI LA VITESSE DU VENT EST NULLE.
-C               3. SPECTRE DE TYPE JONSWAP PARAMETRIQUE
-C
-C
-C  ARGUMENTS :
-C  ***********
-C  +-------------+----+--------------------------------------------+
-C  ! NOM         !MODE! SIGNIFICATION - OBSERVATIONS               !
-C  +-------------+----+--------------------------------------------+
-C  ! F(-,-,-)    !<-- ! SPECTRE DIRECTIONNEL DE VARIANCE           !
-C  ! SPEC(-)     !<-- ! VECTEUR DU SPECTRE EN FREQUENCE            !
-C  ! FRA(-)      !<-- ! VECTEUR DE LA FONCTION DE REPARTITION ANG. !
-C  ! UV(-)       ! -->! TABLEAU DES COMPOSANTES OUEST-EST DU VENT  !
-C  ! VV(-)       ! -->! TABLEAU DES COMPOSANTES SUD-NORD  DU VENT  !
-C  ! FREQ(-)     ! -->! VECTEUR DES FREQUENCES DE DISCRETISATION   !
-C  ! TETA(-)     ! -->! VECTEUR DES DIRECTIONS DE DISCRETISATION   !
-C  ! GRAVIT      ! -->! ACCELERATION DE LA PESANTEUR               !
-C  ! FREMAX      ! -->! VALEUR MAXIMUM DE LA FREQUENCE DE PIC      !
-C  ! FETCH       ! -->! FETCH MOYEN                                !
-C  ! SIGMAA      ! -->! VALEUR DE SIGMA JONSWAP POUR F < FP        !
-C  ! SIGMAB      ! -->! VALEUR DE SIGMA JONSWAP POUR F > FP        !
-C  ! GAMMA       ! -->! FACTEUR DE FORME DE PIC JONSWAP            !
-C  ! FPIC        ! -->! FREQUENCE DE PIC JONSWAP                   !
-C  ! HM0         ! -->! HAUTEUR SIGNIFICATIVE JONSWAP              !
-C  ! ALPHIL      ! -->! CONSTANTE DE PHILLIPS (ALPHA)              !
-C  ! TETA1       ! -->! DIRECTION PRINCIPALE 1 POUR FRA            !
-C  ! SPRED1      ! -->! ETALEMENT DIRECTIONNEL 1 POUR FRA          !
-C  ! TETA2       ! -->! DIRECTION PRINCIPALE 2 POUR FRA            !
-C  ! SPRED2      ! -->! ETALEMENT DIRECTIONNEL 2 POUR FRA          !
-C  ! XLAMDA      ! -->! FACTEUR DE PONDERATION POUR LA FRA         !
-C  ! NPOIN2      ! -->! NOMBRE DE POINTS DU MAILLAGE SPATIAL       !
-C  ! NPLAN       ! -->! NOMBRE DE DIRECTIOSN DE DISCRETISATION     !
-C  ! NF          ! -->! NOMBRE DE FREQUENCES DE DISCRETISATION     !
-C  ! INISPE      ! -->! INDICATEUR D'INITIALISATION DU SPECTRE     !
-C  ! E2FMIN      ! -->! SEUIL MINIMUM DE VARIANCE CONSIDERE        !
-C  +-------------+----+--------------------------------------------+
-C  ! MODE   (-> : NON-MODIFIE)  (<-> : MODIFIE)  (<- : INITIALISE) !
-C  +---------------------------------------------------------------+
-C
-C  APPELS :    - PROGRAMME(S) APPELANT  :  CONDIW
-C  ********    - PROGRAMME(S) APPELE(S) :  -      
-C
-C  REMARQUES :
-C  ***********
-C  - 
-C
-C**********************************************************************
-C
+!                    *****************
+                     SUBROUTINE SPEINI
+!                    *****************
+!
+     &( F     , SPEC  , FRA   , UV    , VV    , FREQ  , TETA  , GRAVIT,
+     &  FREMAX, FETCH , SIGMAA, SIGMAB, GAMMA , FPIC  , HM0   , ALPHIL,
+     &  TETA1 , SPRED1, TETA2 , SPRED2, XLAMDA, NPOIN2, NPLAN , NF    ,
+     &  INISPE, E2FMIN, DEPTH , FRABI )
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   28/06/2011
+!***********************************************************************
+!
+!brief    INITIALISES THE VARIANCE SPECTRUM.
+!+
+!+            SEVERAL OPTIONS ARE POSSIBLE DEPENDING ON THE VALUE
+!+                TAKEN BY INISPE :
+!+
+!+            0. ZERO EVERYWHERE
+!+
+!+            1. JONSWAP-TYPE SPECTRUM AS A FUNCTION OF THE WIND
+!+                  (ZERO IF WIND SPEED IS ZERO)
+!+
+!+            2. JONSWAP-TYPE SPECTRUM AS A FUNCTION OF THE WIND
+!+                  (PARAMETRIC IF WIND SPEED IS ZERO)
+!+
+!+            3. PARAMETRIC JONSWAP-TYPE SPECTRUM
+!
+!history  M. BENOIT (EDF/DER/LNH)
+!+        13/07/95
+!+        V1P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        28/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| ALPHIL         |-->| INITIAL PHILLIPS CONSTANT (ALPHA)
+!| DEPTH          |-->| WATER DEPTH
+!| E2FMIN         |-->| SPECTRUM ENERGY THRESHOLD
+!| F              |<--| VARIANCE DENSITY DIRECTIONAL SPETCRUM
+!| FETCH          |-->| INITIAL MEAN FETCH VALUE
+!| FPIC           |-->| INITIAL PEAK FREQUENCY
+!| FRA            |<--| DIRECTIONAL SPREADING FUNCTION VALUES
+!| FRABI          |-->| INITIAL ANGULAR DISTRIBUTION FUNCTION
+!| FREMAX         |-->| INITIAL MAXIMUM PEAK FREQUENCY
+!| FREQ           |-->| DISCRETIZED FREQUENCIES
+!| GAMMA          |-->| INITIAL JONSWAP SPECTRUM PEAK FACTOR
+!| GRAVIT         |-->| GRAVITY ACCELERATION
+!| HM0            |-->| INITIAL SIGNIFICANT WAVE HEIGHT
+!| INISPE         |-->| TYPE OF INITIAL DIRECTIONAL SPECTRUM
+!| NF             |-->| NUMBER OF FREQUENCIES
+!| NPLAN          |-->| NUMBER OF DIRECTIONS
+!| NPOIN2         |-->| NUMBER OF POINTS IN 2D MESH
+!| SIGMAA         |-->| INITIAL VALUE OF SIGMA FOR JONSWAP SPECTRUM
+!|                |   | (F<FP)
+!| SIGMAB         |-->| INITIAL VALUE OF SIGMA FOR JONSWAP SPECTRUM
+!|                |   | (F>FP)
+!| SPEC           |<--| VARIANCE DENSITY FREQUENCY SPECTRUM
+!| SPRED1         |-->| INITIAL DIRECTIONAL SPREAD 1
+!| SPRED2         |-->| INITIAL DIRECTIONAL SPREAD 2
+!| TETA           |-->| DISCRETIZED DIRECTIONS
+!| TETA1          |-->| MAIN DIRECTION 1
+!| TETA2          |-->| MAIN DIRECTION 2
+!| UV             |-->| WIND VELOCITY ALONG X AT THE MESH POINTS
+!| VV             |-->| WIND VELOCITY ALONG Y AT THE MESH POINTS
+!| XLAMDA         |-->| WEIGHTING FACTOR FOR FRA
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
-C.....VARIABLES TRANSMISES
-C     """"""""""""""""""""
+!
+!.....VARIABLES IN ARGUMENT
+!     """"""""""""""""""""
       INTEGER  NPOIN2, NPLAN , NF    , INISPE, FRABI
       DOUBLE PRECISION GRAVIT, FREMAX, FETCH , SIGMAA, SIGMAB, GAMMA
       DOUBLE PRECISION FPIC  , HM0   , ALPHIL, TETA1 , SPRED1, TETA2
@@ -77,16 +92,16 @@ C     """"""""""""""""""""
       DOUBLE PRECISION FREQ(NF) , TETA(NPLAN), SPEC(NF), FRA(NPLAN)
       DOUBLE PRECISION UV(NPOIN2) , VV(NPOIN2), DEPTH(NPOIN2)
       DOUBLE PRECISION F(NPOIN2,NPLAN,NF)
-C
-C.....VARIABLES LOCALES 
-C     """""""""""""""""
+!
+!.....LOCAL VARIABLES
+!     """""""""""""""""
       INTEGER  NPOIN4, IP    , JF    , JP
       DOUBLE PRECISION GX    , GXU   , UG     , AL    , FP    , DEUPI
       DOUBLE PRECISION UVMIN  , COEFA , COEFB , COEFD
       DOUBLE PRECISION COEFE , UVENT , FPMIN  , SPR1  , SPR2  , XLAM
       DOUBLE PRECISION TET1  , TET2  , COEF
-C
-C
+!
+!
       DEUPI = 6.283185307D0
       NPOIN4= NPOIN2*NPLAN*NF
       UVMIN = 1.D-6
@@ -96,30 +111,30 @@ C
       COEFE = 2.D0/3.D0
       GX    = GRAVIT*FETCH
       FPMIN = 1.D-4
-C
-C
-C     ===========================================================
-C     SPECTRE INITIAL NUL EN TOUS POINTS (INISPE=0)
-C     (FAIT EGALEMENT POUR INITIALISATION POUR LES AUTRES VALEURS)
-C     ===========================================================
+!
+!
+!     ===========================================================
+!     INITIAL SPECTRUM IS ZERO EVERYWHERE (INISPE=0)
+!     (ALSO WORKS TO INITIALISE TO OTHER VALUES)
+!     ===========================================================
       CALL OV ( 'X=C     ' , F      , F , F , 0.D0 , NPOIN4 )
       IF (INISPE.EQ.0) RETURN
-C
-C
-C     ==/ INISPE = 1 /===========================================
-C     SI VENT NON NUL -E(F): JONSWAP FONCTION DU VENT (AL,FP)
-C                     -FRA : UNIMODALE AUTOUR DE TETA(VENT)
-C     SI VENT NUL     -E(F): NUL
-C                     -FRA : NUL
-C     ===========================================================
+!
+!
+!     ==/ INISPE = 1 /===========================================
+!     IF NON ZERO WIND -E(F): JONSWAP FUNCTION OF THE WIND (AL,FP)
+!                      -FRA : UNIMODAL ABOUT TETA(WIND)
+!     IF ZERO WIND     -E(F): ZERO
+!                      -FRA : ZERO
+!     ===========================================================
       IF (INISPE.EQ.1) THEN
-C
+!
         DO 100 IP=1,NPOIN2
           UVENT=SQRT(UV(IP)**2+VV(IP)**2)
           IF (UVENT.GT.UVMIN) THEN
-C
-C...........CALCUL DU SPECTRE EN FREQUENCE (JONSWAP).
-C           """""""""""""""""""""""""""""""""""""""""
+!
+!...........COMPUTES THE FREQUENCY SPECTRUM (JONSWAP)
+!           """""""""""""""""""""""""""""""""""""""""
             GXU=GX/(UVENT*UVENT)
             UG = UVENT/GRAVIT
             FP = MAX(0.13D0,COEFA*GXU**COEFD)
@@ -129,9 +144,9 @@ C           """""""""""""""""""""""""""""""""""""""""
             CALL SPEJON
      &( SPEC  , FREQ  , NF    , AL    , FP     , GAMMA , SIGMAA, SIGMAB,
      &  DEUPI , GRAVIT, E2FMIN, FPMIN )
-C
-C...........CALCUL DE LA FONCTION DE REPARTITION ANGULAIRE.
-C           """""""""""""""""""""""""""""""""""""""""""""""
+!
+!...........COMPUTES THE DIRECTIONAL SPREADING FUNCTION
+!           """""""""""""""""""""""""""""""""""""""""""""""
             SPR1=SPRED1
             TET1=ATAN2(UV(IP),VV(IP))
             SPR2=1.D0
@@ -150,31 +165,31 @@ C           """""""""""""""""""""""""""""""""""""""""""""""
      &( FRA   , TETA  , NPLAN , SPR1  , TET1  , SPR2  , TET2  , XLAM  ,
      &  DEUPI )
             ENDIF
-C
-C...........CALCUL DU SPECTRE DIRECTIONNEL.
-C           """""""""""""""""""""""""""""""
+!
+!...........COMPUTES THE DIRECTIONAL SPECTRUM
+!           """""""""""""""""""""""""""""""
             DO 140 JF=1,NF
               DO 150 JP=1,NPLAN
                 F(IP,JP,JF)=SPEC(JF)*FRA(JP)
   150         CONTINUE
   140       CONTINUE
           ENDIF
-C
+!
   100   CONTINUE
-C
-C     ==/ INISPE = 2 /===========================================
-C     SI VENT NON NUL -E(F): JONSWAP FONCTION DU VENT (AL,FP)
-C                     -FRA : UNIMODALE AUTOUR DE TETA(VENT)
-C     SI VENT NUL     -E(F): JONSWAP PARAMETRE (AL,FP)
-C                     -FRA : UNIMODALE PARAMETREE
-C     ===========================================================
+!
+!     ==/ INISPE = 2 /===========================================
+!     IF NON ZERO WIND -E(F): JONSWAP AS A FUNCTION OF THE WIND (AL,FP)
+!                      -FRA : UNIMODAL ABOUT TETA(WIND)
+!     IF ZERO WIND     -E(F): PARAMETERISED JONSWAP (AL,FP)
+!                      -FRA : PARAMETERISED UNIMODAL
+!     ===========================================================
       ELSEIF (INISPE.EQ.2) THEN
-C
+!
         DO 200 IP=1,NPOIN2
           UVENT=SQRT(UV(IP)**2+VV(IP)**2)
-C
-C.........CALCUL DU SPECTRE EN FREQUENCE (JONSWAP).
-C         """""""""""""""""""""""""""""""""""""""""
+!
+!.........COMPUTES THE FREQUENCY SPECTRUM (JONSWAP)
+!         """""""""""""""""""""""""""""""""""""""""
           IF (UVENT.GT.UVMIN) THEN
             GXU=GX/(UVENT*UVENT)
             UG = UVENT/GRAVIT
@@ -189,9 +204,9 @@ C         """""""""""""""""""""""""""""""""""""""""
           CALL SPEJON
      &( SPEC  , FREQ  , NF    , AL    , FP     , GAMMA , SIGMAA, SIGMAB,
      &  DEUPI , GRAVIT, E2FMIN, FPMIN )
-C
-C.........CALCUL DE LA FONCTION DE REPARTITION ANGULAIRE.
-C         """""""""""""""""""""""""""""""""""""""""""""""
+!
+!.........COMPUTES THE DIRECTIONAL SPREADING FUNCTION
+!         """""""""""""""""""""""""""""""""""""""""""""""
           IF (UVENT.GT.UVMIN) THEN
             TET1=ATAN2(UV(IP),VV(IP))
           ELSE
@@ -214,39 +229,39 @@ C         """""""""""""""""""""""""""""""""""""""""""""""
      &( FRA   , TETA  , NPLAN , SPR1  , TET1  , SPR2  , TET2  , XLAM  ,
      &  DEUPI )
           ENDIF
-C
-C.........CALCUL DU SPECTRE DIRECTIONNEL.
-C         """""""""""""""""""""""""""""""
+!
+!.........COMPUTES THE DIRECTIONAL SPECTRUM
+!         """""""""""""""""""""""""""""""
           DO 240 JF=1,NF
             DO 250 JP=1,NPLAN
               F(IP,JP,JF)=SPEC(JF)*FRA(JP)
   250       CONTINUE
   240     CONTINUE
-C
+!
   200   CONTINUE
-C
-C     ==/ INISPE = 3 /===========================================
-C     SI VENT NON NUL -E(F): JONSWAP PARAMETRE (AL,FP)
-C                     -FRA : UNIMODALE AUTOUR DE TETA(VENT)
-C     SI VENT NUL     -E(F): NUL
-C                     -FRA : NUL
-C     ===========================================================
+!
+!     ==/ INISPE = 3 /===========================================
+!     IF NON ZERO WIND -E(F): PARAMETERISED JONSWAP (AL,FP)
+!                      -FRA : UNIMODAL ABOUT TETA(WIND)
+!     IF ZERO WIND     -E(F): ZERO
+!                      -FRA : ZERO
+!     ===========================================================
       ELSEIF (INISPE.EQ.3) THEN
-C
+!
         DO 300 IP=1,NPOIN2
           UVENT=SQRT(UV(IP)**2+VV(IP)**2)
           IF (UVENT.GT.UVMIN) THEN
-C
-C...........CALCUL DU SPECTRE EN FREQUENCE (JONSWAP).
-C           """""""""""""""""""""""""""""""""""""""""
+!
+!...........COMPUTES THE FREQUENCY SPECTRUM (JONSWAP)
+!           """""""""""""""""""""""""""""""""""""""""
             AL = ALPHIL
             FP = FPIC
             CALL SPEJON
      &( SPEC  , FREQ  , NF    , AL    , FP     , GAMMA , SIGMAA, SIGMAB,
      &  DEUPI , GRAVIT, E2FMIN, FPMIN )
-C
-C...........CALCUL DE LA FONCTION DE REPARTITION ANGULAIRE.
-C           """""""""""""""""""""""""""""""""""""""""""""""
+!
+!...........COMPUTES THE DIRECTIONAL SPREADING FUNCTION
+!           """""""""""""""""""""""""""""""""""""""""""""""
             SPR1=SPRED1
             TET1=ATAN2(UV(IP),VV(IP))
             SPR2=1.D0
@@ -265,38 +280,38 @@ C           """""""""""""""""""""""""""""""""""""""""""""""
      &( FRA   , TETA  , NPLAN , SPR1  , TET1  , SPR2  , TET2  , XLAM  ,
      &  DEUPI )
             ENDIF
-C
-C...........CALCUL DU SPECTRE DIRECTIONNEL.
-C           """""""""""""""""""""""""""""""
+!
+!...........COMPUTES THE DIRECTIONAL SPECTRUM
+!           """""""""""""""""""""""""""""""
             DO 340 JF=1,NF
               DO 350 JP=1,NPLAN
                 F(IP,JP,JF)=SPEC(JF)*FRA(JP)
   350         CONTINUE
   340       CONTINUE
           ENDIF
-C
+!
   300   CONTINUE
-C
-C     ==/ INISPE = 4 /===========================================
-C     SI VENT NON NUL -E(F): JONSWAP PARAMETRE (AL,FP)
-C                     -FRA : UNIMODALE PARAMETREE
-C     SI VENT NUL     -E(F): JONSWAP PARAMETRE (AL,FP)
-C                     -FRA : UNIMODALE PARAMETREE
-C     ===========================================================
+!
+!     ==/ INISPE = 4 /===========================================
+!     IF NON ZERO WIND -E(F): PARAMETERISED JONSWAP (AL,FP)
+!                      -FRA : PARAMETERISED UNIMODAL
+!     IF ZERO WIND     -E(F): PARAMETERISED JONSWAP (AL,FP)
+!                      -FRA : PARAMETERISED UNIMODAL
+!     ===========================================================
       ELSEIF (INISPE.EQ.4) THEN
-C
+!
         DO 400 IP=1,NPOIN2
-C
-C.........CALCUL DU SPECTRE EN FREQUENCE (JONSWAP).
-C         """""""""""""""""""""""""""""""""""""""""
+!
+!.........COMPUTES THE FREQUENCY SPECTRUM (JONSWAP)
+!         """""""""""""""""""""""""""""""""""""""""
           AL = ALPHIL
           FP = FPIC
           CALL SPEJON
      &( SPEC  , FREQ  , NF    , AL    , FP     , GAMMA , SIGMAA, SIGMAB,
      &  DEUPI , GRAVIT, E2FMIN, FPMIN )
-C
-C.........CALCUL DE LA FONCTION DE REPARTITION ANGULAIRE.
-C         """""""""""""""""""""""""""""""""""""""""""""""
+!
+!.........COMPUTES THE DIRECTIONAL SPREADING FUNCTION
+!         """""""""""""""""""""""""""""""""""""""""""""""
           SPR1=SPRED1
           TET1=TETA1
           SPR2=SPRED2
@@ -315,42 +330,42 @@ C         """""""""""""""""""""""""""""""""""""""""""""""
      &( FRA   , TETA  , NPLAN , SPR1  , TET1  , SPR2  , TET2  , XLAM  ,
      &  DEUPI )
           ENDIF
-C
-C.........CALCUL DU SPECTRE DIRECTIONNEL.
-C         """""""""""""""""""""""""""""""
+!
+!.........COMPUTES THE DIRECTIONAL SPECTRUM
+!         """""""""""""""""""""""""""""""
           DO 440 JF=1,NF
             DO 450 JP=1,NPLAN
               F(IP,JP,JF)=SPEC(JF)*FRA(JP)
   450       CONTINUE
   440     CONTINUE
-C
+!
   400   CONTINUE
-C
-C     ==/ INISPE = 5 /===========================================
-C     SI VENT NON NUL -E(F): JONSWAP PARAMETRE (HM0,FP)
-C                     -FRA : UNIMODALE AUTOUR DE TETA(VENT)
-C     SI VENT NUL     -E(F): NUL
-C                     -FRA : NUL
-C     ===========================================================
+!
+!     ==/ INISPE = 5 /===========================================
+!     IF NON ZERO WIND -E(F): PARAMETERISED JONSWAP (HM0,FP)
+!                      -FRA : UNIMODAL ABOUT TETA(WIND)
+!     IF ZERO WIND     -E(F): ZERO
+!                      -FRA : ZERO
+!     ===========================================================
       ELSEIF (INISPE.EQ.5) THEN
-C
+!
         COEF=0.0624D0/(0.230D0+0.0336D0*GAMMA-0.185D0/(1.9D0+GAMMA))
      &      *(DEUPI*FPIC)**4*HM0*HM0/GRAVIT**2
-C
+!
         DO 500 IP=1,NPOIN2
           UVENT=SQRT(UV(IP)**2+VV(IP)**2)
           IF (UVENT.GT.UVMIN) THEN
-C
-C...........CALCUL DU SPECTRE EN FREQUENCE (JONSWAP).
-C           """""""""""""""""""""""""""""""""""""""""
+!
+!...........COMPUTES THE FREQUENCY SPECTRUM (JONSWAP)
+!           """""""""""""""""""""""""""""""""""""""""
             AL=COEF
             FP = FPIC
             CALL SPEJON
      &( SPEC  , FREQ  , NF    , AL    , FP     , GAMMA , SIGMAA, SIGMAB,
      &  DEUPI , GRAVIT, E2FMIN, FPMIN )
-C
-C...........CALCUL DE LA FONCTION DE REPARTITION ANGULAIRE.
-C           """""""""""""""""""""""""""""""""""""""""""""""
+!
+!...........COMPUTES THE DIRECTIONAL SPREADING FUNCTION
+!           """""""""""""""""""""""""""""""""""""""""""""""
             SPR1=SPRED1
             TET1=ATAN2(UV(IP),VV(IP))
             SPR2=1.D0
@@ -369,41 +384,41 @@ C           """""""""""""""""""""""""""""""""""""""""""""""
      &( FRA   , TETA  , NPLAN , SPR1  , TET1  , SPR2  , TET2  , XLAM  ,
      &  DEUPI )
             ENDIF
-C
-C...........CALCUL DU SPECTRE DIRECTIONNEL.
-C           """""""""""""""""""""""""""""""
+!
+!...........COMPUTES THE DIRECTIONAL SPECTRUM
+!           """""""""""""""""""""""""""""""
             DO 540 JF=1,NF
               DO 550 JP=1,NPLAN
                 F(IP,JP,JF)=SPEC(JF)*FRA(JP)
   550         CONTINUE
   540       CONTINUE
           ENDIF
-C
+!
   500   CONTINUE
-C
-C     ==/ INISPE = 6 /===========================================
-C     SI VENT NON NUL -E(F): JONSWAP PARAMETRE (HM0,FP)
-C                     -FRA : UNIMODALE PARAMETREE
-C     SI VENT NUL     -E(F): JONSWAP PARAMETRE (HM0,FP)
-C                     -FRA : UNIMODALE PARAMETREE
-C     ===========================================================
+!
+!     ==/ INISPE = 6 /===========================================
+!     IF NON ZERO WIND -E(F): PARAMETERISED JONSWAP (HM0,FP)
+!                      -FRA : PARAMETERISED UNIMODAL
+!     IF ZERO WIND     -E(F): PARAMETERISED JONSWAP (HM0,FP)
+!                      -FRA : PARAMETERISED UNIMODAL
+!     ===========================================================
       ELSEIF (INISPE.EQ.6) THEN
-C
+!
         COEF=0.0624D0/(0.230D0+0.0336D0*GAMMA-0.185D0/(1.9D0+GAMMA))
      &      *(DEUPI*FPIC)**4*HM0*HM0/GRAVIT**2
-C
+!
         DO 600 IP=1,NPOIN2
-C
-C.........CALCUL DU SPECTRE EN FREQUENCE (JONSWAP).
-C         """""""""""""""""""""""""""""""""""""""""
+!
+!.........COMPUTES THE FREQUENCY SPECTRUM (JONSWAP)
+!         """""""""""""""""""""""""""""""""""""""""
           AL = COEF
           FP = FPIC
           CALL SPEJON
      &( SPEC  , FREQ  , NF    , AL    , FP     , GAMMA , SIGMAA, SIGMAB,
      &  DEUPI , GRAVIT, E2FMIN, FPMIN )
-C
-C.........CALCUL DE LA FONCTION DE REPARTITION ANGULAIRE.
-C         """""""""""""""""""""""""""""""""""""""""""""""
+!
+!.........COMPUTES THE DIRECTIONAL SPREADING FUNCTION
+!         """""""""""""""""""""""""""""""""""""""""""""""
           SPR1=SPRED1
           TET1=TETA1
           SPR2=SPRED2
@@ -422,41 +437,41 @@ C         """""""""""""""""""""""""""""""""""""""""""""""
      &( FRA   , TETA  , NPLAN , SPR1  , TET1  , SPR2  , TET2  , XLAM  ,
      &  DEUPI )
           ENDIF
-C
-C.........CALCUL DU SPECTRE DIRECTIONNEL.
-C         """""""""""""""""""""""""""""""
+!
+!.........COMPUTES THE DIRECTIONAL SPECTRUM
+!         """""""""""""""""""""""""""""""
           DO 640 JF=1,NF
             DO 650 JP=1,NPLAN
               F(IP,JP,JF)=SPEC(JF)*FRA(JP)
   650       CONTINUE
   640     CONTINUE
-C
+!
   600   CONTINUE
-C
-C     ==/ INISPE = 7 /===========================================
-C     SI VENT NON NUL -E(F): TMA PARAMETRE (HM0,FP)
-C                     -FRA : UNIMODALE PARAMETREE
-C     SI VENT NUL     -E(F): TMA PARAMETRE (HM0,FP)
-C                     -FRA : UNIMODALE PARAMETREE
-C     ===========================================================
+!
+!     ==/ INISPE = 7 /===========================================
+!     IF NON ZERO WIND -E(F): PARAMETERISED TMA (HM0,FP)
+!                      -FRA : PARAMETERISED UNIMODAL
+!     IF ZERO WIND     -E(F): PARAMETERISED TMA (HM0,FP)
+!                      -FRA : PARAMETERISED UNIMODAL
+!     ===========================================================
       ELSEIF (INISPE.EQ.7) THEN
-C
+!
         COEF=0.0624D0/(0.230D0+0.0336D0*GAMMA-0.185D0/(1.9D0+GAMMA))
      &      *(DEUPI*FPIC)**4*HM0*HM0/GRAVIT**2
-C
+!
         DO 700 IP=1,NPOIN2
-C
-C.........CALCUL DU SPECTRE EN FREQUENCE (JONSWAP).
-C         """""""""""""""""""""""""""""""""""""""""
+!
+!.........COMPUTES THE FREQUENCY SPECTRUM (JONSWAP)
+!         """""""""""""""""""""""""""""""""""""""""
           AL = COEF
           FP = FPIC
-C
+!
           CALL SPETMA
      &( SPEC  , FREQ  , NF    , AL    , FP     , GAMMA , SIGMAA, SIGMAB,
      &  DEUPI , GRAVIT, E2FMIN, FPMIN , DEPTH(IP) )
-C
-C.........CALCUL DE LA FONCTION DE REPARTITION ANGULAIRE.
-C         """""""""""""""""""""""""""""""""""""""""""""""
+!
+!.........COMPUTES THE DIRECTIONAL SPREADING FUNCTION
+!         """""""""""""""""""""""""""""""""""""""""""""""
           SPR1=SPRED1
           TET1=TETA1
           SPR2=SPRED2
@@ -475,17 +490,17 @@ C         """""""""""""""""""""""""""""""""""""""""""""""
      &( FRA   , TETA  , NPLAN , SPR1  , TET1  , SPR2  , TET2  , XLAM  ,
      &  DEUPI )
           ENDIF
-C
-C.........CALCUL DU SPECTRE DIRECTIONNEL.
-C         """""""""""""""""""""""""""""""
+!
+!.........COMPUTES THE THE DIRECTIONAL SPECTRUM
+!         """""""""""""""""""""""""""""""
           DO 740 JF=1,NF
             DO 750 JP=1,NPLAN
               F(IP,JP,JF)=SPEC(JF)*FRA(JP)
   750       CONTINUE
   740     CONTINUE
-C
+!
   700   CONTINUE
       ENDIF
-C
+!
       RETURN
       END

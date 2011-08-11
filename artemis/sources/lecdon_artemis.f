@@ -1,116 +1,133 @@
-C                       *************************
-                        SUBROUTINE LECDON_ARTEMIS
-C                       *************************
-C
-     * (FILE_DESC,PATH,NCAR,CODE)
-C
-C***********************************************************************
-C
-C  ARTEMIS VERSION 6.0      20/04/99  D. AELBRECHT (LNH) 01 30 87 74 12
-C
-C  LINKED TO BIEF VERS. 5.0  17/08/94  J-M HERVOUET (LNH) 01 30 87 80 18
-C
-C***********************************************************************
-C
-C  FUNCTION : READING THE PARAMETER FILE THROUGH A DAMOCLES CALL
-C
-C----------------------------------------------------------------------
-C
-C CALLED BY : HOMERE_ARTEMIS
-C
-C SUBROUTINE CALLED : DAMOC
-C
-C**********************************************************************
-C
+!                    *************************
+                     SUBROUTINE LECDON_ARTEMIS
+!                    *************************
+!
+     &(FILE_DESC,PATH,NCAR,CODE)
+!
+!***********************************************************************
+! ARTEMIS   V6P1                                   31/05/2011
+!***********************************************************************
+!
+!brief    READS THE STEERING FILE THROUGH A DAMOCLES CALL.
+!
+!history  J-M HERVOUET (LNH)
+!+        17/08/1994
+!+
+!+   LINKED TO BIEF 5.0
+!
+!history  D. AELBRECHT (LNH)
+!+        20/04/1999
+!+        V6P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CODE           |-->| CALLING CODE
+!| FILE_DESC      |<--| STORES STRINGS 'SUBMIT' OF DICTIONARY
+!| NCAR           |-->| NUMBER OF LETTERS IN STRING PATH
+!| PATH           |-->| FULL PATH TO CODE DICTIONARY
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE DECLARATIONS_TELEMAC
-      USE DECLARATIONS_ARTEMIS   
-      USE INTERFACE_ARTEMIS, EX_LECDON_ARTEMIS => LECDON_ARTEMIS 
-C
+      USE DECLARATIONS_ARTEMIS
+      USE INTERFACE_ARTEMIS, EX_LECDON_ARTEMIS => LECDON_ARTEMIS
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
+!
       LOGICAL LSTOP
       INTEGER I,KK
-C
+!
       CHARACTER*8 MNEMO(MAXVAR)
-C
-C-----------------------------------------------------------------------
-C
-C DECLARATION DES TABLEAUX POUR L'APPEL DE DAMOCLES
-C
+!
+!-----------------------------------------------------------------------
+!
+! ARRAYS USED IN THE DAMOCLES CALL
+!
       INTEGER, PARAMETER :: NMAX = 300
-C
+!
       INTEGER ADRESS(4,NMAX),DIMENS(4,NMAX)
       DOUBLE PRECISION MOTREA(NMAX)
       INTEGER          MOTINT(NMAX)
       LOGICAL          MOTLOG(NMAX)
       CHARACTER*144    MOTCAR(NMAX)
       CHARACTER*72     MOTCLE(4,NMAX,2)
-      INTEGER          TROUVE(4,NMAX) 
+      INTEGER          TROUVE(4,NMAX)
       LOGICAL DOC
       CHARACTER(LEN=250) :: NOM_CAS
       CHARACTER(LEN=250) :: NOM_DIC
-!ARGUMENTS
+! ARGUMENTS
       CHARACTER(LEN=24), INTENT(IN)     :: CODE
       CHARACTER(LEN=144), INTENT(INOUT) :: FILE_DESC(4,NMAX)
       INTEGER, INTENT(IN)               :: NCAR
       CHARACTER(LEN=250), INTENT(IN)    :: PATH
-C            
-C FIN DES VARIABLES POUR DAMOCLES :
-C
-C-----------------------------------------------------------------------
-C
-C INITIALISATIONS POUR APPEL A DAMOCLES :
-C
+!
+! END OF DECLARATIONS FOR DAMOCLES CALL :
+!
+!-----------------------------------------------------------------------
+!
+! INITIALISES THE VARIABLES FOR DAMOCLES CALL :
+!
       DO 10 KK=1,NMAX
-C
-C       UN FICHIER NON DONNE PAR DAMOCLES SERA RECONNU PAR UN BLANC
-C       (IL N'EST PAS SUR QUE TOUS LES COMPILATEURS INITIALISENT AINSI)
-C
+!
+!       A FILENAME NOT GIVEN BY DAMOCLES WILL BE RECOGNIZED AS A WHITE SPACE
+!       (IT MAY BE THAT NOT ALL COMPILERS WILL INITIALISE LIKE THAT)
+!
         MOTCAR(KK)(1:1)=' '
-C
+!
         DIMENS(1,KK) = 0
         DIMENS(2,KK) = 0
         DIMENS(3,KK) = 0
         DIMENS(4,KK) = 0
-C
+!
 10    CONTINUE
-C
-C     IMPRESSION DE LA DOC
-C
+!
+!     WRITES OUT INFO
+!
       DOC = .FALSE.
-C
-C-----------------------------------------------------------------------
-C     OUVERTURE DES FICHIERS DICTIONNAIRE ET CAS
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!     OPENS DICTIONNARY AND STEERING FILES
+!-----------------------------------------------------------------------
+!
       IF(NCAR.GT.0) THEN
-C
+!
         NOM_DIC=PATH(1:NCAR)//'ARTDICO'
         NOM_CAS=PATH(1:NCAR)//'ARTCAS'
-C
+!
       ELSE
-C
+!
         NOM_DIC='ARTDICO'
         NOM_CAS='ARTCAS'
-C
+!
       ENDIF
-C
+!
       OPEN(2,FILE=NOM_DIC,FORM='FORMATTED',ACTION='READ')
       OPEN(3,FILE=NOM_CAS,FORM='FORMATTED',ACTION='READ')
-C
+!
       CALL DAMOCLE( ADRESS , DIMENS , NMAX   , DOC     , LNG    , LU ,
-     *              MOTINT , MOTREA , MOTLOG , MOTCAR  , MOTCLE ,
-     *              TROUVE , 2   , 3   , .FALSE. , FILE_DESC)
-C
-C     DECRYPTAGE DES CHAINES SUBMIT
-C
-      CALL READ_SUBMIT(ART_FILES,44,CODE,FILE_DESC,300)
-C
-C-----------------------------------------------------------------------
-C
-      DO I=1,44
+     &              MOTINT , MOTREA , MOTLOG , MOTCAR  , MOTCLE ,
+     &              TROUVE , 2   , 3   , .FALSE. , FILE_DESC)
+!
+!     DECODES 'SUBMIT' CHAINS
+!
+      CALL READ_SUBMIT(ART_FILES,MAXLU_ART,CODE,FILE_DESC,300)
+!
+!-----------------------------------------------------------------------
+!
+      DO I=1,MAXLU_ART
         IF(ART_FILES(I)%TELNAME.EQ.'ARTGEO') THEN
           ARTGEO=I
         ELSEIF(ART_FILES(I)%TELNAME.EQ.'ARTCAS') THEN
@@ -137,15 +154,15 @@ C
           ARTRFO=I
         ENDIF
       ENDDO
-C
-C-----------------------------------------------------------------------
-C
-C AFFECTATION DES PARAMETRES SOUS LEUR NOM EN FORTRAN :
-C
-C-----------------------------------------------------------------------
-C
-C MOTS-CLES ENTIERS :
-C
+!
+!-----------------------------------------------------------------------
+!
+! ASSIGNS THE STEERING FILE VALUES TO THE PARAMETER FORTRAN NAME :
+!
+!-----------------------------------------------------------------------
+!
+! INTEGER KEYWORDS :
+!
          LEOPRD    = MOTINT( ADRESS(1, 1) )
          LISPRD    = MOTINT( ADRESS(1, 2) )
          SLVART%NITMAX    = MOTINT( ADRESS(1,3) )
@@ -174,15 +191,17 @@ C
          MARTIM(3) = MOTINT( ADRESS(1,22) + 2 )
          NPRIV     = MOTINT( ADRESS(1,23) )
          NCSIZE    = MOTINT( ADRESS(1,24) )
-C        ORIGIN COORDINATES
+!        ORIGIN COORDINATES
          I_ORIG    = MOTINT( ADRESS(1,25)   )
          J_ORIG    = MOTINT( ADRESS(1,25)+1 )
-C POUR L'INSTANT ON DEBUTE LES IMPRESSIONS A ZERO
+         IPENTCO   = MOTINT( ADRESS(1,26) )
+
+! FOR THE MOMENT WTITES TO FILE FROM THE START OF SIMULATION
          PTINIG    = 0
          PTINIL    = 0
-C
-C MOTS-CLES REELS :
-C
+!
+! REAL KEYWORDS :
+!
          PER       = MOTREA( ADRESS(2, 1) )
          TETAH     = MOTREA( ADRESS(2, 2) )
          GRAV      = MOTREA( ADRESS(2, 3) )
@@ -216,9 +235,9 @@ C
          FFON      = MOTREA( ADRESS(2,31) )
          PMIN      = MOTREA( ADRESS(2,32) )
          PMAX      = MOTREA( ADRESS(2,33) )
-C
-C MOTS-CLES LOGIQUES :
-C
+!
+! LOGICAL KEYWORDS :
+!
          LISTIN    = MOTLOG( ADRESS(3, 1) )
          INFOGR    = MOTLOG( ADRESS(3, 2) )
          BALAYE    = MOTLOG( ADRESS(3, 3) )
@@ -231,26 +250,26 @@ C
          ENTRUG    = MOTLOG( ADRESS(3, 10) )
          LISHOU    = MOTLOG( ADRESS(3, 11) )
          VALID     = MOTLOG( ADRESS(3, 12) )
-C        EQUATIONS SPHERIQUES CODEES EN DUR
+!        SPHERICAL EQUATIONS, HARD-CODED
          SPHERI    = .FALSE.
-C
-C MOTS-CLES CHAINES DE CARACTERES : CERTAINS SONT UTILISES PAR
-C                                   LA PROCEDURE DE LANCEMENT
-C
+!
+! STRING KEYWORDS : SOME ARE USED BY THE LAUNCHING
+!                   PROCEDURE
+!
          TITCAS    = MOTCAR( ADRESS(4, 1) )(1:72)
          VARDES    = MOTCAR( ADRESS(4, 2) )(1:72)
          CALL MAJUS(VARDES)
          VARIMP    = MOTCAR( ADRESS(4, 3) )(1:72)
          CALL MAJUS(VARIMP)
-C        DE 4 A 5 : LU ET UTILISE PAR PRECOS
+!        FROM 4 TO 5: READ AND USED BY PRECOS
          ART_FILES(ARTGEO)%NAME=MOTCAR( ADRESS(4,6) )
 !        NOMFOR    = MOTCAR( ADRESS(4, 7) )
 !        NOMCAS    = MOTCAR( ADRESS(4, 8) )
 !         ART_FILES(ARTCAS)%NAME=MOTCAR( ADRESS(4,8) )
          ART_FILES(ARTCLI)%NAME=MOTCAR( ADRESS(4,9) )
-!         write(*,*) 'in lecdon ',ART_FILES(ARTGEO)%NAME
+!         WRITE(*,*) 'IN LECDON ',ART_FILES(ARTGEO)%NAME
          ART_FILES(ARTRES)%NAME=MOTCAR( ADRESS(4,10) )
-C        DE 11 A 14 : LU ET UTILISE PAR PRECOS
+!        FROM 11 TO 14 : READ AND USED BY PRECOS
          ART_FILES(ARTFON)%NAME=MOTCAR( ADRESS(4,15) )
          ART_FILES(ARTBI1)%NAME=MOTCAR( ADRESS(4,16) )
          ART_FILES(ARTBI2)%NAME=MOTCAR( ADRESS(4,17) )
@@ -258,7 +277,7 @@ C        DE 11 A 14 : LU ET UTILISE PAR PRECOS
          ART_FILES(ARTFO2)%NAME=MOTCAR( ADRESS(4,19) )
          ART_FILES(ARTRBI)%NAME=MOTCAR( ADRESS(4,20) )
          ART_FILES(ARTRFO)%NAME=MOTCAR( ADRESS(4,21) )
-C        DE 22 A 23 : LU ET UTILISE PAR PRECOS OU NON UTILISE
+!        FROM 22 TO 23 : READ AND USED BY PRECOS OR NOT USED
          CDTINI    = MOTCAR( ADRESS(4,24) )(1:72)
          CALL MAJUS(CDTINI)
          BINGEO    = MOTCAR( ADRESS(4,25) )(1:3)
@@ -266,107 +285,106 @@ C        DE 22 A 23 : LU ET UTILISE PAR PRECOS OU NON UTILISE
          BINRES    = MOTCAR( ADRESS(4,26) )(1:3)
          CALL MAJUS(BINRES)
          ART_FILES(ARTREF)%NAME=MOTCAR( ADRESS(4,28) )
-!        FORMAT DU FICHIER DE RESULTATS
+!        RESULTS FILE FORMAT
          ART_FILES(ARTRES)%FMT = MOTCAR( ADRESS(4,30) )(1:8)
          CALL MAJUS(ART_FILES(ARTRES)%FMT)
-!        FORMAT DU FICHIER DE REFERENCE
+!        REFERENCE FILE FORMAT
          ART_FILES(ARTREF)%FMT = MOTCAR( ADRESS(4,31) )(1:8)
          CALL MAJUS(ART_FILES(ARTREF)%FMT)
-!        FORMAT DU FICHIER BINAIRE 1
+!        BINARY FILE 1 FORMAT
          ART_FILES(ARTBI1)%FMT = MOTCAR( ADRESS(4,32) )(1:8)
          CALL MAJUS(ART_FILES(ARTBI1)%FMT)
-!        FORMAT DU FICHIER BINAIRE 2
+!        BINARY FILE 2 FORMAT
          ART_FILES(ARTBI2)%FMT = MOTCAR( ADRESS(4,33) )(1:8)
          CALL MAJUS(ART_FILES(ARTBI2)%FMT)
-C
+!
       IF(LISTIN) THEN
          IF(LNG.EQ.1) WRITE(LU,101)
          IF(LNG.EQ.2) WRITE(LU,102)
       ENDIF
 101   FORMAT(1X,/,19X, '********************************************',/,
-     *            19X, '*               LECDON:                    *',/,
-     *            19X, '*        APRES APPEL DE DAMOCLES           *',/,
-     *            19X, '*     VERIFICATION DES DONNEES LUES        *',/,
-     *            19X, '*     SUR LE FICHIER DES PARAMETRES        *',/,
-     *            19X, '********************************************',/)
+     &            19X, '*               LECDON:                    *',/,
+     &            19X, '*        APRES APPEL DE DAMOCLES           *',/,
+     &            19X, '*     VERIFICATION DES DONNEES LUES        *',/,
+     &            19X, '*     SUR LE FICHIER DES PARAMETRES        *',/,
+     &            19X, '********************************************',/)
 102   FORMAT(1X,/,19X, '********************************************',/,
-     *            19X, '*               LECDON:                    *',/,
-     *            19X, '*        AFTER CALLING DAMOCLES            *',/,
-     *            19X, '*        CHECKING OF DATA  READ            *',/,
-     *            19X, '*         IN THE STEERING FILE             *',/,
-     *            19X, '********************************************',/)
-C
-C-----------------------------------------------------------------------
-C  NOMS DES VARIABLES POUR LES FICHIERS DE RESULTATS ET DE GEOMETRIE:
-C-----------------------------------------------------------------------
-C        
-C TABLEAU DE LOGIQUES POUR LES SORTIES DE VARIABLES
-C        
+     &            19X, '*               LECDON:                    *',/,
+     &            19X, '*        AFTER CALLING DAMOCLES            *',/,
+     &            19X, '*        CHECKING OF DATA  READ            *',/,
+     &            19X, '*         IN THE STEERING FILE             *',/,
+     &            19X, '********************************************',/)
+!
+!-----------------------------------------------------------------------
+!  NAME OF THE VARIABLES FOR THE RESULTS AND GEOMETRY FILES :
+!-----------------------------------------------------------------------
+!
+! LOGICAL ARRAY FOR OUTPUT
+!
       CALL NOMVAR_ARTEMIS(TEXTE,TEXTPR,MNEMO)
       CALL SORTIE(VARDES , MNEMO , 100 , SORLEO )
       CALL SORTIE(VARIMP , MNEMO , 100 , SORIMP )
-C
-C-----------------------------------------------------------------------
-C
-C DANS LE CAS D'UN BALAYAGE EN PERIODE, LA PREMIERE PERIODE A CALCULER
-C EST PERDEB
-C
+!
+!-----------------------------------------------------------------------
+!
+! IN THE CASE OF A PERIOD SWEEPING, THE FIRST PERIOD TO BE COMPUTED
+! IS PERDEB
+!
       IF (BALAYE) PER = PERDEB
-C
-C-----------------------------------------------------------------------
-C
-C SI IL N'Y A PAS D'IMPRESSIONS SUR LE LISTING, IL NE DOIT PAS Y AVOIR
-C D'INFORMATIONS ECRITES SUR LE SOLVEUR
-C
+!
+!-----------------------------------------------------------------------
+!
+! IF NOTHING IS TO BE WRITTEN TO THE LISTING FILE, THERE SHOULD BE
+! NO INFORMATION WRITTEN ABOUT THE SOLVEUR
+!
       IF (.NOT.LISTIN) INFOGR = .FALSE.
-C
-C-----------------------------------------------------------------------
-C
-C POUR UN CALCUL EN HOULE ALEATOIRE, ON INHIBE LES SORTIES GRAPHIQUES ET
-C IMPRIMEES DES PHASES, VITESSES, COTE DE LA SURFACE LIBRE, ET
-C POTENTIELS CAR ILS NE SIGNIFIENT RIEN.
-C
-C MAIS ON SORT QUAND MEME UN NOMBRE D'ONDE MOYEN, UNE CELERITE DE
-C PHASE MOYENNE, ET UNE VITESSE DE GROUPE MOYENNE CALCULES A PARTIR
-C DE LA PERIODE MOYENNE T01, DE MEME QU'UNE INCIDENCE MOYENNE
-C
-C EN OUTRE, ON VERIFIE QUE LE NOMBRE DE PERIODES ET DE DIRECTIONS
-C DE DISCRETISATION EST AU MOINS EGALE A 1
-C
+!
+!-----------------------------------------------------------------------
+!
+! FOR RANDOM SEA COMPUTATIONS, INHIBITS THE GRAPHICAL AND LISTING
+! OUTPUT OF THE PHASES, SPEEDS, FREE SURFACE ELEVATION, AND
+! POTENTIAL BECAUSE THEY DO NOT MEAN ANYTHING.
+!
+! BUT WRITES OUT AN AVERAGE WAVE NUMBER, AN AVERAGE PHASE CELERITY
+! AND AN AVERAGE GROUP VELOCITY, COMPUTED FROM THE MEAN WAVE
+! PERIOD T01. ALSO WRITES OUT AN AVERAGE INCIDENCE
+!
+! MOREOVER, CHECKS THAT THE NUMBER OF DISCRETISED PERIODS AND
+! DIRECTIONS IS AT LEAST 1
+!
       IF(ALEMON .OR. ALEMUL) THEN
-C
-C       INDICE 2 : PHASE
-C
+!
+!       2 : PHASE
+!
         SORLEO( 2) = .FALSE.
         SORIMP( 2) = .FALSE.
-C
-C       INDICES 3 ET 4 : U0 ET V0
-C
+!
+!       3 AND 4 : U0 AND V0
+!
         SORLEO( 3) = .FALSE.
         SORIMP( 3) = .FALSE.
         SORLEO( 4) = .FALSE.
         SORIMP( 4) = .FALSE.
-C
-C       INDICE 5 : SURFACE LIBRE
-
-C
+!
+!       5 : FREE SURFACE
+!
         SORLEO( 5) = .FALSE.
         SORIMP( 5) = .FALSE.
-C
-C       INDICES 11 ET 12 : POTENTIEL REEL ET IMAGINAIRE
-C
+!
+!       11 AND 12 : REAL AND IMAGINARY PARTS OF THE POTENTIAL
+!
         SORLEO(11) = .FALSE.
         SORIMP(11) = .FALSE.
         SORLEO(12) = .FALSE.
         SORIMP(12) = .FALSE.
-C
+!
         IF (NPALE.LE.0) NPALE = 1
         IF (NDALE.LE.0) NDALE = 1
-C
+!
       ELSE
-C
-C       INDICES 17, 18 ET 19 : T01, T02 ET TM
-C
+!
+!       17, 18 AND 19 : T01, T02 AND TM
+!
         SORLEO(17) = .FALSE.
         SORIMP(17) = .FALSE.
         SORLEO(18) = .FALSE.
@@ -374,19 +392,19 @@ C
         SORLEO(19) = .FALSE.
         SORIMP(19) = .FALSE.
       ENDIF
-C
-C PAS DE BALAYAGE EN PERIODE SI HOULE ALEATOIRE
-C
+!
+! NO PERIOD SWEEPING FOR RANDOM SEAS
+!
       IF (ALEMON .OR. ALEMUL) BALAYE = .FALSE.
-C
-C SI HOULE MONODIRECTIONNELLE, IL FAUT NDALE=1
-C
+!
+! NDALE=1 FOR MONO-DIRECTIONAL SEAS
+!
       IF (ALEMON .AND. .NOT.ALEMUL) NDALE = 1
-C
-C-----------------------------------------------------------------------
-C
-C  PAS DE SORTIE DE VARIABLES PRIVEES SI ELLES N'ONT PAS ETE ALLOUEES
-C
+!
+!-----------------------------------------------------------------------
+!
+!  DOES NOT WRITE OUT 'PRIVE' VARIABLES IF THEY'VE NOT BEEN ALLOCATED
+!
       LSTOP = .FALSE.
       DO 15 I=1,4
         IF ((SORLEO(12+I).OR.SORIMP(12+I)).AND.(NPRIV.LT.I)) THEN
@@ -397,61 +415,61 @@ C
  15   CONTINUE
       IF (LSTOP) STOP
  16   FORMAT(1X,'LA VARIABLE PRIVEE ',1I1,' NE PEUT ETRE UTILISEE '
-     *      ,1X,'CAR ELLE N''EST PAS ALLOUEE.',/
-     *      ,1X,'AUGMENTER ''NPRIV'' (ACTUELLEMENT ',1I1,' ).',/)
+     &      ,1X,'CAR ELLE N''EST PAS ALLOUEE.',/
+     &      ,1X,'AUGMENTER ''NPRIV'' (ACTUELLEMENT ',1I1,' ).',/)
  17   FORMAT(1X,'PRIVATE ARRAY ',1I1,' CANNOT BE USED '
-     *      ,1X,'BECAUSE IT WAS NOT ALLOCATED.',/
-     *      ,1X,'CHECK ''NPRIV''  (AT THE TIME BEING ',1I1,' ).',/)
-C
-C-----------------------------------------------------------------------
-C
-C  IMPRESSION DU TITRE LU
-C
+     &      ,1X,'BECAUSE IT WAS NOT ALLOCATED.',/
+     &      ,1X,'CHECK ''NPRIV''  (AT THE TIME BEING ',1I1,' ).',/)
+!
+!-----------------------------------------------------------------------
+!
+!  WRITES OUT THE TITLE
+!
       IF(LISTIN) THEN
          IF(LNG.EQ.1) WRITE(LU,3000) TITCAS
          IF(LNG.EQ.2) WRITE(LU,3001) TITCAS
 3000     FORMAT(/1X,'TITRE DE L''ETUDE :',1X,A72,/)
 3001     FORMAT(/1X,'NAME OF THE STUDY :',1X,A72,/)
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C PAS DE BANCS DECOUVRANTS ==> MSK = .FALSE.
-C
+!
+!-----------------------------------------------------------------------
+!
+! NO TIDAL FLATS ==> MSK = .FALSE.
+!
       MSK = .FALSE.
-C
-C-----------------------------------------------------------------------
-C
-C OPTION OBLIGATOIRE POUR LE SOLVEUR DIRECT
-C
+!
+!-----------------------------------------------------------------------
+!
+! COMPULSORY CHOICE OF KEYWORD FOR THE DIRECT SOLVEUR
+!
       IF( (SLVART%SLV.EQ.8).AND.(OPTASS.NE.3) ) THEN
           IF(LNG.EQ.1) WRITE(LU,3002)
           IF(LNG.EQ.2) WRITE(LU,3003)
-C          
+!
 3002    FORMAT(1X,'AVEC SOLVEUR DIRECT, STOCKAGE PAR SEGMENT',/,1X,
-     *             'OBLIGATOIRE',///)
+     &             'OBLIGATOIRE',///)
 3003    FORMAT(1X,'WITH DIRECT SYSTEM SOLVER, EDGE-BASED STORAGE',/,1X,
-     *             'IS MANDATORY',///)
+     &             'IS MANDATORY',///)
           CALL PLANTE(1)
           STOP
-      ENDIF    
-C
-C SOLVEUR DIRECT AVEC PARALLELISME IMPOSSIBLE
-C
+      ENDIF
+!
+! USE OF DIRECT SOLVEUR IS NOT POSSIBLE WITH PARALLELISM
+!
       IF(NCSIZE.GT.1) THEN
         IF(SLVART%SLV.EQ.8) THEN
            IF(LNG.EQ.1) WRITE(LU,3004)
            IF(LNG.EQ.2) WRITE(LU,3005)
 3004       FORMAT(1X,'AVEC PARALLELISME,',/,1X,
-     *             'PAS DE SOLVEUR DIRECT',///)
+     &             'PAS DE SOLVEUR DIRECT',///)
 3005       FORMAT(1X,'WITH PARALLELISM,',/,1X,
-     *             'NO DIRECT SYSTEM SOLVER',///)
+     &             'NO DIRECT SYSTEM SOLVER',///)
            CALL PLANTE(1)
            STOP
         ENDIF
-      ENDIF   
-C
-C-----------------------------------------------------------------------
-C
+      ENDIF
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

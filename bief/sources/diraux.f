@@ -1,102 +1,108 @@
-C                       *****************
-                        SUBROUTINE DIRAUX
-C                       *****************
-C
-     * ( X , Y , Z , W , F , INDIC , CRITER , MESH )
-C
-C***********************************************************************
-C BIEF VERSION 5.1           06/12/94    J-M HERVOUET (LNH) 30 87 80 18
-C***********************************************************************
-C
-C  FONCTION : AIDE A LA PREPARATION D'UN SYSTEME LINEAIRE AVEC DES
-C             CONDITIONS DE DIRICHLET.
-C
-C             X,Y ET Z DOIVENT ETRE DES STRUCTURES
-C
-C             ICI X EST UN VECTEUR DEFINI SUR LE DOMAINE
-C                 Y EST UN VECTEUR DEFINI SUR LE DOMAINE
-C                 Z EST UN VECTEUR DEFINI SUR LE DOMAINE OU DE BORD.
-C
-C             INDIC EST UN TABLEAU, PAS UNE STRUCTURE ||||||||||
-C
-C  |||||||| : ICI L'OPERATION N'EST EFFECTUEE QUE SI LA CONDITION
-C             INDIC(K)=CRITER POUR UN NUMERO K GLOBAL OU DE BORD.
-C
-C  OPERATIONS EFFECTUEES :
-C
-C             W EST MIS A 0.D0 POUR LES POINTS OU INDIC(K) = CRITER
-C                    ET A 1.D0 POUR LES AUTRES.
-C
-C             X EST MIS EGAL A Y MULTIPLIE PAR Z SI INDIC(K) = CRITER
-C
-C             F EST MIS EGAL Z SI INDIC(K) = CRITER
-C
-C  CES OPERATIONS SERVENT A TRAITER LES POINTS DE TYPE DIRICHLET
-C
-C             X EST LE SECOND MEMBRE QUI SERA EGAL A LA DIAGONALE
-C             MULTIPLIEE PAR LA VALEUR DIRICHLET Z.
-C
-C             F EST L'INCONNUE MISE A SA VALEUR DIRICHLET
-C
-C             W EST UN TABLEAU DE TRAVAIL QUI VA SERVIR A ANNULER
-C             LES TERMES DES MATRICES QUI TOUCHENT AUX POINTS DIRICHLET.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |      X         |<-- | VECTEUR RESULTAT
-C |      Y         | -->| VECTEUR OPERANDE
-C |      Z         | -->| VECTEUR OPERANDE
-C |      W         | -->| TABLEAU DE TRAVAIL
-C |      F         | -->| INCONNUE MISE A SA VALEUR DIRICHLET
-C |      INDIC     | -->| TABLEAU D'INDICATEURS.
-C |      CRITER    | -->| CRITERE POUR FAIRE L'OPERATION.
-C |      MESH      | -->| STRUCTURE DU MAILLAGE
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELANTS :
-C PROGRAMMES APPELES   : NEANT
-C
-C**********************************************************************
-C
+!                    *****************
+                     SUBROUTINE DIRAUX
+!                    *****************
+!
+     & ( X , Y , Z , W , F , INDIC , CRITER , MESH )
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    HELPS PREPARE A LINEAR SYSTEM WITH DIRICHLET CONDITIONS.
+!code
+!+             X, Y AND Z MUST BE STRUCTURES.
+!+
+!+             HERE X IS A VECTOR DEFINED ON THE DOMAIN
+!+                  Y IS A VECTOR DEFINED ON THE DOMAIN
+!+                  Z IS A VECTOR DEFINED ON THE DOMAIN OR BOUNDARY
+!+
+!+             INDIC IS AN ARRAY, NOT A STRUCTURE ||||||||||
+!+
+!+  |||||||| : THE OPERATION IS ONLY PERFORMED IF INDIC(K)=CRITER
+!+             FOR A GLOBAL OR BOUNDARY NUMBER K.
+!+
+!+  OPERATIONS :
+!+
+!+             W SET TO 0.D0 FOR POINTS WHERE INDIC(K) = CRITER
+!+                   TO 1.D0 OTHERWISE
+!+
+!+             X = Y MULTIPLIED BY Z IF INDIC(K) = CRITER
+!+
+!+             F = Z IF INDIC(K) = CRITER
+!+
+!+  THESE OPERATIONS ARE USED TO TREAT THE POINTS OF TYPE DIRICHLET.
+!+
+!+             X IS THE SECOND MEMBER (WILL BE EQUAL TO THE DIAGONAL
+!+             MULTIPLIED BY THE DIRICHLET VALUE Z)
+!+
+!+             F IS THE UNKNOWN (SET TO ITS DIRICHLET VALUE)
+!+
+!+             W IS A WORKING ARRAY USED TO CANCEL THE MATRICES
+!+             TERMS TOUCHING DIRICHLET POINTS
+!
+!history  J-M HERVOUET (LNH)
+!+        06/12/94
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CRITER         |-->| INTEGER, CONVENTION FOR DIRICHLET
+!| F              |-->| VARIABLE THAT WILL BE GIVEN ITS DIRICHLET VALUE
+!|                |   | TAKEN IN Z
+!| INDIC          |-->| BOUNDARY CONDITIONS AT VALUE CRITER OR NOT
+!| MESH           |-->| MESH STRUCTURE
+!| W              |<->| WORK ARRAY
+!| X              |<--| Y MULTIPLIED BY Z IF INDIC(K) = CRITER
+!| Y              |-->| VECTOR, A DATA
+!| Z              |-->| DIRICHLET VALUES
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_DIRAUX => DIRAUX
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       TYPE(BIEF_OBJ) , INTENT(INOUT) :: X,W,F
       TYPE(BIEF_OBJ) , INTENT(IN)    :: Y,Z
       INTEGER        , INTENT(IN)    :: INDIC(*),CRITER
       TYPE(BIEF_MESH), INTENT(IN)    :: MESH
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER K,NPOIN,IELMX,IELMZ,N
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       NPOIN = Z%DIM1
-C
-C-----------------------------------------------------------------------
-C
-C  W MIS A 1.
-C
+!
+!-----------------------------------------------------------------------
+!
+!  W SET TO 1
+!
       CALL OS( 'X=C     ' , X=W , C=1.D0 )
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IELMX=X%ELM
       IELMZ=Z%ELM
-C
+!
       IF(IELMX.NE.IELMZ) THEN
-C
+!
         DO K=1,NPOIN
           IF(INDIC(K).EQ.CRITER) THEN
             N = MESH%NBOR%I(K)
@@ -105,9 +111,9 @@ C
             F%R(N) = Z%R(K)
           ENDIF
         ENDDO
-C
+!
       ELSE
-C
+!
         DO K=1,NPOIN
           IF(INDIC(K).EQ.CRITER) THEN
             X%R(K) = Y%R(K) * Z%R(K)
@@ -115,10 +121,10 @@ C
             F%R(K) = Z%R(K)
           ENDIF
         ENDDO
-C
+!
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-      END 
+      END

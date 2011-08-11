@@ -1,70 +1,73 @@
-C                       *****************
-                        SUBROUTINE CRSL12
-C                       *****************
-C
-     *(NEWSL,OLDSL,ZF,IKLE,NELEM,NELMAX)
-C
-C***********************************************************************
-C  BIEF VERSION 5.1          27/11/92    J-M JANIN    (LNH) 30 87 72 84
-C
-C***********************************************************************
-C
-C FONCTION : CALCUL D'UNE SURFACE LIBRE CORRIGEE PAR ELEMENTS
-C            POUR TENIR COMPTE DES BANCS DECOUVRANTS
-C
-C            ELEMENT QUASI-BULLE
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |      NEWSL     | -- |  SURFACE LIBRE MODIFIEE, PAR ELEMENTS
-C |      OLDSL     | -->|  SURFACE LIBRE REELLE.                       |
-C |      ZF        | -->|  COTE DU FOND                                |
-C |      IKLE      | -->|  TABLES DE CONNECTIVITE
-C |      NELEM     | -->|  NOMBRE D'ELEMENTS
-C |      NELMAX    | -->|  NOMBRE MAXIMUM D'ELEMENTS
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C  APPELE PAR : PROPAG
-C
-C  SOUS-PROGRAMME APPELE :
-C
-C**********************************************************************
-C
+!                    *****************
+                     SUBROUTINE CRSL12
+!                    *****************
+!
+     &(NEWSL,OLDSL,ZF,IKLE,NELEM,NELMAX)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    CORRECTS THE FREE SURFACE COMPUTATION BY ELEMENTS
+!+                TO TAKE ACCOUNT OF THE TIDAL FLATS.
+!+
+!+            QUASI-BUBBLE ELEMENT.
+!
+!history  J-M JANIN    (LNH)
+!+        27/11/92
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| IKLE           |-->| CONNECTIVITY TABLE
+!| NELEM          |-->| NUMBER OF ELEMENTS
+!| NELMAX         |-->| MAXIMUM NUMBER OF ELEMENTS
+!| NEWSL          |<->| MODIFIED FREE SURFACE, PER ELEMENT
+!| OLDSL          |-->| REAL FREE SURFACE, PER POINT
+!| ZF             |-->| BATHYMETRY
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN)             :: NELEM,NELMAX
       DOUBLE PRECISION, INTENT(INOUT) :: NEWSL(NELMAX,4)
       DOUBLE PRECISION, INTENT(IN)    :: OLDSL(*),ZF(*)
-      INTEGER, INTENT(IN)             :: IKLE(NELMAX,4)      
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+      INTEGER, INTENT(IN)             :: IKLE(NELMAX,4)
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER IELEM,IK(4),J(4)
       DOUBLE PRECISION SLM
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       INTRINSIC MAX
-C
-C-----------------------------------------------------------------------
-C
-C  1) CLASSEMENT PAR ORDRE CROISSANT DES COTES DE FONDS ET CORRECTION
-C     EVENTUELLE DES COTES DE SURFACE LIBRE DES ELEMENTS DECOUVERTS
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
+!  1) SORTS (ASCENDING ORDER) THE BOTTOM ELEVATIONS AND POTENTIALLY
+!     CORRECTS THE FREE SURFACE ELEVATION FOR DRYING ELEMENTS
+!
+!-----------------------------------------------------------------------
+!
       DO 4 IELEM = 1 , NELEM
-C
+!
       IK(1) = IKLE(IELEM,1)
       J (1) = 1
       IK(2) = IKLE(IELEM,2)
@@ -73,7 +76,7 @@ C
       J (3) = 3
       IK(4) = IKLE(IELEM,4)
       J (4) = 4
-C
+!
       IF (ZF(IK(2)).LT.ZF(IK(1)))  THEN
          J(2)=1
          J(1)=2
@@ -98,7 +101,7 @@ C
             ENDIF
          ENDIF
       ENDIF
-C
+!
       SLM=OLDSL(IK(J(1)))
       NEWSL(IELEM,J(1))=SLM
       NEWSL(IELEM,J(2))=OLDSL(IK(J(2)))-MAX(0.D0,ZF(IK(J(2)))-SLM)
@@ -106,11 +109,10 @@ C
       NEWSL(IELEM,J(3))=OLDSL(IK(J(3)))-MAX(0.D0,ZF(IK(J(3)))-SLM)
       SLM=MAX(SLM,NEWSL(IELEM,J(3)))
       NEWSL(IELEM,J(4))=OLDSL(IK(J(4)))-MAX(0.D0,ZF(IK(J(4)))-SLM)
-C
+!
 4     CONTINUE
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-      END 
- 
+      END

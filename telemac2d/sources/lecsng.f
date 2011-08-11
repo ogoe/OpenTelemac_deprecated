@@ -1,78 +1,80 @@
-C                       *****************
-                        SUBROUTINE LECSNG
-C                       *****************
-C
-     *(NWEIRS,NWRMAX,NPSING,NUMDIG,ZDIG,PHIDIG,IOPTAN,NPSMAX,NPOIN,IFIC)
-C
-C***********************************************************************
-C  TELEMAC 2D VERSION 5.2     19/04/96     V. GUINOT   (LHF)
-C              MODIFIE LE     03/10/96  J.-M. HERVOUET (LNH) 30 87 80 18
-C***********************************************************************
-C
-C      FONCTIONS:
-C      ==========
-C
-C           LECTURE DES DONNEES DEFINISSANT LES SINGULARITES SUR LE
-C           FICHIER FORMATTE 1.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |   NWEIRS       | -->| NOMBRE DE SINGULARITES LINEIQUES
-C |   NWRMAX       | -->| NOMBRE MAXIMUM DE SINGULARITES PREVUES
-C |   NPSING       |<-- | NOMBRE DE POINTS POUR 1 COTE DE SINGULARITE
-C |   NUMDIG(K,N,I)|<-- | NUMERO DES POINTS DES DIGUES
-C |                |    | DANS LA NUMEROTATION DES POINTS DE BORD
-C |   ZDIG         |<-- | COTE DES POINTS DES DIGUES
-C |   PHIDIG       |<-- | COEFFICIENT DE DEBIT DES POINTS DES DIGUES
-C |   IOPTAN       |<-- | OPTION DE TRAITEMENT DES VITESSES TANGENTES
-C |   NPSMAX       | -- | NOMBRE MAXIMUM DE POINTS POUR UN COTE
-C |                |    | D'UNE SINGULARITE.
-C |   NPOIN        | -->| NOMBRE DE NOEUDS DU MAILLAGE
-C |                |    | LES POINTEURS POUR ZDIG, NUMDIG ET PHIDIG
-C |                |    | SONT FAITS DANS POINT EN SUPPOSANT QUE :
-C |                |    | NPOIN >= NWEIRS * NPSMAX.
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : TELMAC
-C
-C SOUS-PROGRAMMES APPELES : NEANT
-C
-C**********************************************************************
-C
+!                    *****************
+                     SUBROUTINE LECSNG
+!                    *****************
+!
+     &(NWEIRS,NWRMAX,NPSING,NUMDIG,ZDIG,PHIDIG,IOPTAN,NPSMAX,NPOIN,IFIC)
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    READS THE DATA DEFINING SINGULARITIES
+!+                FROM FORMATTED FILE 1.
+!
+!history  V. GUINOT (LHF)
+!+        19/04/1996
+!+
+!+
+!
+!history  J.-M. HERVOUET (LNH)
+!+        03/10/1996
+!+        V5P2
+!+   MODIFIED
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| IFIC           |-->| LOGICAL UNIT OF FORMATED DATA FILE 1
+!| IOPTAN         |<--| OPTION FOR TANGENTIAL VELOCITIES
+!| NPOIN          |-->| NUMBER OF NODES IN THE MESH
+!|                |   | ZDIG, NUMDIG AND PHIDIG ARE ALLOCATED ASSUMING:
+!|                |   | NPOIN .GE. NWEIRS * NPSMAX.
+!| NPSING         |<--| NUMBER OF POINTS FOR ONE SIDE OF A SINGULARITY
+!| NPSMAX         |-->| MAXIMUM FOR NPSING
+!| NWEIRS         |-->| NUMBER OF LINEAR SINGULARITIES (WEIRS, ETC.)
+!| NWRMAX         |-->| MAXIMUM FOR NWEIRS
+!| PHIDIG         |<--| DISCHARGE COEFFICIENT FOR POINTS ON WEIRS
+!| ZDIG           |<--| ELEVATION OF POINTS ON WEIRS
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C       
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN)    :: NWRMAX,NPOIN,IFIC,NWEIRS
       INTEGER, INTENT(INOUT) :: NPSMAX,IOPTAN
-C                                                              NPSMAX 
+!                                                              NPSMAX
       INTEGER, INTENT(INOUT) :: NPSING(NWEIRS),NUMDIG(2,NWEIRS,*     )
-C                                                    NPSMAX
+!                                                    NPSMAX
       DOUBLE PRECISION, INTENT(INOUT) :: ZDIG(NWEIRS,*     )
-C                                                      NPSMAX
+!                                                      NPSMAX
       DOUBLE PRECISION, INTENT(INOUT) :: PHIDIG(NWEIRS,*     )
-C         
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER N,I,NNWEIRS
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       NNWEIRS=NWEIRS
-C
+!
       READ(IFIC,*,END=900)
       READ(IFIC,*,ERR=998) N,IOPTAN
-C
-C     CONTROLE DU DIMENSIONNEMENT
-C
+!
+!     CHECKS SIZES
+!
       IF(N.GT.NWRMAX) THEN
         IF(LNG.EQ.1) THEN
           WRITE(LU,*) 'LECSNG : NOMBRE DE SEUILS : ',N
@@ -85,9 +87,9 @@ C
         CALL PLANTE(1)
         STOP
       ENDIF
-C
-C     COHERENCE AVEC LE FICHIER CAS
-C
+!
+!     COHERENCE WITH THE STEERING FILE
+!
       IF(N.NE.NWEIRS) THEN
         IF(LNG.EQ.1) THEN
           WRITE(LU,*) 'LECSNG : NOMBRE DE SEUILS : ',N
@@ -101,15 +103,15 @@ C
         CALL PLANTE(1)
         STOP
       ENDIF
-C
+!
       IF(LNG.EQ.1) THEN
         WRITE(LU,*)'LECSNG : NOMBRE DE DIGUES :',NWEIRS
       ELSEIF(LNG.EQ.2) THEN
         WRITE(LU,*)'LECSNG : NUMBER OF WEIRS :',NWEIRS
       ENDIF
-C
+!
       NPSMAX = 0
-C
+!
       DO 10 N=1,NWEIRS
         READ(IFIC,*,END=900)
         READ(IFIC,*,END=900)
@@ -124,13 +126,13 @@ C
         READ(IFIC,*,END=900)
         READ(IFIC,*,ERR=991) (PHIDIG(N,I),I=1,NPSING(N))
 10    CONTINUE
-C
+!
       GO TO 1000
-C
-C-----------------------------------------------------------------------
-C     MESSAGES D'ERREURS
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!     ERROR MESSAGES
+!-----------------------------------------------------------------------
+!
 998   CONTINUE
       IF(LNG.EQ.1) THEN
         WRITE(LU,*) 'LECSNG : ERREUR DE LECTURE SUR LE'
@@ -142,7 +144,7 @@ C
         WRITE(LU,*) '         AT LINE 2'
       ENDIF
       GO TO 2000
-C
+!
 997   CONTINUE
       IF(LNG.EQ.1) THEN
         WRITE(LU,*) 'LECSNG : ERREUR DE LECTURE SUR LE'
@@ -156,7 +158,7 @@ C
         WRITE(LU,*) '         THE NUMBER OF POINTS CANNOT BE READ'
       ENDIF
       GO TO 2000
-C
+!
 996   CONTINUE
       IF(LNG.EQ.1) THEN
         WRITE(LU,*) 'LECSNG : ERREUR DE LECTURE SUR LE'
@@ -172,7 +174,7 @@ C
         WRITE(LU,*) '         FOR SIDE NUMBER 1'
       ENDIF
       GO TO 2000
-C
+!
 994   CONTINUE
       IF(LNG.EQ.1) THEN
         WRITE(LU,*) 'LECSNG : ERREUR DE LECTURE SUR LE'
@@ -188,7 +190,7 @@ C
         WRITE(LU,*) '         FOR SIDE NUMBER 2'
       ENDIF
       GO TO 2000
-C
+!
 992   CONTINUE
       IF(LNG.EQ.1) THEN
         WRITE(LU,*) 'LECSNG : ERREUR DE LECTURE SUR LE'
@@ -202,7 +204,7 @@ C
         WRITE(LU,*) '         ELEVATIONS ON THE WEIR CANNOT BE READ'
       ENDIF
       GO TO 1000
-C
+!
 991   CONTINUE
       IF(LNG.EQ.1) THEN
         WRITE(LU,*) 'LECSNG : ERREUR DE LECTURE SUR LE'
@@ -216,7 +218,7 @@ C
         WRITE(LU,*) '         DISCHARGE COEFFICIENTS CANNOT BE READ'
       ENDIF
       GO TO 2000
-C
+!
 900   CONTINUE
       IF(LNG.EQ.1) THEN
         WRITE(LU,*) 'LECSNG : ERREUR DE LECTURE SUR LE'
@@ -227,13 +229,13 @@ C
         WRITE(LU,*) '         FORMATTED DATA FILE 1'
         WRITE(LU,*) '         UNEXPECTED END OF FILE'
       ENDIF
-C
+!
 2000  CONTINUE
-C
+!
       NNWEIRS = 0
-C
+!
 1000  CONTINUE
-C
+!
       IF(NNWEIRS.EQ.0) THEN
         IF(LNG.EQ.1) THEN
           WRITE(LU,*)
@@ -249,13 +251,13 @@ C
           WRITE(LU,*)
         ENDIF
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C VERIFICATION DU DIMENSIONNEMENT DES TABLEAUX NUMDIG, PHIDIG, ZDIG
-C
+!
+!-----------------------------------------------------------------------
+!
+!     CHECKS SIZE OF ARRAYS NUMDIG, PHIDIG, ZDIG
+!
       IF(NPOIN.LT.NWEIRS*NPSMAX) THEN
-C
+!
         IF(LNG.EQ.1) THEN
           WRITE(LU,*)
           WRITE(LU,*)'LECSNG : TROP DE POINTS SUR LES SINGULARITES'
@@ -269,14 +271,13 @@ C
           WRITE(LU,*)'         POINTERS'
           WRITE(LU,*)
         ENDIF
-C
+!
         CALL PLANTE(1)
         STOP
-C
+!
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END
- 

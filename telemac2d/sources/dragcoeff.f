@@ -1,60 +1,63 @@
-C                       ********************
-                        SUBROUTINE dragCoeff
-C                       ********************
-C
-     & (v, d, vk, cW)
-C
-C***********************************************************************
-C  TELEMAC-2D VERSION 5.5                 20/04/04      F. HUVELIN
-C***********************************************************************
-C
-C      FONCTION:   DRAG COEFFICIENT BEHIND A CYLINDER
-C      =========   
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |   V            | -->| VELOCITY UPSTREAM
-C |   D            | -->| DIAMETER
-C |   VK           | -->| LAMINAR VISCOSITY
-C |   CW           | <--| DRAG COEFFICIENT
-C |________________|____|_______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : FRICTION_LINDNER
-C
-C SOUS-PROGRAMMES APPELES : NEANT
-C
-C***********************************************************************
-C
+!                    ********************
+                     SUBROUTINE DRAGCOEFF
+!                    ********************
+!
+     & (V, D, VK, CW)
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    COMPUTES THE DRAG COEFFICIENT BEHIND A CYLINDER.
+!
+!history  F. HUVELIN
+!+        20/04/2004
+!+        V5P5
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CW             |<--| DRAG COEFFICIENT BEHIND A CYLINDER
+!| D              |-->| DIAMETER
+!| V              |-->| VELOCITY UPSTREAM
+!| VK             |-->| LAMINAR VISCOSITY
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       DOUBLE PRECISION, INTENT(IN)  :: V, D, VK
-      DOUBLE PRECISION, INTENT(OUT) :: cW
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-      DOUBLE PRECISION              :: Re
+      DOUBLE PRECISION, INTENT(OUT) :: CW
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+      DOUBLE PRECISION              :: RE
 !
 !=======================================================================!
 !=======================================================================!
-! 
-      Re = v * d / vk
-!  
-      IF (Re.LE.800.0D0) THEN
-         cW = 3.07D0 / Re**(0.168D0)
-      ELSEIF(Re.LE.6000.D0) THEN
-         cW = 1.D0    
-      ELSEIF(Re.LE.11000.0D0) THEN
-         cW = 1.0D0+0.2D0*(Re-6000.D0)/5000.D0
+!
+      RE = V * D / VK
+!
+      IF (RE.LE.800.0D0) THEN
+         CW = 3.07D0 / RE**(0.168D0)
+      ELSEIF(RE.LE.6000.D0) THEN
+         CW = 1.D0
+      ELSEIF(RE.LE.11000.0D0) THEN
+         CW = 1.0D0+0.2D0*(RE-6000.D0)/5000.D0
       ELSE
-         cW = 1.2D0
+         CW = 1.2D0
       ENDIF
 !
 !=======================================================================!

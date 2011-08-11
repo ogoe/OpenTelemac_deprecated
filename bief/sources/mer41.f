@@ -1,69 +1,93 @@
-C                       ****************
-                        SUBROUTINE MER41
-C                       ****************
-C
-     *(X, XA1 ,XA2 ,XA3 ,XA4 ,XA5 ,
-     *    XA6 ,XA7 ,XA8 ,XA9 ,XA10,
-     *    XA11,XA12,XA13,XA14,XA15,
-     *    IKLE1,IKLE2,IKLE3,IKLE4,IKLE5,IKLE6,
-     *    NELEM,NELMAX,NPOIN,LV)
-C
-C***********************************************************************
-C BIEF VERSION 5.1           05/02/91    J-M HERVOUET (LNH) 30 87 80 18
-C                                        F  LEPEINTRE (LNH) 30 87 78 54
-C***********************************************************************
-C
-C FONCTION : PRODUIT X = U B (ATTENTION : ELEMENT PAR ELEMENT)
-C
-C            ICI ELEMENT PRISME P1 OU ELEMENT A SIX POINTS
-C
-C            OPERATION INVERSE DU SOUS-PROGRAMME REMONT, D'OU LE NOM
-C
-C            ICI LA MATRICE U EST LE RESULTAT D'UNE DECOMPOSITION
-C            EFFECTUEE PAR LE SOUS-PROGRAMME DECLDU.
-C
-C            CHAQUE MATRICE ELEMENTAIRE A ETE DECOMPOSEE SOUS LA FORME :
-C
-C            LE X DE X UE
-C
-C            LE : TRIANGULAIRE INFERIEURE AVEC DES 1 SUR LA DIAGONALE.
-C            DE : DIAGONALE
-C            UE : TRIANGULAIRE SUPERIEURE AVEC DES 1 SUR LA DIAGONALE.
-C
-C                                                T
-C            SI LA MATRICE EST SYMETRIQUE : LE =  UE
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |      XA1,..15  | -->|  TERMES EXTRADIAGONAUX DE LA MATRICE A
-C |                |    |  CORRESPONDANT A LA PARTIE INFERIEURE
-C |      IKLE1,.,6 | -->|  PASSAGE DE LA NUMEROTATION LOCALE A GLOBALE
-C |      NELEM     | -->|  NOMBRE D'ELEMENTS DU MAILLAGE
-C |      NELMAX    | -->|  NOMBRE MAXIMUM D'ELEMENTS DU MAILLAGE
-C |                |    |  (CAS D'UN MAILLAGE ADAPTATIF)
-C |      NPOIN     | -->|  DIMENSION DES TABLEAUX
-C |      LV        | -->|  LONGUEUR DU VECTEUR POUR LA VECTORISATION
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES :
-C
-C**********************************************************************
-C
+!                    ****************
+                     SUBROUTINE MER41
+!                    ****************
+!
+     &(X, XA1 ,XA2 ,XA3 ,XA4 ,XA5 ,
+     &    XA6 ,XA7 ,XA8 ,XA9 ,XA10,
+     &    XA11,XA12,XA13,XA14,XA15,
+     &    IKLE1,IKLE2,IKLE3,IKLE4,IKLE5,IKLE6,
+     &    NELEM,NELMAX,NPOIN,LV)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    PRODUCT X = U B (BEWARE: ELEMENT BY ELEMENT).
+!+
+!+            HERE: P1 PRISM ELEMENT OR ELEMENT WITH 6 POINTS.
+!+
+!+            REVERSE OPERATION FROM THAT IN SUBROUTINE REMONT,
+!+                HENCE THE NAME.
+!code
+!+        THE MATRIX U IS HERE THE RESULT OF A DECOMPOSITION
+!+        DONE IN SUBROUTINE DECLDU.
+!+
+!+        EACH ELEMENTARY MATRIX HAS BEEN FACTORISED IN THE FORM :
+!+
+!+        LE X DE X UE
+!+
+!+        LE : LOWER TRIANGULAR WITH 1S ON THE DIAGONAL
+!+        DE : DIAGONAL
+!+        UE : UPPER TRIANGULAR WITH 1S ON THE DIAGONAL
+!+
+!+                                            T
+!+        IF THE MATRIX IS SYMMETRICAL : LE =  UE
+!
+!history  J-M HERVOUET (LNH)    ; F LEPEINTRE (LNH)
+!+        05/02/91
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| IKLE1          |-->| FIRST POINTS OF PRISMS
+!| IKLE2          |-->| SECOND POINTS OF PRISMS
+!| IKLE3          |-->| THIRD POINTS OF PRISMS
+!| IKLE4          |-->| FOUTH POINTS OF PRISMS
+!| IKLE5          |-->| FIFTH POINTS OF PRISMS
+!| IKLE6          |-->| SIXTH POINTS OF PRISMS
+!| LV             |-->| VECTOR LENGTH OF THE MACHINE
+!| NELEM          |-->| NUMBER OF ELEMENTS
+!| NELMAX         |-->| MAXIMUM NUMBER OF ELEMENTS
+!| NPOIN          |-->| NUMBER OF POINTS
+!| X              |<--| RESULTING VECTOR
+!| XA10           |-->| OFF-DIAGONAL TERM
+!| XA11           |-->| OFF-DIAGONAL TERM
+!| XA12           |-->| OFF-DIAGONAL TERM
+!| XA13           |-->| OFF-DIAGONAL TERM
+!| XA14           |-->| OFF-DIAGONAL TERM
+!| XA15           |-->| OFF-DIAGONAL TERM
+!| XA2            |-->| OFF-DIAGONAL TERM
+!| XA3            |-->| OFF-DIAGONAL TERM
+!| XA4            |-->| OFF-DIAGONAL TERM
+!| XA5            |-->| OFF-DIAGONAL TERM
+!| XA6            |-->| OFF-DIAGONAL TERM
+!| XA7            |-->| OFF-DIAGONAL TERM
+!| XA8            |-->| OFF-DIAGONAL TERM
+!| XA9            |-->| OFF-DIAGONAL TERM
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN) :: NPOIN,NELEM,NELMAX,LV
       INTEGER, INTENT(IN) :: IKLE1(NELMAX),IKLE2(NELMAX),IKLE3(NELMAX)
       INTEGER, INTENT(IN) :: IKLE4(NELMAX),IKLE5(NELMAX),IKLE6(NELMAX)
-C
+!
       DOUBLE PRECISION, INTENT(INOUT) :: X(NPOIN)
       DOUBLE PRECISION, INTENT(IN) :: XA1(NELMAX),XA2(NELMAX)
       DOUBLE PRECISION, INTENT(IN) :: XA3(NELMAX)
@@ -75,73 +99,72 @@ C
       DOUBLE PRECISION, INTENT(IN) :: XA12(NELMAX)
       DOUBLE PRECISION, INTENT(IN) :: XA13(NELMAX),XA14(NELMAX)
       DOUBLE PRECISION, INTENT(IN) :: XA15(NELMAX)
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER IELEM,IB
-C
+!
       INTRINSIC MIN
-C
-C-----------------------------------------------------------------------
-C
-C SUITE D'INVERSIONS DES MATRICES TRIANGULAIRES INFERIEURES
-C
-C-----------------------------------------------------------------------
-C BOUCLE EN MODE SCALAIRE (LV=1) OU AVEC VECTORISATION FORCEE
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
+! RESUMES INVERSION OF THE LOWER TRIANGULAR MATRICES
+!
+!-----------------------------------------------------------------------
+! LOOP IN SCALAR MODE (LV=1) OR WITH FORCED VECTORISATION
+!-----------------------------------------------------------------------
+!
       IF(LV.EQ.1) THEN
-C
-C  MODE SCALAIRE
-C
+!
+!  SCALAR MODE
+!
       DO 10 IELEM = 1 , NELEM
           X(IKLE1(IELEM))=X(IKLE1(IELEM))+XA5 (IELEM)*X(IKLE6(IELEM))
-     *                                   +XA4 (IELEM)*X(IKLE5(IELEM))
-     *                                   +XA3 (IELEM)*X(IKLE4(IELEM))
-     *                                   +XA2 (IELEM)*X(IKLE3(IELEM))
-     *                                   +XA1 (IELEM)*X(IKLE2(IELEM))
+     &                                   +XA4 (IELEM)*X(IKLE5(IELEM))
+     &                                   +XA3 (IELEM)*X(IKLE4(IELEM))
+     &                                   +XA2 (IELEM)*X(IKLE3(IELEM))
+     &                                   +XA1 (IELEM)*X(IKLE2(IELEM))
           X(IKLE2(IELEM))=X(IKLE2(IELEM))+XA9 (IELEM)*X(IKLE6(IELEM))
-     *                                   +XA8 (IELEM)*X(IKLE5(IELEM))
-     *                                   +XA7 (IELEM)*X(IKLE4(IELEM))
-     *                                   +XA6 (IELEM)*X(IKLE3(IELEM))
+     &                                   +XA8 (IELEM)*X(IKLE5(IELEM))
+     &                                   +XA7 (IELEM)*X(IKLE4(IELEM))
+     &                                   +XA6 (IELEM)*X(IKLE3(IELEM))
           X(IKLE3(IELEM))=X(IKLE3(IELEM))+XA12(IELEM)*X(IKLE6(IELEM))
-     *                                   +XA11(IELEM)*X(IKLE5(IELEM))
-     *                                   +XA10(IELEM)*X(IKLE4(IELEM))
+     &                                   +XA11(IELEM)*X(IKLE5(IELEM))
+     &                                   +XA10(IELEM)*X(IKLE4(IELEM))
           X(IKLE4(IELEM))=X(IKLE4(IELEM))+XA14(IELEM)*X(IKLE6(IELEM))
-     *                                   +XA13(IELEM)*X(IKLE5(IELEM))
+     &                                   +XA13(IELEM)*X(IKLE5(IELEM))
           X(IKLE5(IELEM))=X(IKLE5(IELEM))+XA15(IELEM)*X(IKLE6(IELEM))
 10    CONTINUE
-C
+!
       ELSE
-C
-C  MODE VECTORIEL
-C
+!
+!  VECTOR MODE
+!
       DO 20 IB = 1,(NELEM+LV-1)/LV
-*VOCL LOOP,NOVREC
-CDIR$ IVDEP
+!VOCL LOOP,NOVREC
+!DIR$ IVDEP
       DO 30 IELEM = 1+(IB-1)*LV , MIN(NELEM,IB*LV)
           X(IKLE1(IELEM))=X(IKLE1(IELEM))+XA5 (IELEM)*X(IKLE6(IELEM))
-     *                                   +XA4 (IELEM)*X(IKLE5(IELEM))
-     *                                   +XA3 (IELEM)*X(IKLE4(IELEM))
-     *                                   +XA2 (IELEM)*X(IKLE3(IELEM))
-     *                                   +XA1 (IELEM)*X(IKLE2(IELEM))
+     &                                   +XA4 (IELEM)*X(IKLE5(IELEM))
+     &                                   +XA3 (IELEM)*X(IKLE4(IELEM))
+     &                                   +XA2 (IELEM)*X(IKLE3(IELEM))
+     &                                   +XA1 (IELEM)*X(IKLE2(IELEM))
           X(IKLE2(IELEM))=X(IKLE2(IELEM))+XA9 (IELEM)*X(IKLE6(IELEM))
-     *                                   +XA8 (IELEM)*X(IKLE5(IELEM))
-     *                                   +XA7 (IELEM)*X(IKLE4(IELEM))
-     *                                   +XA6 (IELEM)*X(IKLE3(IELEM))
+     &                                   +XA8 (IELEM)*X(IKLE5(IELEM))
+     &                                   +XA7 (IELEM)*X(IKLE4(IELEM))
+     &                                   +XA6 (IELEM)*X(IKLE3(IELEM))
           X(IKLE3(IELEM))=X(IKLE3(IELEM))+XA12(IELEM)*X(IKLE6(IELEM))
-     *                                   +XA11(IELEM)*X(IKLE5(IELEM))
-     *                                   +XA10(IELEM)*X(IKLE4(IELEM))
+     &                                   +XA11(IELEM)*X(IKLE5(IELEM))
+     &                                   +XA10(IELEM)*X(IKLE4(IELEM))
           X(IKLE4(IELEM))=X(IKLE4(IELEM))+XA14(IELEM)*X(IKLE6(IELEM))
-     *                                   +XA13(IELEM)*X(IKLE5(IELEM))
+     &                                   +XA13(IELEM)*X(IKLE5(IELEM))
           X(IKLE5(IELEM))=X(IKLE5(IELEM))+XA15(IELEM)*X(IKLE6(IELEM))
 30    CONTINUE
 20    CONTINUE
-C
+!
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-      END 
- 
+      END

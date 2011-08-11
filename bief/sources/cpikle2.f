@@ -1,59 +1,66 @@
-C                       ******************
-                        SUBROUTINE CPIKLE2
-C                       ******************
-C
-     *(IKLE3,KLEI3,IKLES,NELEM2,NELMAX2,NPOIN2,NPLAN)
-C
-C***********************************************************************
-C BIEF VERSION 5.9           23/08/99    J-M HERVOUET (LNH) 30 87 80 18
-C***********************************************************************
-C
-C FONCTION : EXTENSION DU TABLEAU DES CONNECTIVITES
-C            CAS D'UN MAILLAGE DE PRISMES, IKLE CONSTRUIT
-C            A PARTIR DE LA CONNECTIVITE DU MAILLAGE DE TRIANGLES.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |      IKLE      |<-->|  TABLEAU DES CONNECTIVITES                   |
-C |      NELEM     | -->|  NOMBRE D'ELEMENTS
-C |      NELMAX    | -->|  NOMBRE MAXIMUM D'ELEMENTS
-C |      NPOIN     | -->|  NOMBRE DE SOMMETS DU MAILLAGE
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C  APPELE PAR : INBIEF
-C
-C  SOUS-PROGRAMME APPELE : NEANT
-C
-C**********************************************************************
-C
+!                    ******************
+                     SUBROUTINE CPIKLE2
+!                    ******************
+!
+     &(IKLE3,KLEI3,IKLES,NELEM2,NELMAX2,NPOIN2,NPLAN)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    EXTENDS THE CONNECTIVITY TABLE.
+!+                CASE OF A MESH OF PRISMS, IKLE BUILT FROM THE
+!+                CONNECTIVITY OF THE TRIANGLE MESH.
+!
+!history  J-M HERVOUET (LNH)
+!+        23/08/99
+!+        V5P9
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| IKLE3          |<->| 3D CONNECTIVITY TABLE
+!| IKLES          |-->| 2D CONNECTIVITY TABLE WITH DIMENSION (3,NELEM2)
+!| KLEI3          |<--| LIKE IKLE3 BUT WITH SWAPPED DIMENSIONS
+!| NELEM2         |-->| NUMBER OF ELEMENTS IN 2D
+!| NELMAX2        |-->| MAXIMUM NUMBER OF ELEMENTS IN 2D
+!| NPLAN          |-->| NUMBER OF PLANES
+!| NPOIN2         |-->| NUMBER OF POINTS IN 2D
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN)    :: NELEM2,NELMAX2,NPOIN2,NPLAN
-      INTEGER, INTENT(INOUT) :: IKLES(3,NELEM2)
+      INTEGER, INTENT(IN)    :: IKLES(3,NELEM2)
       INTEGER, INTENT(INOUT) :: IKLE3(NELMAX2,NPLAN-1,6)
       INTEGER, INTENT(INOUT) :: KLEI3(6,NELMAX2,NPLAN-1)
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER IELEM,I
-C
-C-----------------------------------------------------------------------
-C
-C     BOTTOM AND TOP OF ALL LAYERS
-C
+!
+!-----------------------------------------------------------------------
+!
+!     BOTTOM AND TOP OF ALL LAYERS
+!
       IF(NPLAN.GE.2) THEN
         DO I = 1,NPLAN-1
-          DO IELEM = 1,NELEM2          
+          DO IELEM = 1,NELEM2
             IKLE3(IELEM,I,1) = IKLES(1,IELEM) + (I-1)*NPOIN2
             IKLE3(IELEM,I,2) = IKLES(2,IELEM) + (I-1)*NPOIN2
             IKLE3(IELEM,I,3) = IKLES(3,IELEM) + (I-1)*NPOIN2
@@ -65,7 +72,7 @@ C
             KLEI3(3,IELEM,I) = IKLES(3,IELEM) + (I-1)*NPOIN2
             KLEI3(4,IELEM,I) = IKLES(1,IELEM) +  I   *NPOIN2
             KLEI3(5,IELEM,I) = IKLES(2,IELEM) +  I   *NPOIN2
-            KLEI3(6,IELEM,I) = IKLES(3,IELEM) +  I   *NPOIN2    
+            KLEI3(6,IELEM,I) = IKLES(3,IELEM) +  I   *NPOIN2
           ENDDO
         ENDDO
       ELSE
@@ -74,8 +81,8 @@ C
         CALL PLANTE(1)
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

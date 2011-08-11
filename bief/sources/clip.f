@@ -1,60 +1,70 @@
-C                       ***************
-                        SUBROUTINE CLIP
-C                       ***************
-C
-     *(F,XMIN,CLPMIN,XMAX,CLPMAX,NPOIN)
-C
-C***********************************************************************
-C BIEF VERSION 5.1           12/01/95    J-M HERVOUET (LNH) 30 87 80 18
-C                                        F  LEPEINTRE (LNH) 30 87 78 54
-C***********************************************************************
-C
-C FONCTION : LIMITATION DES VALEURS CONTENUES DANS LE TABLEAU F
-C
-C            MINIMUM DE F : XMIN (SI CLPMIN=.TRUE.)
-C            MAXIMUM DE F : XMAX (SI CLPMAX=.TRUE.)
-C
-C
-C IMPORTANTE NOTE : SI NPOIN EST NEGATIF, ON TRAITERA - NPOIN VALEURS
-C                   SI NPOIN EST POSITIF ON PRENDRA LA TAILLE DE F.
-C
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |    F           |<-->| TABLEAU DES VALEURS
-C |    XMIN        | -->| VALEUR MIN
-C |    CLPMIN      | -->| LOGIQUE QUI DECIDE DU CLIPPING
-C |    XMAX        | -->| VALEUR MAX
-C |    CLPMAX      | -->| LOGIQUE QUI DECIDE DU CLIPPING
-C |    NPOIN       | -->| NOMBRE TOTAL DE POINTS DU DOMAINE
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C***********************************************************************
-C
+!                    ***************
+                     SUBROUTINE CLIP
+!                    ***************
+!
+     &(F,XMIN,CLPMIN,XMAX,CLPMAX,NPOIN)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    CAPS THE VALUES IN ARRAY F.
+!+
+!+            MINIMUM OF F: XMIN (IF CLPMIN=.TRUE.).
+!+
+!+            MAXIMUM OF F: XMAX (IF CLPMAX=.TRUE.).
+!
+!note     IMPORTANT : IF NPOIN IS NEGATIVE, WILL TREAT -NPOIN VALUES.
+!+
+!+                 IF NPOIN IS POSITIVE, WILL TAKE THE SIZE OF F.
+!
+!history  J-M HERVOUET (LNH)    ; F  LEPEINTRE (LNH)
+!+        12/01/95
+!+        V5P1
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CLPMAX         |-->| LOGICAL, IF YES, CLIPPING OF MAXIMUM VALUE
+!| CLPMIN         |-->| LOGICAL, IF YES, CLIPPING OF MINIMUM VALUE
+!| F              |<->| ATTAY OF VALUES TO BE CHECKED
+!| NPOIN          |-->| NUMBER OF POINTS IN THE DOMAIN
+!| XMAX           |-->| MAXIMUM THRESHOLD VALUE 
+!| XMIN           |-->| MINIMUM THRESHOLD VALUE
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_CLIP => CLIP
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       TYPE(BIEF_OBJ)  , INTENT(INOUT) :: F
       DOUBLE PRECISION, INTENT(IN)    :: XMIN,XMAX
       LOGICAL         , INTENT(IN)    :: CLPMIN,CLPMAX
       INTEGER         , INTENT(IN)    :: NPOIN
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER NP
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(F%TYPE.EQ.2) THEN
-C       F EST UNE STRUCTURE DE VECTEUR
+!       F IS A VECTOR STRUCTURE
         IF(NPOIN.LT.0) THEN
           NP = - NPOIN
         ELSE
@@ -67,9 +77,8 @@ C       F EST UNE STRUCTURE DE VECTEUR
         IF(LNG.EQ.2) WRITE(LU,*) F%NAME,' IS NOT A VECTOR'
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
-      END 
- 
+      END

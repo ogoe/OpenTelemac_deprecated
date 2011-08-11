@@ -1,58 +1,75 @@
-C
-C 24/06/2009
-C
-C Warning by JMH: there is a CALL EXIT(ICODE) which is a Fortran extension
-C                 it will not work with some compilers, like Nag
-C
-C
-C
-C
-C
-cjaj 2001/2
-c     slightly changed to deal with: 
-c     (1) arbitrary number of subdomains
-c     (2) arbitrary names of the geometry and result files
-c     (3) automatic parallel runs
-c
-CHW   IMPROVED READING OF DATASETS, 20.02.2003, BAW-HAMBURG
-C
-cjaj  added exit codes Fri Mar 14 15:47:51 MET 2003
-C
-      PROGRAM GREDELHYD
-C
-C     MERGES THE RESULTS OF A PARALLEL COMPUTATION WITH COUPLING WITH DELWAQ
-C     TO WRITE A SINGLE FILE IN DELWAQ FORMAT
-C
+!                    *****************
+                     PROGRAM GREDELHYD_AUTOP
+!                    *****************
+!
+!
+!***********************************************************************
+! PARALLEL   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    MERGES THE RESULTS OF A PARALLEL COMPUTATION (COUPLING
+!+                WITH DELWAQ) TO WRITE A SINGLE FILE IN DELWAQ FORMAT.
+!
+!history  JAJ
+!+        2001/2
+!+
+!+   SLIGHTLY CHANGED TO DEAL WITH:
+!
+!history  HW, BAW-HAMBURG
+!+        20/02/2003
+!+
+!+   IMPROVED READING OF DATASETS
+!
+!history  JAJ
+!+        14/03/2003
+!+
+!+   ADDED EXIT CODES
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
       INTEGER LI
-C
-      CHARACTER(LEN=30) GEO   
-C
+!
+      CHARACTER(LEN=30) GEO
+!
       INTEGER ERR
       INTEGER NELEM,ECKEN,NDUM,I,J,NBV1,NBV2,PARAM(10)
       INTEGER NPLAN,NPOIN2
       INTEGER NPROC
-      integer i_s, i_sp, i_len
+      INTEGER I_S, I_SP, I_LEN
       INTEGER IDUM, NPTFR,NSEG2,MBND
-C
+!
       INTEGER, DIMENSION(:)  , ALLOCATABLE :: LIHBOR             ! LIHBOR(NPTFR)
       INTEGER, DIMENSION(:)  , ALLOCATABLE :: NBOR               ! NBOR(*)
       INTEGER, DIMENSION(:)  , ALLOCATABLE :: NBOR0,LIHBOR0      ! NBOR0(NPTFR),LIHBOR0(NPTFR)
-C
+!
       REAL RDUM
       REAL,    DIMENSION(:)  , ALLOCATABLE :: F
-C
+!
       LOGICAL IS
-C
+!
       CHARACTER*30 RES
       CHARACTER*50 RESPAR
       CHARACTER*11 EXTENS
       CHARACTER*30 CONLIM
       EXTERNAL    EXTENS
       INTRINSIC MAXVAL
-C
+!
       INTEGER ITSTRT,ITSTOP,ITSTEP,NSTEPA
       INTEGER MARDAT(3),MARTIM(3)
       CHARACTER*72  TITRE
@@ -61,50 +78,48 @@ C
       CHARACTER*144 NOMINI,NOMVEB,NOMMAF,NOMVEL,NOMVIS
       LOGICAL SALI_DEL,TEMP_DEL
       LOGICAL VELO_DEL,DIFF_DEL
-C
+!
       LI=5
       LU=6
       LNG=2
-chw
-cjaj introduce yourself with the version date
-c
-      write(lu,*) 'I am Gredelhyd, cousin of Gretel from BAW Hamburg' 
-      write(lu,*)
-C
-      write (lu, advance='no', 
-     &    fmt='(/,'' Global geometry file: '')')
-!      REWIND(LI)      
-      read(li,*) geo
-      write(lu,*) geo
-c
-c reading file names and the number of processors / partitions
-c
-      write (lu, advance='no', fmt='(/,'' Result file: '')')
-      read(li,*) res   
-      write(lu,*) res
-c
-      write (lu,advance='no',fmt='(/,'' Number of processors: '')')
-      read (li,*) nproc
-      write(lu,*) nproc
-
-      inquire (file=geo,exist=is)
-      if (.not.is) then 
-        write (lu,*) 'file does not exist: ', geo
-        call plante (-1)
-        stop
-      end if     
-c
-      i_s  = len (res)
-      i_sp = i_s + 1
-      do i=1,i_s
-         if(RES(i_sp-i:i_sp-i) .ne. ' ') exit
-      enddo
-      i_len=i_sp - i
-
-C
-C     FICHIER DE GEOMETRIE DU CALCUL, LU JUSQU'AUX 10 PARAMETRES:
-C
-      OPEN(2,FILE=GEO,FORM='UNFORMATTED',STATUS='OLD',ERR=990)  
+!HW
+!JAJ INTRODUCE YOURSELF WITH THE RELEASE DATE
+!
+      WRITE(LU,*) 'I AM GREDELHYD, COUSIN OF GRETEL FROM BAW HAMBURG'
+      WRITE(LU,*)
+!
+      WRITE (LU, ADVANCE='NO',
+     &    FMT='(/,'' GLOBAL GEOMETRY FILE: '')')
+!      REWIND(LI)
+      READ(LI,*) GEO
+      WRITE(LU,*) GEO
+!
+! READS FILENAMES AND THE NUMBER OF PROCESSORS / PARTITIONS
+!
+      WRITE (LU, ADVANCE='NO', FMT='(/,'' RESULT FILE: '')')
+      READ(LI,*) RES
+      WRITE(LU,*) RES
+!
+      WRITE (LU,ADVANCE='NO',FMT='(/,'' NUMBER OF PROCESSORS: '')')
+      READ (LI,*) NPROC
+      WRITE(LU,*) NPROC
+      INQUIRE (FILE=GEO,EXIST=IS)
+      IF (.NOT.IS) THEN
+        WRITE (LU,*) 'FILE DOES NOT EXIST: ', GEO
+        CALL PLANTE (-1)
+        STOP
+      END IF
+!
+      I_S  = LEN (RES)
+      I_SP = I_S + 1
+      DO I=1,I_S
+         IF(RES(I_SP-I:I_SP-I) .NE. ' ') EXIT
+      ENDDO
+      I_LEN=I_SP - I
+!
+!     GEOMETRY FILE, READ UNTIL 10 PARAMETERS:
+!
+      OPEN(2,FILE=GEO,FORM='UNFORMATTED',STATUS='OLD',ERR=990)
       READ(2,ERR=990)
       READ(2,ERR=990) NBV1,NBV2
       DO 10 I=1,NBV1+NBV2
@@ -112,93 +127,93 @@ C
 10    CONTINUE
       GO TO 992
 990   WRITE(LU,*) 'ERROR WHEN OPENING OR READING FILE: ',GEO
-      call plante(-1)
+      CALL PLANTE(-1)
       STOP
 992   CONTINUE
-C     LECTURE DES 10 PARAMETRES ET DE LA DATE
+!     READS THE 10 PARAMETERS AND THE DATE
       READ(2) (PARAM(I),I=1,10)
       IF(PARAM(10).EQ.1) READ(2) (PARAM(I),I=1,6)
-C
-C     FICHIER  DE RESULTATS :
-C
-      OPEN(3,FILE=RES,FORM='FORMATTED',ERR=991)    
+!
+!     RESULTS FILE:
+!
+      OPEN(3,FILE=RES,FORM='FORMATTED',ERR=991)
       GO TO 993
 991   WRITE(LU,*) 'ERROR WHEN OPENING FILE: ',RES
-      call plante(-1)
+      CALL PLANTE(-1)
       STOP
 993   CONTINUE
-C
-C     1) LECTURE DU DEBUT DU PREMIER FICHIER DE RESULTATS.
-C
-ccc      RESPAR=RES // EXTENS(2**IDIMS-1,0)
-c
-      respar=res(1:i_len) // extens(nproc-1,0)
-c
-      inquire (file=respar,exist=is)
-      if (.not.is) then 
-        write (lu,*) 'file does not exist: ', respar
-        write (lu,*) 'check the number of processors'
-        write (lu,*) 'and the result file core name'
-        call plante(-1)
-        stop
-      end if  
-c
+!
+!     1) READS THE BEGINNING OF THE FIRST RESULTS FILE
+!
+!CC      RESPAR=RES // EXTENS(2**IDIMS-1,0)
+!
+      RESPAR=RES(1:I_LEN) // EXTENS(NPROC-1,0)
+!
+      INQUIRE (FILE=RESPAR,EXIST=IS)
+      IF (.NOT.IS) THEN
+        WRITE (LU,*) 'FILE DOES NOT EXIST: ', RESPAR
+        WRITE (LU,*) 'CHECK THE NUMBER OF PROCESSORS'
+        WRITE (LU,*) 'AND THE RESULT FILE CORE NAME'
+        CALL PLANTE(-1)
+        STOP
+      END IF
+!
       OPEN(4,FILE=RESPAR,FORM='FORMATTED',ERR=994)
       GO TO 995
 994   WRITE(LU,*) 'ERROR WHEN OPENING FILE: ',RESPAR
-      call plante(-1)
+      CALL PLANTE(-1)
       STOP
 995   CONTINUE
-C
+!
       READ(4,'(I6)')NPLAN
       CLOSE(4)
-C
+!
       ALLOCATE(F(NPLAN),STAT=ERR)
-      IF(ERR.NE.0) call ALLOER (lu, 'f')
-C
-C  5 : 4 parametres
-C      
+      IF(ERR.NE.0) CALL ALLOER (LU, 'F')
+!
+!  5 : 4 PARAMETERS
+!
       READ(2) NELEM,NPOIN2,ECKEN,NDUM
       WRITE(LU,*) '4 PARAMETERS IN GEOMETRY FILE'
       WRITE(LU,*) 'NELEM=',  NELEM
       WRITE(LU,*) 'NPOIN2=', NPOIN2
       WRITE(LU,*) 'ECKEN=',  ECKEN
       WRITE(LU,*) 'NDUM=',   NDUM
-C
-C----------------------------------------------------------------------
-C
+!
+!----------------------------------------------------------------------
+!
       IF(NPLAN.LE.1) THEN
-        conlim = "T2DCLI"
+        CONLIM = "T2DCLI"
       ELSE
-        conlim = "T3DCLI"
+        CONLIM = "T3DCLI"
       ENDIF
-C
+!
       OPEN(4,FILE=CONLIM,FORM='FORMATTED',ERR=996)
       GO TO 997
  996  WRITE(LU,*) 'ERROR WHEN OPENING FILE: ',CONLIM
-      call plante(-1)
+      CALL PLANTE(-1)
       STOP
  997  CONTINUE
-C
+!
       ALLOCATE(LIHBOR0(NPOIN2),STAT=ERR)
-      IF(ERR.NE.0) call ALLOER (lu, 'lihbor')
+      IF(ERR.NE.0) CALL ALLOER (LU, 'LIHBOR')
       ALLOCATE(NBOR0(NPOIN2),STAT=ERR)
-      IF(ERR.NE.0) call ALLOER (lu, 'nbor')
+      IF(ERR.NE.0) CALL ALLOER (LU, 'NBOR')
       DO I=1,NPOIN2
         READ(4,*,END=989) LIHBOR0(I),IDUM,IDUM,RDUM,RDUM,RDUM,RDUM,
-     1                    IDUM,RDUM,RDUM,RDUM,NBOR0(I),IDUM
+     &                    IDUM,RDUM,RDUM,RDUM,NBOR0(I),IDUM
       ENDDO
-C
-      CLOSE(4) 
+!
+      CLOSE(4)
  989  NPTFR=I-1
-C
+!
       ALLOCATE(LIHBOR(NPTFR),STAT=ERR)
-      IF(ERR.NE.0) call ALLOER (lu, 'lihbor')
+      IF(ERR.NE.0) CALL ALLOER (LU, 'LIHBOR')
       ALLOCATE(NBOR(NPTFR),STAT=ERR)
-      IF(ERR.NE.0) call ALLOER (lu, 'nbor')
-C
+      IF(ERR.NE.0) CALL ALLOER (LU, 'NBOR')
+!
       MBND=0
-C
+!
       DO I=1,NPTFR
         NBOR(I)   = NBOR0(I)
         LIHBOR(I) = LIHBOR0(I)
@@ -206,19 +221,19 @@ C
           MBND = MBND + 1
         ENDIF
       ENDDO
-C
-C     WITH PRISMS, DIFFERENT FROM 2D VALUES, OTHERWISE
-C
+!
+!     WITH PRISMS, DIFFERENT FROM 2D VALUES, OTHERWISE
+!
       NSEG2 = (3*NELEM+NPTFR)/2
-C
-c
+!
+!
       OPEN(4,FILE=RESPAR,FORM='FORMATTED',ERR=984)
       GO TO 985
 984   WRITE(LU,*) 'ERROR WHEN OPENING FILE: ',RESPAR
-      call plante(-1)
+      CALL PLANTE(-1)
       STOP
 985   CONTINUE
-C
+!
       READ(4,'(I6)')NPLAN
       READ(4,'(I3)')J
       READ(4,'(A)')TITRE(1:J)
@@ -232,249 +247,250 @@ C
       READ(4,'(I14)')ITSTOP
       READ(4,'(I14)')NSTEPA
       READ(4,'(I6)')NPLAN
-C
+!
       WRITE(3, '(A)' )
-     *    "task      full-coupling                              "
+     &    "task      full-coupling                              "
       WRITE(3, '(A)' )
-     *    "                                                     "
+     &    "                                                     "
       WRITE(3, '(A)' )
-     *    "#                                                    "
+     &    "#                                                    "
       WRITE(3, '(A)' )
-     *    "# Telemac data                                       "
+     &    "# telemac data                                       "
       WRITE(3, '(A)' )
-     *    "#                                                    "
+     &    "#                                                    "
       WRITE(3, '(A)' )
-     *    "                                                     "
+     &    "                                                     "
       WRITE(3, '(A)' )
-     *    "geometry  finite-elements                            "
+     &    "geometry  finite-elements                            "
       WRITE(3, '(A)' )
-     *    "                                                     "
+     &    "                                                     "
       WRITE(3, '(A)' )
-     *    "horizontal-aggregation       no                      "
+     &    "horizontal-aggregation       no                      "
       WRITE(3, '(A)' )
-     *    "minimum-vert-diffusion-used  no                      "
+     &    "minimum-vert-diffusion-used  no                      "
       WRITE(3, '(A)' )
-     *    "vertical-diffusion           calculated              "
+     &    "vertical-diffusion           calculated              "
       WRITE(3, '(A)' )
-     *    "description                                          "
+     &    "description                                          "
       WRITE(3, '(A,A,A)' )
-     *    "   '",TITRE(1:J),"'"
+     &    "   '",TITRE(1:J),"'"
       WRITE(3, '(A)' )
-     *    "   '                                    '            "
+     &    "   '                                    '            "
       WRITE(3, '(A)' )
-     *    "   '                                    '            "
+     &    "   '                                    '            "
       WRITE(3, '(A)' )
-     *    "end-description                                      "
+     &    "end-description                                      "
       WRITE(3, '(A,I4,I2,I2,I2,I2,I2,A)' )
-     *"reference-time           '",MARDAT(1),MARDAT(2),MARDAT(3),
-     *                             MARTIM(1),MARTIM(2),MARTIM(3),"'"
+     &"reference-time           '",MARDAT(1),MARDAT(2),MARDAT(3),
+     &                             MARTIM(1),MARTIM(2),MARTIM(3),"'"
       WRITE(3, '(A,I14,A)' )
-     *    "hydrodynamic-start-time  '",ITSTRT,"'"
+     &    "hydrodynamic-start-time  '",ITSTRT,"'"
       WRITE(3, '(A,I14,A)' )
-     *    "hydrodynamic-stop-time   '",ITSTOP,"'"
+     &    "hydrodynamic-stop-time   '",ITSTOP,"'"
       WRITE(3, '(A,I14,A)' )
-     *    "hydrodynamic-timestep    '",NSTEPA,"'"
+     &    "hydrodynamic-timestep    '",NSTEPA,"'"
       WRITE(3, '(A,I14,A)' )
-     *    "conversion-ref-time      '",ITSTRT,"'"
+     &    "conversion-ref-time      '",ITSTRT,"'"
       WRITE(3, '(A,I14,A)' )
-     *    "conversion-start-time    '",ITSTRT,"'"
+     &    "conversion-start-time    '",ITSTRT,"'"
       WRITE(3, '(A,I14,A)' )
-     *    "conversion-stop-time     '",ITSTOP,"'"
+     &    "conversion-stop-time     '",ITSTOP,"'"
       WRITE(3, '(A,I14,A)' )
-     *    "conversion-timestep      '",NSTEPA,"'"
+     &    "conversion-timestep      '",NSTEPA,"'"
       WRITE(3, '(A,I6)'  )
-     *    "grid-cells-first-direction ",NPOIN2
+     &    "grid-cells-first-direction ",NPOIN2
       WRITE(3, '(A,I6,A)')
-     *    "grid-cells-second-direction",NSEG2+MBND," # nr of exchanges!"
+     &    "grid-cells-second-direction",NSEG2+MBND," # nr of exchanges!"
       WRITE(3, '(A,I6)' )
-     *    "number-hydrodynamic-layers ",NPLAN
+     &    "number-hydrodynamic-layers ",NPLAN
       WRITE(3, '(A,I6)' )
-     *    "number-water-quality-layers",NPLAN
+     &    "number-water-quality-layers",NPLAN
       READ(4,'(I3)')J
       READ(4,'(A)')NOMGEO(1:J)
       WRITE(3, '(A,A,A)' )
-     *    "hydrodynamic-file        '",NOMGEO(1:J),"'"
+     &    "hydrodynamic-file        '",NOMGEO(1:J),"'"
       WRITE(3, '(A)' )
-     *    "aggregation-file         none                        "
+     &    "aggregation-file         none                        "
       WRITE(3, '(A,A,A)' )
-     *    "grid-indices-file        '",NOMGEO(1:J),"'"
+     &    "grid-indices-file        '",NOMGEO(1:J),"'"
       READ(4,'(I3)')J
       READ(4,'(A)')NOMLIM(1:J)
       WRITE(3, '(A,A,A)' )
-     *    "grid-coordinates-file    '",NOMLIM(1:J),"'"
+     &    "grid-coordinates-file    '",NOMLIM(1:J),"'"
       READ(4,'(I3)')J
       READ(4,'(A)')NOMSOU(1:J)
       WRITE(3, '(A,A,A)' )
-     *    "volumes-file             '",NOMSOU(1:J),"'"
+     &    "volumes-file             '",NOMSOU(1:J),"'"
       READ(4,'(I3)')J
       READ(4,'(A)')NOMMAB(1:J)
       WRITE(3, '(A,A,A)' )
-     *    "areas-file               '",NOMMAB(1:J),"'"
+     &    "areas-file               '",NOMMAB(1:J),"'"
       READ(4,'(I3)')J
       READ(4,'(A)')NOMCOU(1:J)
       WRITE(3, '(A,A,A)' )
-     *    "flows-file               '",NOMCOU(1:J),"'"
+     &    "flows-file               '",NOMCOU(1:J),"'"
       READ(4,'(I3)')J
       READ(4,'(A)')NOMVEB(1:J)
       WRITE(3, '(A,A,A)' )
-     *    "pointers-file            '",NOMVEB(1:J),"'"
+     &    "pointers-file            '",NOMVEB(1:J),"'"
       READ(4,'(I3)')J
       READ(4,'(A)')NOMMAF(1:J)
       WRITE(3, '(A,A,A)' )
-     *    "lengths-file             '",NOMMAF(1:J),"'"
+     &    "lengths-file             '",NOMMAF(1:J),"'"
       READ(4,'(L)')SALI_DEL
       IF(SALI_DEL) THEN
         READ(4,'(I3)')J
         READ(4,'(A)')NOMSAL(1:J)
         WRITE(3, '(A,A,A)' )
-     *    "salinity-file            '",NOMSAL(1:J),"'"
+     &    "salinity-file            '",NOMSAL(1:J),"'"
       ELSE
         WRITE(3, '(A)' )
-     *    "salinity-file            none                        "
+     &    "salinity-file            none                        "
       ENDIF
       READ(4,'(L)')TEMP_DEL
       IF(TEMP_DEL) THEN
         READ(4,'(I3)')J
         READ(4,'(A)')NOMTEM(1:J)
         WRITE(3, '(A,A,A)' )
-     *    "temperature-file         '",NOMTEM(1:J),"'"
+     &    "temperature-file         '",NOMTEM(1:J),"'"
       ELSE
         WRITE(3, '(A)' )
-     *    "temperature-file         none                        "
+     &    "temperature-file         none                        "
       ENDIF
       READ(4,'(L)')DIFF_DEL
       IF(DIFF_DEL) THEN
         READ(4,'(I3)')J
         READ(4,'(A)')NOMVIS(1:J)
         WRITE(3, '(A,A,A)' )
-     *    "vert-diffusion-file      '",NOMVIS(1:J),"'"
+     &    "vert-diffusion-file      '",NOMVIS(1:J),"'"
       ELSE
         WRITE(3, '(A)' )
-     *    "vert-diffusion-file      none                        "
+     &    "vert-diffusion-file      none                        "
       ENDIF
-      READ(4,'(L1)') VELO_DEL
+      READ(4,'(L)')VELO_DEL
       IF(VELO_DEL) THEN
         READ(4,'(I3)')J
         READ(4,'(A)')NOMVEL(1:J)
         WRITE(3, '(A,A,A)' )
-     *    "velocity-file            '",NOMVEL(1:J),"'"
+     &    "velocity-file            '",NOMVEL(1:J),"'"
       ELSE
         WRITE(3, '(A)' )
-     *    "velocity-file            none                        "
+     &    "velocity-file            none                        "
       ENDIF
       READ(4,'(I3)')J
       READ(4,'(A)')NOMINI(1:J)
       WRITE(3, '(A,A,A)' )
-     *    "surfaces-file            '",NOMINI(1:J),"'"
-C
+     &    "surfaces-file            '",NOMINI(1:J),"'"
+!
       WRITE(3, '(A)' )
-     *    "total-grid-file          none                        "
+     &    "total-grid-file          none                        "
       WRITE(3, '(A)' )
-     *    "discharges-file          none                        "
+     &    "discharges-file          none                        "
       WRITE(3, '(A)' )
-     *    "chezy-coefficients-file  none                        "
+     &    "chezy-coefficients-file  none                        "
       WRITE(3, '(A)' )
-     *    "shear-stresses-file      none                        "
+     &    "shear-stresses-file      none                        "
       WRITE(3, '(A)' )
-     *    "walking-discharges-file  none                        "
-      if ( NPLAN .gt. 1 ) then
+     &    "walking-discharges-file  none                        "
+      IF ( NPLAN .GT. 1 ) THEN
          WRITE(3, '(A)' )
-     *       "minimum-vert-diffusion                            "
+     &       "minimum-vert-diffusion                            "
          WRITE(3, '(A)' )
-     *       "   upper-layer       0.0000E+00                   "
+     &       "   upper-layer       0.0000E+00                   "
          WRITE(3, '(A)' )
-     *       "   lower-layer       0.0000E+00                   "
+     &       "   lower-layer       0.0000E+00                   "
          WRITE(3, '(A)' )
-     *       "   interface-depth   0.0000E+00                   "
+     &       "   interface-depth   0.0000E+00                   "
          WRITE(3, '(A)' )
-     *       "end-minimum-vert-diffusion                        "
-      endif
+     &       "end-minimum-vert-diffusion                        "
+      ENDIF
       WRITE(3, '(A)' )
-     *    "constant-dispersion                                  "
+     &    "constant-dispersion                                  "
       WRITE(3, '(A)' )
-     *    "   first-direction    0.0000                         "
+     &    "   first-direction    0.0000                         "
       WRITE(3, '(A)' )
-     *    "   second-direction   0.0000                         "
+     &    "   second-direction   0.0000                         "
       WRITE(3, '(A)' )
-     *    "   third-direction    0.0000                         "
+     &    "   third-direction    0.0000                         "
       WRITE(3, '(A)' )
-     *    "end-constant-dispersion                              "
+     &    "end-constant-dispersion                              "
       WRITE(3, '(A)' )
-     *    "hydrodynamic-layers                               "
+     &    "hydrodynamic-layers                               "
       DO I=1,NPLAN
         READ(4,'(F10.4)')F(I)
       ENDDO
-      do I=1,NPLAN
+      DO I=1,NPLAN
          WRITE(3, '(F10.4)' ) F(I)
-      enddo
+      ENDDO
       WRITE(3, '(A)' )
-     *    "end-hydrodynamic-layers                           "
+     &    "end-hydrodynamic-layers                           "
       WRITE(3, '(A)' )
-     *    "water-quality-layers                              "
-      do I=1,NPLAN
+     &    "water-quality-layers                              "
+      DO I=1,NPLAN
          WRITE(3, '(F10.4)' ) 1.0
-      enddo
+      ENDDO
       WRITE(3, '(A)' )
-     *    "end-water-quality-layers                          "
+     &    "end-water-quality-layers                          "
       WRITE(3, '(A)' )
-     *    "discharges                                           "
+     &    "discharges                                           "
       WRITE(3, '(A)' )
-     *    "end-discharges                                       "
-C
+     &    "end-discharges                                       "
+!
       WRITE(LU,*) 'END OF PROGRAM '
-C
-      CLOSE(2)       
+!
+      CLOSE(2)
       CLOSE(3)
       CLOSE(4)
-C
+!
       STOP
-
-      END PROGRAM GREDELHYD
-
-
-C                       ***************************
+      END PROGRAM GREDELHYD_AUTOP
+!
+!
+!                       ****************************
                         CHARACTER*11 FUNCTION EXTENS
-C                       ***************************
-     *(N,IPID)
-C
-C***********************************************************************
-C  PARA       VERSION 4.0         08/01/97        J-M HERVOUET (LNH)
-C
-C***********************************************************************
-C
-C      FONCTIONS: EXTENSION DES FICHIERS SUR CHAQUE PROCESSEUR.
-C      ==========
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________|
-C |     N          | -->| NOMBRE DE PROCESSEURS MOINS UN = NCSIZE-1
-C |     IPID       | -->| NUMERO DU PROCESSEUR
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR :
-C
-C SOUS-PROGRAMMES APPELES : NEANT
-C
-C**********************************************************************
-C
+!                       ****************************
+     &(N,IPID)
+!
+!***********************************************************************
+! PARALLEL   V6P0                                   21/08/2010
+!***********************************************************************
+!
+!brief       EXTENSION OF THE FILES ON EACH PROCESSOR.
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  J-M HERVOUET (LNH)
+!+        08/01/1997
+!+        V4P0
+!+
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| IPID           |-->| NUMERO DU PROCESSEUR
+!| N              |-->| NOMBRE DE PROCESSEURS MOINS UN = NCSIZE-1
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
+!
       INTEGER IPID,N
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(N.GT.0) THEN
-C
+!
         EXTENS='00000-00000'
-C
+!
         IF(N.LT.10) THEN
           WRITE(EXTENS(05:05),'(I1)') N
         ELSEIF(N.LT.100) THEN
@@ -486,7 +502,7 @@ C
         ELSE
           WRITE(EXTENS(01:05),'(I5)') N
         ENDIF
-C
+!
         IF(IPID.LT.10) THEN
           WRITE(EXTENS(11:11),'(I1)') IPID
         ELSEIF(IPID.LT.100) THEN
@@ -498,38 +514,91 @@ C
         ELSE
           WRITE(EXTENS(07:11),'(I5)') IPID
         ENDIF
-C
+!
       ELSE
-C
+!
         EXTENS='       '
-C
-      ENDIF  
-C
-C-----------------------------------------------------------------------
-C
+!
+      ENDIF
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END
-      subroutine ALLOER (n, chfile)
-      implicit none
-      integer, intent(in) :: n
-      character*(*), intent(in) :: chfile
-      write(n,*) 'error by allocation of ',chfile
-      call plante(-1)
-      stop
-      end subroutine ALLOER
-
-
-      subroutine PLANTE(ival)
-      implicit none
-      integer, intent(in) :: ival
-      integer icode      
-      if (ival < 0) then      ! this indicates a controlled error
-        icode = 1 
-      else if (ival==0) then  ! this indicates a program failure
-        icode = -1
-      else                    ! this indicates a normal stop
-        icode = 0
-      endif 
+!
+!
+!     *****************************
+      SUBROUTINE ALLOER (N, CHFILE)
+!     *****************************
+!
+!***********************************************************************
+! PARALLEL   V6P0                                   21/08/2010
+!***********************************************************************
+!
+!brief
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CHFILE         |---|
+!| N              |---|
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: N
+      CHARACTER*(*), INTENT(IN) :: CHFILE
+      WRITE(N,*) 'ERROR BY ALLOCATION OF ',CHFILE
+      CALL PLANTE(-1)
+      STOP
+      END SUBROUTINE ALLOER
+!
+!
+!     ***********************
+      SUBROUTINE PLANTE(IVAL)
+!     ***********************
+!
+!***********************************************************************
+! PARALLEL   V6P0                                   21/08/2010
+!***********************************************************************
+!
+!brief
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| IVAL           |---|
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: IVAL
+      INTEGER ICODE
+      IF (IVAL < 0) THEN      ! THIS INDICATES A CONTROLLED ERROR
+        ICODE = 1
+      ELSE IF (IVAL==0) THEN  ! THIS INDICATES A PROGRAM FAILURE
+        ICODE = -1
+      ELSE                    ! THIS INDICATES A NORMAL STOP
+        ICODE = 0
+      ENDIF
       CALL EXIT(ICODE)
-      stop    ! which is usually equivalent to call EXIT(0)
-      end subroutine PLANTE
+      STOP    ! WHICH IS USUALLY EQUIVALENT TO CALL EXIT(0)
+      END SUBROUTINE PLANTE

@@ -1,77 +1,88 @@
-C                       ************************
-                        SUBROUTINE FRICTION_CALC
-C                       ************************
-C
+!                    ************************
+                     SUBROUTINE FRICTION_CALC
+!                    ************************
+!
      &(N_START, N_END, KFROT, NDEF, VK, GRAV,
      & KARMAN, CHESTR, DW_MESH, HC, VRES, CF)
-C
-C***********************************************************************
-C  TELEMAC-2D VERSION 5.5              J-M HERVOUET (LNH) 01 30 87 80 18
-C                           20/04/04    F. HUVELIN 
-C***********************************************************************
-C
-C FONCTION : SETTING THE FRICTION COEFFICIENT
-C
-C----------------------------------------------------------------------
-C                             ARGUMENTS                                
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE                       
-C |________________|____|______________________________________________
-C | N_START,N_END  | => | Starting and ending point                    
-C | KFROT          | => | Law used for the calculation                 
-C | NDEF           | => | Default's Manning                            
-C | VK             | => | Kinematic viscosity                          
-C | GRAV           | => | Gravity acceleration                         
-C | KARMAN         | => | Von Karman's constant                        
-C | CHESTR         | => | Friction parameter                           
-C | DW_MESH        | => | Distance to the boundary                    
-C | HC             | => | Water depth : max(H,HMIN)                    
-C | VRES           | => | Resultant velocity                           
-C | CF             | <= | Friction coefficient (bottom or wall)        
-C |________________|____|______________________________________________
-C                    <=  input value                                   
-C                    =>  output value                                   
-C----------------------------------------------------------------------
-C
-C     FRICTION LAW PROGRAMMED :
-C
-C     KFROT = 0 :  NO FRICTION
-C     KFROT = 1 :  LAW OF HAALAND
-C     KFROT = 2 :  LAW OF CHEZY
-C     KFROT = 3 :  LAW OF STRICKLER
-C     KFROT = 4 :  LAW OF MANNING
-C     KFROT = 5 :  LAW OF NIKURADSE
-C     KFROT = 6 :  LOG LAW OF WALL
-C     KFROT = 7 :  LAW OF COLEBROOK-WHITE
-C
-C
-!=======================================================================!
-!=======================================================================!
-!                    DECLARATION DES TYPES ET DIMENSIONS                !
-!=======================================================================!
-!=======================================================================!
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    SETS THE FRICTION COEFFICIENT.
+!code
+!+     FRICTION LAWS PROGRAMMED :
+!+
+!+     KFROT = 0 :  NO FRICTION
+!+     KFROT = 1 :  LAW OF HAALAND
+!+     KFROT = 2 :  LAW OF CHEZY
+!+     KFROT = 3 :  LAW OF STRICKLER
+!+     KFROT = 4 :  LAW OF MANNING
+!+     KFROT = 5 :  LAW OF NIKURADSE
+!+     KFROT = 6 :  LOG LAW OF WALL
+!+     KFROT = 7 :  LAW OF COLEBROOK-WHITE
+!
+!note     LAWS CODED UP : NO FRICTION; HAALAND; CHEZY;
+!+                STRICKLER; MANNING; NIKURADSE; WALL; COLEBROOK-WHITE
+!
+!history  F. HUVELIN
+!+        20/04/2004
+!+
+!+
+!
+!history  J-M HERVOUET (LNHE)
+!+
+!+        V5P5
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CF             |<--| ADIMENSIONAL FRICTION COEFFICIENT
+!| CHESTR         |-->| FRICTION PARAMETER
+!| DW_MESH        |-->| DISTANCE TO THE BOUNDARY
+!| GRAV           |-->| GRAVITY ACCELERATION
+!| HC             |-->| WATER DEPTH : MAX(H,HMIN)
+!| KARMAN         |-->| VON KARMAN'S CONSTANT
+!| KFROT          |-->| LAW USED FOR THE CALCULATION
+!| NDEF           |-->| DEFAULT'S MANNING
+!| N_START,N_END  |-->| STARTING AND ENDING POINT
+!| VK             |-->| KINEMATIC VISCOSITY
+!| VRES           |-->| RESULTANT VELOCITY
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       USE BIEF
 !
-      IMPLICIT NONE      
+      IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER,          INTENT(IN)    :: N_START, N_END, KFROT
       DOUBLE PRECISION, INTENT(IN)    :: NDEF, VK, GRAV, KARMAN
-      TYPE(BIEF_OBJ),   INTENT(IN)    :: CHESTR, DW_MESH, HC, VRES
+      TYPE(BIEF_OBJ),   INTENT(IN)    :: CHESTR,DW_MESH,HC,VRES
       TYPE(BIEF_OBJ),   INTENT(INOUT) :: CF
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER                       :: I, ITER
       DOUBLE PRECISION, PARAMETER   :: TIERS = 1.D0/3.D0
+      DOUBLE PRECISION, PARAMETER   :: SUR30 = 1.D0/30.D0
       DOUBLE PRECISION              :: UNORM, INLOG, AUX
       DOUBLE PRECISION              :: OLDUST, OLDCF
       DOUBLE PRECISION              :: RE, UST, DW, DWPLUS
-      DOUBLE PRECISION              :: TERM1, TERM2
+      DOUBLE PRECISION              :: TERM1,TERM2
 !
 !=======================================================================!
 !=======================================================================!
@@ -97,7 +108,7 @@ C
 !
          DO I = N_START, N_END
             UNORM = MAX(VRES%R(I),1.D-6)
-C                         1.D-6 : VISCOSITE LAMINAIRE DE L'EAU
+!                         1.D-6: LAMINAR VISCOSITY OF WATER
             INLOG = (6.9D0*1.D-6/4.D0  /HC%R(I)/UNORM)**3
      &            + (CHESTR%R(I)/14.8D0/HC%R(I))**3.33
             INLOG = MIN(1.D0-1.D-6,INLOG)
@@ -137,11 +148,13 @@ C                         1.D-6 : VISCOSITE LAMINAIRE DE L'EAU
 !
       CASE(5)
 !
+!        NOTE: 11.036 IS 30.D0/EXP(1.D0)
          DO I = N_START, N_END
-            CF%R(I) = 2.D0/(LOG( 11.D0*HC%R(I)/CHESTR%R(I))/KARMAN )**2
+           AUX=MAX(1.001D0,HC%R(I)*11.036D0/CHESTR%R(I))
+           CF%R(I) = 2.D0 / (LOG(AUX)/KARMAN)**2
          ENDDO
 !
-! LOG LAW OF WALL
+! LOG LAW OF WALL FOR VISCOUS FRICTION
 ! ---------------
 !
       CASE(6)
@@ -149,14 +162,14 @@ C                         1.D-6 : VISCOSITE LAMINAIRE DE L'EAU
          DO I = N_START, N_END
 !
             IF(VRES%R(I) < 1.0D-9) THEN
-               CF%R(I) = 20.D0 ! Rismo2d = 10.D0 and Telemac2d = 2*10.D0
+               CF%R(I) = 20.D0 ! RISMO2D = 10.D0 AND TELEMAC2D = 2*10.D0
             ELSE
 !
                DW = 0.33D0*DW_MESH%R(I)
 !
                IF (CHESTR%R(I) < 1.0D-9) THEN
 !
-! iterative computation of friction velocity Ust
+! ITERATIVE COMPUTATION OF FRICTION VELOCITY UST
 ! ----------------------------------------------
 !
                   UST    = 100.0*VK/DW
@@ -169,10 +182,10 @@ C                         1.D-6 : VISCOSITE LAMINAIRE DE L'EAU
                      DWPLUS = DW*UST/VK
 !
                      IF (DWPLUS < 11.D0) DWPLUS = 11.D0
-!  
+!
                      OLDUST = UST
                      UST    = KARMAN*VRES%R(I) / LOG(9.D0*DWPLUS)
-! 
+!
                   ENDDO
 !
                ELSE
@@ -181,7 +194,7 @@ C                         1.D-6 : VISCOSITE LAMINAIRE DE L'EAU
 !
                   IF (RE < 70.D0) THEN
 !
-! iterative computation of friction velocity Ust
+! ITERATIVE COMPUTATION OF FRICTION VELOCITY UST
 ! ----------------------------------------------
 !
                      OLDUST = 0.D0
@@ -196,7 +209,7 @@ C                         1.D-6 : VISCOSITE LAMINAIRE DE L'EAU
 !
                         RE     = CHESTR%R(I)*UST/VK
                         OLDUST = UST
-!         
+!
                         IF (RE < 3.32D0) THEN
                            UST = KARMAN*VRES%R(I) / LOG(9.D0*DWPLUS)
                         ELSE
@@ -210,7 +223,7 @@ C                         1.D-6 : VISCOSITE LAMINAIRE DE L'EAU
                ENDIF
 !
                DWPLUS = DW*UST/VK
-!   
+!
                IF (DWPLUS < 11.D0 ) THEN
                   UST = 11.0*VK / DW
                   UST = SQRT(VRES%R(I)*VK/DW)
@@ -229,22 +242,22 @@ C                         1.D-6 : VISCOSITE LAMINAIRE DE L'EAU
 !
             RE = 4.D0*VRES%R(I)*HC%R(I)/VK
 !
-! the original condition for laminar/turbulent flow
-! could not be hold (problems during NR iteration):
+! THE ORIGINAL CONDITION FOR LAMINAR/TURBULENT FLOW
+! COULD NOT BE HOLD (PROBLEMS DURING NR ITERATION):
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
             IF(RE.GT.500.D0) THEN
 !
-! test condition: roughness less than flow depth
+! TEST CONDITION: ROUGHNESS LESS THAN FLOW DEPTH
 ! ----------------------------------------------
 !
                IF(CHESTR%R(I) < HC%R(I)) THEN
-!                 NDEF : default Manning's n
+!                 NDEF : DEFAULT MANNING'S N
                   CF%R(I) = 2.D0*(NDEF**2)*GRAV/HC%R(I)**TIERS
                ELSE
                   TERM1   = 4.4D0 / RE
                   TERM2   = CHESTR%R(I) / 14.84D0 / HC%R(I)
-                  CF%R(I) = 2.5D0 ! initialize cf=1/sqrt(cf) for iteration
+                  CF%R(I) = 2.5D0 ! INITIALIZE CF=1/SQRT(CF) FOR ITERATION
                   OLDCF   = 0.D0
 !
                   DO ITER = 1, 50
@@ -252,7 +265,7 @@ C                         1.D-6 : VISCOSITE LAMINAIRE DE L'EAU
                      OLDCF = CF%R(I)
                      CF%R(I) = -2.03D0*LOG10(OLDCF*TERM1 + TERM2)
                   ENDDO
-!        
+!
                   IF (ITER.GE.50) THEN
                      CF%R(I) = -2.03D0*LOG10(TERM2)
                   ENDIF

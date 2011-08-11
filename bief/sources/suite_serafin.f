@@ -1,172 +1,172 @@
-C                       ************************
-                        SUBROUTINE SUITE_SERAFIN
-C                       ************************
-C
-     *(VARSOR,CLAND,NUMDEB,NPRE,STD,HIST,NHIST,NPOIN,AT,TEXTPR,VARCLA,
-     * NVARCL,TROUVE,ALIRE,LISTIN,FIN,MAXVAR,NPLAN,DT)
-C
-C***********************************************************************
-C BIEF VERSION 6.0      09/04/2009    J-M HERVOUET (LNHE) 01 30 87 80 18
-C
-C***********************************************************************
-C
-C   FONCTION  : LECTURE DES RESULTATS INSCRITS SUR UN FICHIER
-C               DE RESULTATS AU FORMAT SERAFIN.
-C
-C
-C   NOTE JMH 15/03/07 : THIS SUBROUTINE IS NOW OPTIMIZED TO
-C                       BE CALLED A LARGE NUMBER OF TIMES WITHOUT 
-C                       REWINDING AT EVERY CALL. FOR EVERY LOGICAL UNIT
-C                       A NUMBER OF DATA HAVE TO BE SAVED BETWEEN EACH 
-C                       CALL.
-C 
-C   CAUTION :           THIS WILL NOT WORK IF A LOGICAL UNIT IS CLOSED
-C                       AND RE-OPENED                      
-C
-C
-C   09/12/2008 : STD IS NOW A STRING OF ANY SIZE
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________
-C |   VARSOR       |<-- | BLOC DES TABLEAUX CONTENANT LES VARIABLES
-C |   CLAND        |<-- | BLOC DES VARIABLES CLANDESTINES
-C |   NUMDEB       |<-->| FIN = .TRUE. NUMERO DU DERNIER ENREGISTREMENT
-C |                |    | FIN = .FALSE. : NUMERO DE L'ENREGISTREMENT
-C |                |    |                 QUE L'ON VEUT LIRE.
-C |   NPRE         | -->| NUMERO DE CANAL DU FICHIER
-C |   STD          | -->| BINAIRE DU FICHIER : STD, IBM OU I3E
-C |   HIST         | -->| TABLEAU DE VALEURS MISES DANS L'ENREGISTREMENT
-C |                |    | DU TEMPS.
-C |   NHIST        | -->| NOMBRE DE VALEURS DANS LE TABLEAU HIST.
-C |   NPOIN        | -->| NOMBRE DE POINTS DANS LE MAILLAGE
-C |   AT           | -->| TEMPS
-C |   TEXTPR       | -->| NOMS ET UNITES DES VARIABLES.
-C |   VARCLA       | -->| TABLEAU OU L'ON RANGE LES VARIABLES
-C |                |    | CLANDESTiNES.
-C |   NVARCL       | -->| NOMBRE DE VARIABLES CLANDESTi-NES.
-C |   TROUVE       |<-- | INDIQUE (TROUVE(K)=1) LES VARIABLES TROUVEES
-C |                |    | DANS LE FICHIER.
-C |   ALIRE        | -->| VARIABLES QU'IL FAUT LIRE (POUR LES AUTRES ON
-C |                |    | SAUTE L'ENREGISTREMENT CORRESPONDANT)
-C |                |    | LES VARIABLES CLANDESTi-NES SONT LUES
-C |                |    | SYSTEMATIQUEMENT.
-C |   LISTIN       | -->| SI OUI, IMPRESSION D'INFORMATIONS SUR LISTING
-C |   FIN          | -->| VOIR LE TROISIEME ARGUMENT NUMDEB
-C |   MAXVAR       | -->| DIMENSION DES TABLEAUX DES VARIABLES : ALIRE, ETC
-C |   NPLAN        | -->| NUMBER OF PLANES IN 3D (OPTIONAL)
-C |   DT           |<-->| TIME STEP BETWEEN 2 RECORDS (OPTIONAL)
-C |________________|____|_______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES : LIT
-C
-C***********************************************************************
-C
+!                    ************************
+                     SUBROUTINE SUITE_SERAFIN
+!                    ************************
+!
+     &(VARSOR,CLAND,NUMDEB,NPRE,STD,HIST,NHIST,NPOIN,AT,TEXTPR,VARCLA,
+     & NVARCL,TROUVE,ALIRE,LISTIN,FIN,MAXVAR,NPLAN,DT)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    READS THE OUTPUT FROM A SERAFIN RESULT FILE.
+!
+!note     JMH 15/03/07 : THIS SUBROUTINE IS NOW OPTIMISED TO
+!+                        BE CALLED A LARGE NUMBER OF TIMES WITHOUT
+!+                        REWINDING AT EVERY CALL. FOR EVERY LOGICAL
+!+                        UNIT A NUMBER OF DATA HAVE TO BE SAVED
+!+                        BETWEEN EACH CALL.
+!
+!warning  THIS WILL NOT WORK IF A LOGICAL UNIT IS CLOSED AND RE-OPENED
+!
+!history
+!+        09/12/2008
+!+
+!+   STD IS NOW A STRING OF ANY SIZE
+!
+!history  J-M HERVOUET (LNHE)
+!+        09/04/2009
+!+        V6P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| ALIRE          |-->| VARIABLES TO BE READ (FOR OTHERS THE RECORD IS
+!|                |   | SKIPPED). CLANDESTINE VARIABLES ARE READ
+!|                |   | SYSTEMATICALLY.
+!| AT             |-->| TIME
+!| CLAND          |<--| BLOCK OF CLANDESTINE VARIABLES
+!| DT             |<->| TIME STEP BETWEEN 2 RECORDS (OPTIONAL)
+!| FIN            |-->| SEE NUMDEB
+!| HIST           |-->| ARRAY OF VALUES THAT MAY BE PUT IN THE TIME RECORD
+!| LISTIN         |-->| IF YES,  PRINTING INFORMATIONS ON LISTING
+!| MAXVAR         |-->| SIZE OF ARRAYS OF VARIABLES : ALIRE, ETC
+!| NHIST          |-->| NUMBER OF VALUES IN HIST
+!| NPLAN          |-->| NUMBER OF PLANES IN 3D (OPTIONAL)
+!| NPOIN          |-->| NUMBER OF POINTS
+!| NPRE           |-->| LOGICAL UNIT OF FILE
+!| NUMDEB         |<->| FIN = .TRUE. WILL BE THE LAST RECORD NUMBER
+!|                |   | FIN = .FALSE. : PRESCRIBED RECORD TO BE READ
+!| NVARCL         |-->| NUMBER OF CLANDESTINE VARIABLES.
+!| STD            |-->| FILE BINARY: STD, IBM OR I3E
+!| TEXTPR         |-->| NAMES AND UNITS OF VARIABLES.
+!| TROUVE         |<--| GIVES (TROUVE(K)=1) VARIABLES FOUND IN THE FILE
+!| VARCLA         |-->| BLOCK WHERE TO PUT CLANDESTINE VARIABLES
+!| VARSOR         |<--| BLOCK CONTAINING VARIABLES
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_SUITE_SERAFIN => SUITE_SERAFIN
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       TYPE(BIEF_OBJ), INTENT(INOUT) :: VARSOR,CLAND
       INTEGER, INTENT(IN), OPTIONAL :: NPLAN
       INTEGER, INTENT(IN)           :: NHIST,NVARCL,MAXVAR
       INTEGER                       :: NUMDEB,NPRE,NPOIN,TROUVE(MAXVAR)
-      INTEGER                       :: ALIRE(MAXVAR)        
+      INTEGER                       :: ALIRE(MAXVAR)
       CHARACTER(LEN=*)              :: STD
       CHARACTER(LEN=32)             :: TEXTPR(MAXVAR),VARCLA(NVARCL)
       DOUBLE PRECISION              :: HIST(*),AT
       DOUBLE PRECISION, INTENT(OUT) , OPTIONAL :: DT
-      LOGICAL                       :: FIN,LISTIN 
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C 
-C     100 IS HERE THE MAXIMUM LOGICAL UNIT IN FORTRAN
+      LOGICAL                       :: FIN,LISTIN
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+!     100 IS HERE THE MAXIMUM LOGICAL UNIT IN FORTRAN
       INTEGER, PARAMETER :: NLU  =  100
       INTEGER IBID(1),ISTAT,NVAR,IVAR,KK,ERR
-      INTEGER NUMSUI,NPLAN_PREV(NLU),NPOIN_PREV(NLU),NREAD     
-C
+      INTEGER NUMSUI,NPLAN_PREV(NLU),NPOIN_PREV(NLU),NREAD
+!
       DOUBLE PRECISION AAT(20),ATPREV
       REAL, ALLOCATABLE :: W(:)
       DOUBLE PRECISION, ALLOCATABLE :: WD(:)
-C
+!
       CHARACTER(LEN=1) :: CBID
-C      
+!
       CHARACTER(LEN=72) :: TITPRE
-C     10 : LIMIT OF 10 FILES READ BY SUITE IN A SINGLE RUN 
-C     100 IS HERE A MAXIMUM FOR MAXVAR 
+!     10 : LIMIT OF 10 FILES READ BY SUITE IN A SINGLE RUN
+!     100 IS HERE A MAXIMUM FOR MAXVAR
       CHARACTER(LEN=32) :: TEXTLU(100,10)
-C
+!
       LOGICAL YAWD
-C
+!
       INTEGER SIZE_W,SIZE_WD,ADRA,NUMEN(NLU)
       DATA SIZE_W/0/
       DATA SIZE_WD/0/
       DATA ADRA/0/
-C                NLU
+!                NLU
       DATA NUMEN/100*0/
-C
-C     KNO   : NUMBER OF RECORDS PER TIME STEP, INCLUDING TIME
-C     ENREG : LAST RECORD READ, STARTING AFTER THE GEOMETRY
-C     A     : ADDRESS IN TEXTLU FOR LOGICAL UNIT NPRE
-C
-      INTEGER KNO(NLU),ENREG(NLU),A(NLU)      
-C
+!
+!     KNO   : NUMBER OF RECORDS PER TIME STEP, INCLUDING TIME
+!     ENREG : LAST RECORD READ, STARTING AFTER THE GEOMETRY
+!     A     : ADDRESS IN TEXTLU FOR LOGICAL UNIT NPRE
+!
+      INTEGER KNO(NLU),ENREG(NLU),A(NLU)
+!
       SAVE W,SIZE_W,SIZE_WD,NUMEN,KNO,ENREG,TEXTLU,NPOIN_PREV,NPLAN_PREV
       SAVE A,ADRA,WD
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(NUMEN(NPRE).EQ.0) THEN
-C       A NEW FILE, ADDRESS IN TEXTLU ATTRIBUTED
+!       A NEW FILE, ADDRESS IN TEXTLU ATTRIBUTED
         ADRA=ADRA+1
         IF(ADRA.GT.10) STOP 'LIMITATION TO 10 FILES IN SUITE'
         A(NPRE)=ADRA
       ENDIF
-C
+!
       YAWD = .FALSE.
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(NUMEN(NPRE).EQ.0) THEN
-C
-C     LECTURE DE LA PARTIE GEOMETRIE DU FICHIER
-C
-C     STANDARD SELAFIN
-C
+!
+!     READS THE GEOMETRY SECTION FROM THE FILE
+!
+!     STANDARD SELAFIN
+!
       CALL SKIPGEO(NPRE,TITPRE,NPOIN_PREV(NPRE),NVAR,TEXTLU(1,A(NPRE)),
-     *             NPLAN_PREV(NPRE))
+     &             NPLAN_PREV(NPRE))
       ENREG(NPRE)=0
-C
+!
       IF(NPOIN_PREV(NPRE).EQ.NPOIN) THEN
-C
-C       OK, NOTHING TO DO
-C
+!
+!       OK, NOTHING TO DO
+!
       ELSEIF(.NOT.PRESENT(NPLAN).OR.NPLAN_PREV(NPRE).EQ.0) THEN
-C
-C       ERROR
-C
+!
+!       ERROR
+!
         IF(LISTIN.AND.LNG.EQ.1) WRITE(LU,3222)
         IF(LISTIN.AND.LNG.EQ.2) WRITE(LU,3223)
 3222    FORMAT(1X,'SUITE_SERAFIN : MAILLAGE (OU STANDARD FAUX), ARRET')
 3223    FORMAT(1X,'SUITE_SERAFIN : DIFFERENT MESH (OR WRONG STANDARD)')
         CALL PLANTE(1)
         STOP
-C
+!
       ELSEIF(NPOIN_PREV(NPRE)/NPLAN_PREV(NPRE).EQ.NPOIN/NPLAN) THEN
-C
+!
         IF(LISTIN.AND.LNG.EQ.1) WRITE(LU,3224)
         IF(LISTIN.AND.LNG.EQ.2) WRITE(LU,3225)
 3224    FORMAT(1X,'SUITE_SERAFIN : NOMBRE DE PLANS DIFFERENT',/,1X,
-     *            '                LES DONNEES SERONT INTERPOLEES')
+     &            '                LES DONNEES SERONT INTERPOLEES')
 3225    FORMAT(1X,'SUITE_SERAFIN: DIFFERENT NUMBER OF PLANES',/,1X,
-     *            '               DATA WILL BE INTERPOLATED')
+     &            '               DATA WILL BE INTERPOLATED')
         IF(SIZE_WD.EQ.0) THEN
           ALLOCATE(WD(NPOIN_PREV(NPRE)),STAT=ERR)
         ELSEIF(NPOIN_PREV(NPRE).GT.SIZE_WD) THEN
@@ -185,18 +185,18 @@ C
           STOP
         ENDIF
         YAWD=.TRUE.
-C
+!
       ELSE
         IF(LISTIN.AND.LNG.EQ.1) WRITE(LU,3222)
         IF(LISTIN.AND.LNG.EQ.2) WRITE(LU,3223)
         CALL PLANTE(1)
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       ERR=0
-C
+!
       IF(SIZE_W.EQ.0) THEN
         ALLOCATE(W(NPOIN_PREV(NPRE)),STAT=ERR)
         SIZE_W=NPOIN_PREV(NPRE)
@@ -215,71 +215,71 @@ C
         CALL PLANTE(1)
         STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C  IMPRESSIONS :
-C
+!
+!-----------------------------------------------------------------------
+!
+!  PRINTOUTS :
+!
       IF(LISTIN.AND.LNG.EQ.1) WRITE(LU,300) TITPRE
       IF(LISTIN.AND.LNG.EQ.2) WRITE(LU,301) TITPRE
 300   FORMAT(1X,//,1X,'TITRE DU CAS PRECEDENT: ',A72,/)
 301   FORMAT(1X,//,1X,'TITLE OF PREVIOUS COMPUTATION: ',A72,/)
-C
+!
       DO 10 IVAR=1,NVAR
         IF(LISTIN.AND.LNG.EQ.1) WRITE(LU,11)
-     *    TEXTLU(IVAR,A(NPRE))(1:16),TEXTLU(IVAR,A(NPRE))(17:32)
+     &    TEXTLU(IVAR,A(NPRE))(1:16),TEXTLU(IVAR,A(NPRE))(17:32)
         IF(LISTIN.AND.LNG.EQ.2) WRITE(LU,111)
-     *    TEXTLU(IVAR,A(NPRE))(1:16),TEXTLU(IVAR,A(NPRE))(17:32)
+     &    TEXTLU(IVAR,A(NPRE))(1:16),TEXTLU(IVAR,A(NPRE))(17:32)
 11      FORMAT(1X,'NOM: ' ,A16,'  UNITE: ',A16)
 111     FORMAT(1X,'NAME: ',A16,'  UNIT: ' ,A16)
 10    CONTINUE
-C
-C-----------------------------------------------------------------------
-C               COMPTAGE DU NOMBRE D'ENREGISTREMENTS
-C-----------------------------------------------------------------------
-C
-C     NOMBRE DE VARIABLES PAR PAS DE TEMPS (TEMPS INCLUS)
-C
+!
+!-----------------------------------------------------------------------
+!               COUNTS THE NUMBER OF RECORDS
+!-----------------------------------------------------------------------
+!
+!     NUMBER OF VARIABLES PER TIMESTEP (TIME INCLUDED)
+!
       KNO(NPRE) = NVAR + 1
-C
-C LECTURE JUSQU'A LA FIN DU FICHIER SANS CONSERVER CE QU'ON LIT
-C POUR COMPTER LE NOMBRE D'ENREGISTREMENTS
-C
+!
+! READS TILL THE END OF THE FILE WITHOUT RECORDING WHAT'S BEEN READ
+! TO COUNT THE NUMBER OF RECORDS
+!
 20    CONTINUE
-C
+!
       DO KK=1,KNO(NPRE)
-C       TEST DE FIN DE FICHIER
+!       TESTS THE END OF THE FILE
         IF(EOF(NPRE)) GO TO 50
         CALL LIT(AAT,W,IBID,CBID,1,'R4',NPRE,STD,ISTAT)
-C       ISTAT NEGATIF : ERREUR DE LECTURE
+!       ISTAT IS NEGATIVE : READ ERROR
         IF(ISTAT.LT.0) GO TO 40
       ENDDO
-C
+!
       NUMEN(NPRE)  =  NUMEN(NPRE)  + 1
       GO TO 20
-C
-C     ERREUR DANS LE FICHIER RESULTAT DU CALCUL PRECEDENT
-C
+!
+!     ERROR IN THE PREVIOUS COMPUTATION RESULTS FILE
+!
 40    IF(LISTIN.AND.LNG.EQ.1) WRITE(LU,1010) NUMEN(NPRE)+1
       IF(LISTIN.AND.LNG.EQ.2) WRITE(LU,1011) NUMEN(NPRE)+1
 1010  FORMAT(1X,'SUITE_SERAFIN :',/,1X,
-     *          'ERREUR DE LECTURE DANS L''ENREGISTREMENT ',I5)
+     &          'ERREUR DE LECTURE DANS L''ENREGISTREMENT ',I5)
 1011  FORMAT(1X,'SUITE_SERAFIN : READ ERROR IN RECORD NUMBER ',I5)
-C
-C DETERMINATION DU DERNIER ENREGISTREMENT LU
-C
+!
+! DETERMINES THE LAST RECORD
+!
 50    CONTINUE
-C
-C ON RELIT LE FICHIER POUR S'ARRETER JUSTE AVANT L'ENREGISTREMENT A LIRE
-C AFIN DE FAIRE ENSUITE APPEL AU SOUS-PROGRAMME LITENR.
-C
+!
+! READS THE FILE AGAIN TO STOP RIGHT BEFORE THE RECORD TO READ
+! AND CALL SUBROUTINE LITENR THEN.
+!
       CALL SKIPGEO(NPRE,TITPRE,NPOIN_PREV(NPRE),
-     *             NVAR,TEXTLU(1,A(NPRE)),NPLAN_PREV(NPRE))
+     &             NVAR,TEXTLU(1,A(NPRE)),NPLAN_PREV(NPRE))
       ENREG(NPRE)=0
-C
-C     IF(NUMEN(NPRE).EQ.0)
+!
+!     IF(NUMEN(NPRE).EQ.0)
       ENDIF
-C
+!
       IF(NUMEN(NPRE).EQ.0) THEN
         IF(LISTIN.AND.LNG.EQ.1) WRITE(LU,120)
         IF(LISTIN.AND.LNG.EQ.2) WRITE(LU,121)
@@ -295,21 +295,21 @@ C
       ELSE
         IF(LISTIN.AND.LNG.EQ.1) WRITE(LU,130) NUMDEB
         IF(LISTIN.AND.LNG.EQ.2) WRITE(LU,131) NUMDEB
-      ENDIF 
-C
-C-----------------------------------------------------------------------
-C               LECTURE DES ENREGISTREMENTS DE RESULTATS
-C-----------------------------------------------------------------------
-C
-C     ON SAUTE LES ENREGISTREMENTS QU'ON NE VA PAS LIRE
-C 
+      ENDIF
+!
+!-----------------------------------------------------------------------
+!               READS THE RESULT RECORDS
+!-----------------------------------------------------------------------
+!
+!     SKIPD RECORDS THAT WILL NOT BE READ
+!
       IF(FIN) THEN
         NUMSUI=NUMEN(NPRE)
         NUMDEB=NUMEN(NPRE)
       ELSE
         NUMSUI=NUMDEB
       ENDIF
-C
+!
 135   CONTINUE
       IF(NUMSUI.GE.1) THEN
         NREAD=KNO(NPRE)*(NUMSUI-1)-ENREG(NPRE)
@@ -319,38 +319,38 @@ C
             ENREG(NPRE)=ENREG(NPRE)+1
           ENDDO
         ELSEIF(NREAD.LT.0) THEN
-C         GOING AGAIN AT THE BEGINNING
+!         GOING AGAIN AT THE BEGINNING
           CALL SKIPGEO(NPRE,TITPRE,NPOIN_PREV(NPRE),
-     *                 NVAR,TEXTLU(1,A(NPRE)),NPLAN_PREV(NPRE))
+     &                 NVAR,TEXTLU(1,A(NPRE)),NPLAN_PREV(NPRE))
           ENREG(NPRE)=0
-          GO TO 135 
+          GO TO 135
         ENDIF
       ENDIF
       GO TO 134
-C
+!
 133   CONTINUE
       IF(LISTIN.AND.LNG.EQ.1) WRITE(LU,1010) ((KK-1)/KNO(NPRE))+1
       IF(LISTIN.AND.LNG.EQ.2) WRITE(LU,1011) ((KK-1)/KNO(NPRE))+1
       CALL PLANTE(1)
       STOP
-C
-C     LECTURE DE L'ENREGISTREMENT:
-C
+!
+!     READS THE RECORD:
+!
 134   CONTINUE
-C
-C     THE TIME-STEP IN THE FILE IS REQUESTED
-C
+!
+!     THE TIMESTEP IN THE FILE IS REQUESTED
+!
       IF(PRESENT(DT)) THEN
         IF(NUMEN(NPRE).GT.1) THEN
           DO KK=1,KNO(NPRE)
             BACKSPACE (UNIT=NPRE)
           ENDDO
-C         READING TIME OF PREVIOUS RECORD
+!         READS TIME OF PREVIOUS RECORD
           CALL LIT(AAT,W,IBID,CBID,1,'R4',NPRE,STD,ISTAT)
           ATPREV = AAT(1)
           DO KK=1,KNO(NPRE)-1
             READ(UNIT=NPRE)
-          ENDDO 
+          ENDDO
         ELSE
           IF(LNG.EQ.1) THEN
             WRITE(LU,*) 'SUITE_SERAFIN : UN SEUL ENREGISTREMENT'
@@ -364,28 +364,28 @@ C         READING TIME OF PREVIOUS RECORD
           ENDIF
           CALL PLANTE(1)
           STOP
-        ENDIF             
+        ENDIF
       ENDIF
-C
+!
       IF(YAWD) THEN
       CALL LITENR(VARSOR,CLAND,
-     *            NPRE,STD,HIST,NHIST,NPOIN,AT,TEXTPR,TEXTLU(1,A(NPRE)),
-     *            KNO(NPRE)-1,
-     *            VARCLA,NVARCL,TROUVE,ALIRE,W,LISTIN,MAXVAR,
-     *            NPOIN_PREV(NPRE),NPLAN_PREV(NPRE),WD)
+     &            NPRE,STD,HIST,NHIST,NPOIN,AT,TEXTPR,TEXTLU(1,A(NPRE)),
+     &            KNO(NPRE)-1,
+     &            VARCLA,NVARCL,TROUVE,ALIRE,W,LISTIN,MAXVAR,
+     &            NPOIN_PREV(NPRE),NPLAN_PREV(NPRE),WD)
       ELSE
-C     CAS OU WD N'EST PAS ALLOUE (LE METTRE EN ARGUMENT EST UNE ERREUR)
+!     CASE WHERE WD HAS NOT BEEN ALLOCATED (PASSING IT IN ARGUMENT IS A MISTAKE)
       CALL LITENR(VARSOR,CLAND,
-     *            NPRE,STD,HIST,NHIST,NPOIN,AT,TEXTPR,TEXTLU(1,A(NPRE)),
-     *            KNO(NPRE)-1,
-     *            VARCLA,NVARCL,TROUVE,ALIRE,W,LISTIN,MAXVAR,
-     *            NPOIN_PREV(NPRE),NPLAN_PREV(NPRE))
+     &            NPRE,STD,HIST,NHIST,NPOIN,AT,TEXTPR,TEXTLU(1,A(NPRE)),
+     &            KNO(NPRE)-1,
+     &            VARCLA,NVARCL,TROUVE,ALIRE,W,LISTIN,MAXVAR,
+     &            NPOIN_PREV(NPRE),NPLAN_PREV(NPRE))
       ENDIF
       ENREG(NPRE)=ENREG(NPRE)+KNO(NPRE)
-C
+!
       IF(PRESENT(DT)) DT=AT-ATPREV
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

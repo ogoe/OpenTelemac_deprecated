@@ -1,67 +1,86 @@
-C                       *****************
-                        SUBROUTINE LECHAM
-C                       *****************
-C
-     *( ZM , DZHDT, X    , Y     , NPOIN2, NDON , BINDON, NBOR  , NPTFR, 
-     *  AT , DDC  , TM1  , TM2   , NP   , XRELV , YRELV , ZR   ,
-     *  Z1 , Z2   , INDIM, NPMAX , IDHMA, NVAR  )
-C
-C***********************************************************************
-C  TOMAWAC VERSION 5.0
-C***********************************************************************
-C
-C   FONCTION : CE SOUS-PROGRAMME PROJETE LA VALEUR DES DONNEES
-C              DE MAREE
-C              SUR LE MAILLAGE DE CALCUL ET INTERPOLE
-C              A L'INSTANT INITIAL
-C        (INSPIRE ENTRE AUTRES DE LA ROUTINE FOND DE TELEMAC 2D)
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C !      NOM       !MODE!                   ROLE                       !
-C !________________!____!______________________________________________!
-C !    ZM          !<-- !  DONNEE AUX NOEUDS DU MAILLAGE               !
-C !    X,Y         ! -->!  COORDONNEES DU MAILLAGE                     !
-C !    NPOIN2      ! -->!  NOMBRE DE POINTS DU MAILLAGE                !
-C !    NDON        ! -->!  NUMERO D'UNITE LOGIQUE DU FICHIER DE DONNEES!
-C !    BINDON      ! -->!  BINAIRE DU FICHIER DES DONNEES              !
-C !    NBOR        ! -->!  NUMEROTATION DES POINTS FRONTIERE           !
-C !    NPTFR       ! -->!  NOMBRE DE  POINTS FRONTIERE                 !
-C !    AT          ! -->!  TEMPS                                       !
-C !    DDC         ! -->!  DATE DU DEBUT DU CALCUL                     !
-C !    TM1         !<-->!  TEMPS DU CHAMPS DE DONNEES 1                !
-C !    TM2         !<-->!  TEMPS DU CHAMPS DE DONNEES 2                !
-C !    NP          !<-->!  NOMBRE DE POINTS RELEVES                    !
-C !    XRELV       !<-->!  TABLEAU DES ABSCISSES DES POINTS RELEVES    !
-C !    YRELV       !<-->!  TABLEAU DES ORDONNEES DES POINTS RELEVES    !
-C !    ZR          !<-->!  TABLEAU DES DONNEES RELEVEES                !
-C !    Z1,Z2       !<-->!  DONNEES AUX NOEUDS DU MAILLAGE A TM1 ET TM2 !
-C !    INDIM       ! -->!  TYPE DE FORMAT DE LECTURE                   !
-C !    NPMAX       ! -->!  NOMBRE DE POINTS RELEVES MAXIMUM            !
-C !________________!____!______________________________________________!
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : CONDIW
-C
-C SOUS-PROGRAMME APPELE : FASP
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE LECHAM
+!                    *****************
+!
+     &( ZM , DZHDT, X    , Y     , NPOIN2, NDON , BINDON, NBOR  , NPTFR,
+     &  AT , DDC  , TM1  , TM2   , NP   , XRELV , YRELV , ZR   ,
+     &  Z1 , Z2   , INDIM, NPMAX , IDHMA, NVAR  )
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   21/06/2011
+!***********************************************************************
+!
+!brief    THIS SUBROUTINE PROJECTS THE TIDE DATA ON THE
+!+                COMPUTATION MESH AND INTERPOLATES TO FIRST TIME STEP.
+!+
+!+           (INSPIRED FROM SUBROUTINE FOND IN TELEMAC2D AMONGST OTHERS)
+!
+!history
+!+
+!+        V5P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF)
+!+        05/2011
+!+        V6P1
+!+   Bug correction in the reading of the TELEMAC format file
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        20/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| AT             |-->| COMPUTATION TIME
+!| BINDON         |-->| DATA FILE BINARY
+!| DDC            |-->| DATE OF COMPUTATION BEGINNING
+!| DZHDT          |-->| WATER DEPTH DERIVATIVE WITH RESPECT TO T
+!| IDHMA          |-->| RANK OF THE WATER LEVEL DATA IN THE TELEMAC FILE
+!| INDIM          |-->| FILE FORMAT
+!| NBOR           |-->| GLOBAL NUMBER OF BOUNDARY POINTS
+!| NDON           |-->| LOGICAL UNIT NUMBER OF THA DATA FILE
+!| NP             |<->| NUMBER OF POINTS READ FROM THE FILE
+!| NPMAX          |-->| MAXIMUM NUMBER OF POINTS THAT CAN BE READ
+!| NPOIN2         |-->| NUMBER OF POINTS IN 2D MESH
+!| NPTFR          |-->| NUMBER OF BOUNDARY POINTS
+!| NVAR           |<--| NUMBER OF VARIABLES READ FROM THE DATA FILE
+!| TM1            |<--| TIME T1 IN THE DATA FILE
+!| TM2            |<--| TIME T2 IN THE DATA FILE
+!| X              |-->| ABSCISSAE OF POINTS IN THE MESH
+!| XRELV          |<->| TABLE OF THE ABSCISSES OF DATA FILE POINTS
+!| Y              |-->| ORDINATES OF POINTS IN THE MESH
+!| YRELV          |<->| TABLE OF THE ORDINATES OF DATA FILE POINTS
+!| Z1             |<->| DATA AT TIME TM1 AT THE MESH POINTS
+!| Z2             |<->| DATA AT TIME TM2 AT THE MESH POINTS
+!| ZM             |<--| DATA AT TIME AT, AT THE MESH POINTS
+!| ZR             |<->| TABLE OF THE VALUES READ IN THE DATA FILE
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
       USE DECLARATIONS_TOMAWAC ,ONLY : MESH
+      USE INTERFACE_TOMAWAC, EX_LECHAM => LECHAM
       IMPLICIT NONE
-C
+!
       INTEGER LNG,LU
       COMMON/INFO/ LNG,LU
-C
+!
       INTEGER NP,NDON,NPOIN2,NPTFR,INDIM,NCOL,NLIG,BID,I,J
       INTEGER NVAR,NI,ISTAT,IB(10),IDHMA
-C
+!
       INTEGER NPMAX,NBOR(NPTFR,2)
-C
+!
       DOUBLE PRECISION X(NPOIN2)    , Y(NPOIN2)
       DOUBLE PRECISION ZM(NPOIN2)   , DZHDT(NPOIN2)
       DOUBLE PRECISION XRELV(NPMAX), YRELV(NPMAX)
@@ -70,28 +89,28 @@ C
       DOUBLE PRECISION DDC,DAT1,DAT2,Z(1),ATT, ATB(1)
       DOUBLE PRECISION COE1, COE2
       REAL, ALLOCATABLE :: W(:)
-C
+!
       CHARACTER*3  BINDON,C
       CHARACTER*72 TITCAS
       CHARACTER*32 TEXTE(10)
-C
+!
       ALLOCATE(W(MAX(NPMAX,72)))
-C
-C-----------------------------------------------------------------------
-C        LECTURE DES POINTS RELEVES SUR UNITE LOGIQUE NDON
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!     READS THE POINTS FROM LOGICAL UNIT NDON
+!-----------------------------------------------------------------------
+!
       IF (INDIM.EQ.1) THEN
-C
-C      -----------------------------------------------------------------
-C      FORMAT WAM DIFFERENCES FINIES + INTERPOLATION AUX POINTS
-C                 DU MAILLAGE
-C      -----------------------------------------------------------------
-C
+!
+!      -----------------------------------------------------------------
+!      WAM FORMAT, FINITE DIFFERENCES + INTERPOLATION TO THE MESH POINTS
+!
+!      -----------------------------------------------------------------
+!
        REWIND NDON
-C
+!
        READ(NDON,10,END=100,ERR=100)
-     *      NCOL,NLIG,YMIN,YMAX,XMIN,XMAX,BID,BID
+     &      NCOL,NLIG,YMIN,YMAX,XMIN,XMAX,BID,BID
        DX=(XMAX-XMIN)/REAL(NCOL-1)
        DY=(YMAX-YMIN)/REAL(NLIG-1)
        NP=NCOL*NLIG
@@ -130,7 +149,7 @@ C
          CALL PLANTE(0)
         ENDIF
        ENDIF
-C      LECTURE DE LA DATE DU PREMIER ENREGISTREMENT DE DONNEES
+!      READS THE DATE OF THE FIRST RECORD
        READ(NDON,*) DAT1
        CALL TEMP(TM1,DAT1,DDC)
        IF (TM1.GT.AT) THEN
@@ -147,19 +166,19 @@ C      LECTURE DE LA DATE DU PREMIER ENREGISTREMENT DE DONNEES
         WRITE(LU,*) '*************************************************'
         CALL PLANTE(0)
        ENDIF
-C
+!
        DO 50 I=1,NCOL
           DO 40 J=1,NLIG
              XRELV((I-1)*NLIG+J)=XMIN+DX*(I-1)
              YRELV((I-1)*NLIG+J)=YMIN+DY*(J-1)
 40        CONTINUE
 50     CONTINUE
-C
+!
 90     CONTINUE
        READ(NDON,*,END=100,ERR=100)
        READ(NDON,20,END=100,ERR=100) (ZR(I),I=1,NP)
-       CALL OV( 'X=C     ' , Z1 , Y , Z , 0.D0 , NPOIN2)      
-C
+       CALL OV( 'X=C     ' , Z1 , Y , Z , 0.D0 , NPOIN2)
+!
        READ(NDON,*) DAT2
        CALL TEMP(TM2,DAT2,DDC)
        IF (TM2.LE.AT) THEN
@@ -167,37 +186,40 @@ C
          GOTO 90
        ENDIF
        CALL FASP(X,Y,Z1,NPOIN2,XRELV,YRELV,ZR,NP,NBOR,MESH%KP1BOR%I,
-     *                                                   NPTFR,0.D0)
-C
+     &                                                   NPTFR,0.D0)
+!
        READ(NDON,*,END=100,ERR=100)
        READ(NDON,20,END=100,ERR=100) (ZR(I),I=1,NP)
        CALL FASP(X,Y,Z2,NPOIN2,XRELV,YRELV,ZR,NP,NBOR,MESH%KP1BOR%I,
-     *                                                   NPTFR,0.D0)
-C
-C
+     &                                                   NPTFR,0.D0)
+!
+!
       ELSEIF (INDIM.EQ.2) THEN
-C
-C      -----------------------------------------------------------------
-C      FORMAT TELEMAC
-C      -----------------------------------------------------------------
-C
+!
+!      -----------------------------------------------------------------
+!      TELEMAC FORMAT
+!      -----------------------------------------------------------------
+!
        REWIND NDON
-C
-C      LECTURE DU TITRE
-C
+!
+!      READS TITLE
+!
        CALL LIT(X,W,IB,TITCAS,72,'CH',NDON,BINDON,ISTAT)
-C
-C      LECTURE DU NOMBRE DE VARIABLES ET DE LEURS NOMS
-C
+!
+!      READS NUMBER OF VARIABLES AND THEIR NAMES
+!
        CALL LIT(X,W,IB,C,2,'I ',NDON,BINDON,ISTAT)
        NVAR=IB(1)
        DO 80 I=1,NVAR
          CALL LIT(X,W,IB,TEXTE(I),32,'CH',NDON,BINDON,ISTAT)
 80     CONTINUE
-C
-C      VARIABLES FORMAT ET GEOMETRIE
-C
+!
+!      FORMAT AND GEOMETRY
+!
        CALL LIT(X,W,IB,C,10,'I ',NDON,BINDON,ISTAT)
+       IF (IB(10).EQ.1) THEN
+          CALL LIT(X,W,IB,C, 4,'I ',NDON,BINDON,ISTAT)
+       ENDIF
        CALL LIT(X,W,IB,C, 4,'I ',NDON,BINDON,ISTAT)
        NP=IB(2)
        NI=IB(1)*IB(3)
@@ -216,9 +238,9 @@ C
         WRITE(LU,*) '**************************************************'
         IF(LNG.EQ.1) THEN
          WRITE(LU,*)
-     *             ' LA DIMENSION PREVUE PAR DEFAUT POUR LE TABLEAU DE'
+     &             ' LA DIMENSION PREVUE PAR DEFAUT POUR LE TABLEAU DE'
          WRITE(LU,*)
-     *             ' DONNEES :',NPMAX,' EST TROP FAIBLE POUR CONTENIR'
+     &             ' DONNEES :',NPMAX,' EST TROP FAIBLE POUR CONTENIR'
          WRITE(LU,*) ' LA TOTALITE DES DONNEES :',NCOL*NLIG
         ELSE
          WRITE(LU,*) ' THE DEFAULT DIMENSION ALLOWED FOR THE ARRAY OF '
@@ -228,22 +250,22 @@ C
         WRITE(LU,*) '**************************************************'
         CALL PLANTE(0)
        ENDIF
-C      TABLEAU ENTIER IKLE
+!      ARRAY OF INTEGERS IKLE
        READ(NDON)
-C      TABLEAU ENTIER IPOBO
+!      ARRAY OF INTEGERS IPOBO
        READ(NDON)
-C
-C      X ET Y
-C
+!
+!      X AND Y
+!
        CALL LIT(XRELV,W,IB,C,NP,'R4',NDON,BINDON,ISTAT)
        CALL LIT(YRELV,W,IB,C,NP,'R4',NDON,BINDON,ISTAT)
-C
-C      PAS DE TEMPS ET VARIABLES
-C
+!
+!      TIME STEP AND VARIABLES
+!
        CALL LIT(ATB,W,IB,C,1,'R4',NDON,BINDON,ISTAT)
        TM1=ATB(1)
-CFBG       ATT=ATB(1)*1.D2
-CFBG       CALL TEMP(TM1,ATT,DDC)
+!FBG       ATT=ATB(1)*1.D2
+!FBG       CALL TEMP(TM1,ATT,DDC)
        IF (TM1.GT.AT) THEN
         WRITE(LU,*) '*************************************************'
         IF(LNG.EQ.1) THEN
@@ -261,7 +283,7 @@ CFBG       CALL TEMP(TM1,ATT,DDC)
         WRITE(LU,*) '*************************************************'
         CALL PLANTE(0)
        ENDIF
-C
+!
 110    CONTINUE
        DO I =1,NVAR
         IF(I.EQ.IDHMA) THEN
@@ -270,20 +292,16 @@ C
          READ(NDON)
         ENDIF
        ENDDO
-C
-
+!
        CALL LIT(ATB,W,IB,C,1,'R4',NDON,BINDON,ISTAT)
        TM2=ATB(1)
-CFBG       ATT=ATB(1)*1.D2
-CFBG       CALL TEMP(TM2,ATT,DDC)
        IF (TM2.LE.AT) THEN
         TM1=TM2
         GOTO 110
        ENDIF
         CALL FASP(X,Y,ZR,NPOIN2,XRELV,YRELV,Z1,NP,NBOR,MESH%KP1BOR%I,
-     *                                                    NPTFR,1.D-6)
-!       write(*,*)'Z1 RELEVE PT 7176',Z1(7176)
-
+     &                                                    NPTFR,1.D-6)
+!
         CALL OV( 'X=Y     ' , Z1 , ZR , Z , 0.D0 , NPOIN2)
        DO I =1,NVAR
         IF(I.EQ.IDHMA) THEN
@@ -292,31 +310,23 @@ CFBG       CALL TEMP(TM2,ATT,DDC)
          READ(NDON)
         ENDIF
        ENDDO
-
+!
        WRITE(LU,*) 'TMAREE1:',TM1
        WRITE(LU,*) 'TMAREE2:',TM2
-
-C
-C       ITERPOLATION SPATIALE DES DONNEES
-!        CALL FASP(X,Y,ZR,NPOIN2,XRELV,YRELV,Z1,NP,NBOR,MESH%KP1BOR%I,
-!     *                                                    NPTFR,0.D0)
-!       IF (X(2080)==577499.125d0) write(*,*)'Z1 RELEVE PT 2080',ZR(2080)
-!       IF (X(1307)==577499.125d0) write(*,*)'Z1 RELEVE PT 1307',ZR(1307)
-!        CALL OV( 'X=Y     ' , Z1 , ZR , Z , 0.D0 , NPOIN2)
+!
+!       INTERPOLATES IN SPACE
+!
         CALL FASP(X,Y,ZR,NPOIN2,XRELV,YRELV,Z2,NP,NBOR,MESH%KP1BOR%I,
-     *                                                    NPTFR,1.D-6)
-!        write(*,*)'Z2 RELEVE PT 7176',Z2(7176)
-!        IF (X(2080)==577499.125d0) write(*,*)'Z2 RELEVE PT 2080',ZR(2080)
-!        IF (X(1307)==577499.125d0) write(*,*)'Z2 RELEVE PT 1307',ZR(1307)
+     &                                                    NPTFR,1.D-6)
         CALL OV( 'X=Y     ' , Z2 , ZR , Z , 0.D0 , NPOIN2)
-C
-C
+!
+!
       ELSEIF (INDIM.EQ.3) THEN
-C       LECTURE D'UN FORMAT DEFINI PAR L'UTILISATEUR
+!     READS A USER-DEFINED FORMAT
               CALL MARUTI
-     *    (X,Y,NPOIN2,NDON,BINDON,NBOR,NPTFR,AT,DDC,TM1,TM2,
-     *     NP,XRELV,YRELV,ZR,Z1,Z2,NPMAX)
-C
+     &    (X,Y,NPOIN2,NDON,BINDON,NBOR,NPTFR,AT,DDC,TM1,TM2,
+     &     NP,XRELV,YRELV,ZR,Z1,Z2,NPMAX)
+!
       ELSE
         WRITE(LU,*) '************************************************'
         IF(LNG.EQ.1) THEN
@@ -327,14 +337,15 @@ C
           WRITE(LU,*)'         FOR THE TIDE LEVEL DATA FILE '
         ENDIF
         WRITE(LU,*) '************************************************'
-        CALL PLANTE(0)
+        CALL PLANTE(1)
+        STOP
       ENDIF
-C
-C-----------------------------------------------------------------------
-C   INTERPOLATION TEMPORELLE DES DONNEES
-C   ET GRADIENT TEMPOREL DE LA MAREE
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!   INTERPOLATES IN TIME
+!   AND COMPUTES THE TEMPORAL GRADIENT OF THE TIDE
+!-----------------------------------------------------------------------
+!
       COE1=(TM2-TM1)
       IF (COE1.LT.1.D-4) THEN
          WRITE(LU,*) '****************************************'
@@ -353,23 +364,23 @@ C
          ZM(I)   = ATT*COE2+Z1(I)
          DZHDT(I)= ATT/COE1
 120   CONTINUE
-C
-C
-C-----------------------------------------------------------------------
-C
+!
+!
+!-----------------------------------------------------------------------
+!
       DEALLOCATE(W)
-C
-C-----------------------------------------------------------------------
-C
-C     FORMATS
-C
+!
+!-----------------------------------------------------------------------
+!
+!     FORMATS
+!
 10    FORMAT (2I4,4F9.3,2I2)
 20    FORMAT (10F6.2)
-C
+!
       RETURN
-C
-C     EN CAS DE PROBLEME DE LECTURE ...
-C
+!
+!     IF FAILED TO READ THE FILE ...
+!
 100   CONTINUE
       WRITE(LU,*)'**********************************************'
       IF (LNG.EQ.1) THEN
@@ -381,6 +392,6 @@ C
       ENDIF
       WRITE(LU,*)'**********************************************'
       CALL PLANTE(0)
-C
+!
       RETURN
       END

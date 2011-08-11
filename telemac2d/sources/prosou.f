@@ -1,167 +1,166 @@
-C                       *****************
-                        SUBROUTINE PROSOU
-C                       *****************
-C
-     *(FU,FV,SMH,    UN,VN,HN,GRAV,NORD,
-     * FAIR,WINDX,WINDY,VENT,HWIND,CORIOL,FCOR,
-     * SPHERI,YASMH,COSLAT,SINLAT,AT,LT,
-     * NREJET,NREJEU,DSCE,ISCE,T1,MESH,MSK,MASKEL,
-     * MAREE,MARDAT,MARTIM,PHI0,OPTSOU,COUROU,NPTH,VARCL,NVARCL,VARCLA,
-     * UNSV2D)
-C
-C***********************************************************************
-C  TELEMAC 2D VERSION 6.0   08/04/08  J-M HERVOUET (LNHE) 01 30 87 80 18
-C                                          
-C***********************************************************************
-C
-C  FONCTION :
-C
-C     PREPARATION DES TERMES SOURCES :
-C
-C     DANS L'EQUATION DE CONTINUITE
-C
-C     DANS LES EQUATIONS DYNAMIQUES
-C
-C
-C     SONT PRIS EN COMPTE : - LE VENT.
-C                           - LA FORCE DE CORIOLIS.
-C                           - LA FORCE GENERATRICE DE LA MAREE.
-C                           - LES SOURCES ET LES PUITS.
-C     NOTA:
-C
-C     LE FROTTEMENT DE FOND EST PRIS EN COMPTE DANS LA PROPAGATION
-C     PAR L'APPEL A FROTXY, IL EST SEMI-IMPLICITE.
-C
-C     SI L'ON AJOUTE DES TERMES SOURCES OU PUITS A L'EQUATION DE
-C     CONTINUITE, IL FAUT LE DIRE EN METTANT LA VARIABLE YASMH A
-C     TRUE
-C
-C     ON CONSTRUIT D'ABORD DES TERMES SOURCES FU ET FV EN P1
-C     PUIS ON LES ETEND AU QUASI-BULLE SI IL LE FAUT.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |   FU           |<-- | TERMES SOURCE TRAITE EN P1 SUR L'EQUATION EN U
-C |   FV           |<-- | TERMES SOURCE TRAITE EN P1 SUR L'EQUATION EN V
-C |   SMH          |<-- | TERME SOURCE DANS L'EQUATION DE CONTINUITE
-C |   UN , VN      | -->| COMPOSANTES DES VECTEURS VITESSES A TN.
-C |   HN           | -->| HAUTEURS D'EAU A TN .
-C |   GRAV         | -->| PESANTEUR.
-C |   NORD         | -->| DIRECTION DU NORD EN DEGRES PAR RAPPORT A
-C |                |    | L'AXE DES Y (SENS TRIGONOMETRIQUE)
-C |   FAIR         | -->| COEFFICIENT DE FROTTEMENT DE L'AIR.
-C |   WINDX,Y      | -->| VITESSE DU VENT EN SURFACE.
-C |   VENT         | -->| PRISE EN COMPTE DES EFFORTS DUS AU VENT .
-C |   HWIND        | -->| MINIMUM DEPTH FOR TAKING WIND INTO ACCOUNT
-C |   CORIOL       | -->| PRISE EN COMPTE DES EFFORTS DE CORIOLIS .
-C |   FCOR         | -->| PARAMETRE DE CORIOLIS.
-C |   SPHERI       | -->| =TRUE : COORDONNEES SPHERIQUES
-C |   YASMH        |<-->| =TRUE SI SMH NON NUL. AJOUTE UN TERME SOURCE
-C |                |    | IMPLICITE DANS L'EQUATION DU TRACEUR
-C |   COSLAT       | -->| COS DE LA LATITUDE EN COORDONNEES SPHERIQUES
-C |   SINLAT       | -->| SIN DE LA LATITUDE EN COORDONNEES SPHERIQUES
-C |   AT           | -->| TIME
-C |   LT           | -->| TIME STEP NUMBER
-C |   NREJET       | -->| NOMBRE DE POINTS SOURCES
-C |   NREJEU       | -->| NOMBRE DE VITESSES DES SOURCES DONNEES
-C |                |    | SI NREJEU=0 ON CONSIDERE QUE LA VITESSE DES
-C |                |    | SOURCES EST EGALE A CELLE DU COURANT.
-C |   ISCE,DSCE    | -->| POINTS SOURCES, DEBITS DE LA SOURCE
-C |   T1           | -->| TABLEAU DE TRAVAIL
-C |   MESH         | -->| MAILLAGE
-C |   MSK          | -->|  SI OUI, PRESENCE D'ELEMENTS MASQUES.
-C |   MASKEL       | -->|  TABLEAU DE MASQUAGE DES ELEMENTS
-C |                |    |  =1. : NORMAL   =0. : ELEMENT MASQUE
-C |   COUROU       | -->| IF YES, WAVE DRIVEN CURRENTS TAKEN INTO ACCOUNT
-C |   NPTH         | -->| RECORD NUMBER IN THE WAVE CURRENTS FILE
-C |________________|____|_______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : TELMAC
-C
-C SOUS-PROGRAMME APPELE : OV
-C
-C***********************************************************************
-C
-C    LES TERMES RESPECTIFS SONT:
-C    ==========================
-C
-C
-C     * LE VENT .
-C       ---------
-C
-C                                 1                         2      2
-C                FU           =  --- * F    * U    * SQRT( U    + V   )
-C                  VENT           H     AIR    AIR          AIR    AIR
-C
-C                                 1                         2      2
-C                FV           =  --- * F    * V    * SQRT( U    + V   )
-C                  VENT           H     AIR    AIR          AIR    AIR
-C
-C           AVEC :
-C
-C                  UAIR   :  VITESSE DU VENT DANS LA DIRECTION X
-C                  VAIR   :  VITESSE DU VENT DANS LA DIRECTION Y
-C                  FAIR   :  COEFFICIENT DE FROTTEMENT DE L'AIR
-C
-C
-C     * LA FORCE DE CORIOLIS.
-C       ---------------------
-C
-C                FU           =  + FCOR * V
-C                  CORIOLIS
-C
-C                FV           =  - FCOR * U
-C                  CORIOLIS
-C
-C           AVEC :
-C
-C                  U       :  VITESSE DU FLUIDE DANS LA DIRECTION X
-C                  V       :  VITESSE DU FLUIDE DANS LA DIRECTION Y
-C                  FCOR    :  PARAMETRE DE CORIOLIS
-C
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE PROSOU
+!                    *****************
+!
+     &(FU,FV,SMH,    UN,VN,HN,GRAV,NORD,
+     & FAIR,WINDX,WINDY,VENT,HWIND,CORIOL,FCOR,
+     & SPHERI,YASMH,COSLAT,SINLAT,AT,LT,
+     & NREJET,NREJEU,DSCE,ISCE,T1,MESH,MSK,MASKEL,
+     & MAREE,MARDAT,MARTIM,PHI0,OPTSOU,COUROU,NPTH,VARCL,NVARCL,VARCLA,
+     & UNSV2D,FXWAVE,FYWAVE)
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    PREPARES THE SOURCE TERMS IN THE CONTINUITY EQUATION
+!+                AND IN THE DYNAMIC EQUATIONS. ARE TAKEN INTO ACCOUNT :
+!+
+!+              - WIND
+!+
+!+              - CORIOLIS FORCE
+!+
+!+              - TIDAL FORCE
+!+
+!+              - SOURCES AND SINKS
+!code
+!+    RESPECTIVE TERMS ARE:
+!+    ==========================
+!+
+!+     * WIND
+!+       ---------
+!+                                 1                         2      2
+!+                FU           =  --- * F    * U    * SQRT( U    + V   )
+!+                  VENT           H     AIR    AIR          AIR    AIR
+!+
+!+                                 1                         2      2
+!+                FV           =  --- * F    * V    * SQRT( U    + V   )
+!+                  VENT           H     AIR    AIR          AIR    AIR
+!+
+!+           WHERE :
+!+                  UAIR   :  WIND VELOCITY ALONG X
+!+                  VAIR   :  WIND VELOCITY ALONG Y
+!+                  FAIR   :  AIR FRICTION COEFFICIENT
+!+
+!+     * CORIOLIS FORCE
+!+       ---------------------
+!+
+!+                FU           =  + FCOR * V
+!+                  CORIOLIS
+!+
+!+                FV           =  - FCOR * U
+!+                  CORIOLIS
+!+
+!+           WHERE :
+!+                  U       :  FLOW VELOCITY ALONG X
+!+                  V       :  FLOW VELOCITY ALONG Y
+!+                  FCOR    :  CORIOLIS PARAMETER
+!
+!note     BOTTOM FRICTION IS TAKEN INTO ACCOUNT IN THE PROPAGATION
+!+         THROUGH CALL TO FROTXY, IT IS SEMI-IMPLICIT.
+!note  IF SOURCES OR SINKS TERMS ARE ADDED TO THE CONTINUITY EQUATION,
+!+         IT IS IDENTIFIED WITH VARIABLE YASMH (SET TO TRUE).
+!note  SOURCE TERMS FU AND FV ARE FIRST COMPUTED IN P1.
+!+         THEY ARE THEN EXTENDED TO QUASI-BUBBLE IF REQUIRED.
+!
+!history  J-M HERVOUET (LNHE)
+!+        08/04/2008
+!+        V6P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| AT             |-->| TIME
+!| CORIOL         |-->| IF YES, CORIOLIS FORCE
+!| COSLAT         |-->| COSINUS OF LATITUDE (SPHERICAL COORDINATES)
+!| COUROU         |-->| IF YES, WAVE DRIVEN CURRENTS TAKEN INTO ACCOUNT
+!| DSCE           |-->| DISCHARGE OF POINT SOURCES
+!| FAIR           |-->| FRICTION COEFFICIENT FOR WIND
+!| FCOR           |-->| CORIOLIS PARAMETER
+!| FU             |<->| SOURCE TERMS ON VELOCITY U
+!| FV             |<->| SOURCE TERMS ON VELOCITY V
+!| FXWAVE         |<->| FORCING OF WAVES ALONG X
+!| FYWAVE         |<->| FORCING OF WAVES ALONG Y
+!| GRAV           |-->| GRAVITY
+!| HN             |-->| DEPTH AT TIME T(N)
+!| HWIND          |-->| MINIMUM DEPTH FOR TAKING WIND INTO ACCOUNT
+!| ISCE           |-->| NEAREST POINTS TO SOURCES
+!| LT             |-->| TIME STEP NUMBER
+!| MARDAT         |-->| DATE (YEAR, MONTH,DAY)
+!| MAREE          |-->| IF YES, TAKES THE TIDAL FORCE INTO ACCOUNT
+!| MARTIM         |-->| TIME (HOUR, MINUTE,SECOND)
+!| MASKEL         |-->| MASKING OF ELEMENTS
+!|                |   | =1. : NORMAL   =0. : MASKED ELEMENT
+!| MESH           |-->| MESH STRUCTURE
+!| MSK            |-->| IF YES, THERE IS MASKED ELEMENTS.
+!| NORD           |-->| DIRECTION OF NORTH WITH RESPECT TO Y AXIS
+!|                |   | (TRIGONOMETRIC SENSE) IN DEGREES.
+!| NPTH           |-->| RECORD NUMBER IN THE WAVE CURRENTS FILE
+!| NREJET         |-->| NUMBER OF POINT SOURCES
+!| NREJEU         |-->| NUMBER OF POINT SOURCES WITH GIVEN VELOCITY
+!|                |   | IF NREJEU=0 VELOCITY OF SOURCES IS TAKEN EQUAL
+!|                |   | TO VELOCITY.
+!| NVARCL         |-->| NUMBER OF CLANDESTINE VARIABLES
+!| OPTSOU         |-->| OPTION FOR THE TREATMENT OF SOURCES
+!| PHI0           |-->| LATITUDE OF ORIGIN POINT
+!| SINLAT         |-->| SINUS OF LATITUDE (SPHERICAL COORDINATES)
+!| SMH            |-->| SOURCE TERM IN CONTINUITY EQUATION
+!| SPHERI         |-->| IF TRUE : SPHERICAL COORDINATES
+!| T1             |<->| WORK BIEF_OBJ STRUCTURE
+!| UNSV2D         |-->| INVERSE OF INTEGRALS OF TEST FUNCTIONS
+!| VARCL          |<->| BLOCK OF CLANDESTINE VARIABLES
+!| VARCLA         |-->| NAMES OF CLANDESTINE VARIABLES
+!| VENT           |-->| IF YES, WIND IS TAKEN INTO ACCOUNT
+!| WINDX          |-->| FIRST COMPONENT OF WIND VELOCITY
+!| WINDY          |-->| SECOND COMPONENT OF WIND VELOCITY
+!| YASMH          |<->| IF TRUE SMH IS TAKEN INTO ACCOUNT
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
       USE DECLARATIONS_TELEMAC
       USE DECLARATIONS_TELEMAC2D, ONLY : T2D_FILES,T2DBI1
       USE INTERFACE_TELEMAC2D, EX_PROSOU => PROSOU
-! --- JP Renaud start ---
+! --- JP RENAUD START ---
       USE M_COUPLING_ESTEL3D
-! --- JP Renaud end ---
-C
+! --- JP RENAUD END ---
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
-C     TABLEAUX DE TRAVAIL
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
+!     WORKING ARRAYS
+!
       TYPE(BIEF_OBJ), INTENT(INOUT) :: T1
-C
-C-----------------------------------------------------------------------
-C
-C     VECTEURS
-C
-      TYPE(BIEF_OBJ), INTENT(INOUT) :: FU,FV,SMH
+!
+!-----------------------------------------------------------------------
+!
+!     VECTORS
+!
+      TYPE(BIEF_OBJ), INTENT(INOUT) :: FU,FV,SMH,FXWAVE,FYWAVE
       TYPE(BIEF_OBJ), INTENT(IN)    :: MASKEL,UN,VN,HN,UNSV2D
       TYPE(BIEF_OBJ), INTENT(IN)    :: WINDX,WINDY,COSLAT,SINLAT
-C
-C-----------------------------------------------------------------------
-C
-C     STRUCTURE DE MAILLAGE
-C
+!
+!-----------------------------------------------------------------------
+!
+!     MESH STRUCTURE
+!
       TYPE(BIEF_MESH), INTENT(INOUT) :: MESH
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       INTEGER, INTENT(IN)           :: NVARCL,LT,NREJET,NREJEU,OPTSOU
       INTEGER, INTENT(IN)           :: NPTH
       INTEGER, INTENT(IN)           :: MARDAT(3),MARTIM(3),ISCE(NREJET)
@@ -172,62 +171,61 @@ C
       LOGICAL, INTENT(IN)           :: COUROU
       LOGICAL, INTENT(INOUT)        :: YASMH
       TYPE(BIEF_OBJ), INTENT(INOUT) :: VARCL
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER N,I,IELMU,IELMH,IELM1,NPOIN,IR,ERR,NP
-C
+!
       DOUBLE PRECISION PI,WROT,WD,ATH
-C      
+!
       CHARACTER*16 NOMX,NOMY
       LOGICAL DEJALU,OKX,OKY,OKC
       DATA DEJALU /.FALSE./
       REAL, ALLOCATABLE :: W(:)
-      TYPE(BIEF_OBJ) :: FXH,FYH
-      SAVE FXH,FYH,W
-C
+      SAVE W
+!
       INTRINSIC SQRT,MAX,ACOS
-C
-C-----------------------------------------------------------------------
-C  EXTRACTION DES COORDONNEES X, DU NOMBRE DE POINTS P1
-C                                ET DE L'ELEMENT P1 DU MAILLAGE.
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!  EXTRACTS X COORDINATES, NUMBER OF POINTS P1
+!                          AND P1 ELEMENT OF THE MESH
+!-----------------------------------------------------------------------
+!
       IELM1 = MESH%X%ELM
       NPOIN = MESH%NPOIN
-C
-C-----------------------------------------------------------------------
-C  INITIALISATION
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!  INITIALISES
+!-----------------------------------------------------------------------
+!
       CALL CPSTVC(UN,FU)
       CALL CPSTVC(VN,FV)
       CALL OS( 'X=0     ' , X=FU )
       CALL OS( 'X=0     ' , X=FV )
-C
-C-----------------------------------------------------------------------
-C
-C  CALCUL AVEC VENT
-C  ----------------
-C
-C                               1                         2     2
-C              FU           =  --- * F    * U    * SQRT( U   + V    )
-C                VENT           H     AIR    AIR          AIR   AIR
-C
-C
-C                               1                         2     2
-C              FV           =  --- * F    * V    * SQRT( U   + V    )
-C                VENT           H     AIR    AIR          AIR   AIR
-C
-C
+!
+!-----------------------------------------------------------------------
+!
+!  COMPUTATION WITH WIND
+!  ----------------
+!
+!                               1                         2     2
+!              FU           =  --- * F    * U    * SQRT( U   + V    )
+!                VENT           H     AIR    AIR          AIR   AIR
+!
+!
+!                               1                         2     2
+!              FV           =  --- * F    * V    * SQRT( U   + V    )
+!                VENT           H     AIR    AIR          AIR   AIR
+!
+!
       IF(VENT) THEN
-C
-C  TRAITEMENT PROVISOIRE DES BANCS DECOUVRANTS
-C  ON NE PREND EN COMPTE L'EFFET DU VENT QUE SI LA PROFONDEUR EST
-C  SUPERIEURE A 1 M.
-C
-C  ICI ON SUPPOSE QUE LE VENT EST DONNE EN P1.
-C
+!
+!  TEMPORARY TREATMENT OF TIDAL FLATS
+!  THE WIND EFFECT IS ONLY CONSIDERED IF THE WATER DEPTH IS
+!  GREATER THAN 1 M.
+!
+!  ASSUMES HERE THAT THE WIND IS GIVEN IN P1
+!
         DO 10 N=1,NPOIN
           IF (HN%R(N).GT.HWIND) THEN
             WD = SQRT( WINDX%R(N)**2 + WINDY%R(N)**2 )
@@ -235,180 +233,183 @@ C
             FV%R(N) = FV%R(N) + FAIR * WINDY%R(N) * WD / HN%R(N)
           ENDIF
 10      CONTINUE
-C
+!
       ENDIF
-C
-C***********************************************************************
-C
-C     * AVEC LA FORCE DE CORIOLIS.
-C       --------------------------
-C
-C                FU           =  + FCOR * V
-C                  CORIOLIS
-C
-C                FV           =  - FCOR * U
-C                  CORIOLIS
-C
+!
+!***********************************************************************
+!
+!     * WITH CORIOLIS FORCE
+!       --------------------------
+!
+!                FU           =  + FCOR * V
+!                  CORIOLIS
+!
+!                FV           =  - FCOR * U
+!                  CORIOLIS
+!
       IF(CORIOL) THEN
-C
+!
       PI = ACOS(-1.D0)
-C
+!
         IF(SPHERI) THEN
-C
+!
           WROT = 2 * PI / 86164.D0
           DO 20 I=1,NPOIN
-C           FORMULE INDEPENDANTE DE LA DIRECTION DU NORD
+!           FORMULATION INDEPENDENT OF THE DIRECTION OF NORTH
             FU%R(I) = FU%R(I) + VN%R(I) * 2 * WROT * SINLAT%R(I)
             FV%R(I) = FV%R(I) - UN%R(I) * 2 * WROT * SINLAT%R(I)
 20        CONTINUE
-C
-C         PRISE EN COMPTE DE LA FORCE GENERATRICE DE LA MAREE
-C
+!
+!         TAKES THE TIDAL FORCE INTO ACCOUNT
+!
           IF(MAREE) THEN
             CALL MARAST(MARDAT,MARTIM,PHI0,NPOIN,AT,
-     *                  FU%R,FV%R,MESH%X%R,SINLAT%R,COSLAT%R,GRAV)
+     &                  FU%R,FV%R,MESH%X%R,SINLAT%R,COSLAT%R,GRAV)
           ENDIF
-C
+!
           IF(LT.EQ.1) THEN
             IF(LNG.EQ.1) WRITE(LU,11)
             IF(LNG.EQ.2) WRITE(LU,12)
           ENDIF
 11        FORMAT(1X,'PROSOU : EN COORDONNEES SHERIQUES, LE',/,
-     *           1X,'         COEFFICIENT DE CORIOLIS EST',/,
-     *           1X,'         CALCULE EN FONCTION DE LA LATITUDE.',/,
-     *           1X,'         LE MOT-CLE ''COEFFICIENT DE CORIOLIS''',/,
-     *           1X,'         N''EST DONC PAS PRIS EN COMPTE.')
+     &           1X,'         COEFFICIENT DE CORIOLIS EST',/,
+     &           1X,'         CALCULE EN FONCTION DE LA LATITUDE.',/,
+     &           1X,'         LE MOT-CLE ''COEFFICIENT DE CORIOLIS''',/,
+     &           1X,'         N''EST DONC PAS PRIS EN COMPTE.')
 12        FORMAT(1X,'PROSOU : IN SPHERICAL COORDINATES, THE CORIOLIS',/,
-     *           1X,'         PARAMETER DEPENDS ON THE LATITUDE.',/,
-     *           1X,'         THE KEY WORD ''CORIOLIS COEFFICIENT''',/,
-     *           1X,'         IS CONSEQUENTLY IGNORED.')
-C
+     &           1X,'         PARAMETER DEPENDS ON THE LATITUDE.',/,
+     &           1X,'         THE KEY WORD ''CORIOLIS COEFFICIENT''',/,
+     &           1X,'         IS CONSEQUENTLY IGNORED.')
+!
         ELSE
-C
+!
           CALL OS( 'X=X+CY  ' , FU , VN , VN ,  FCOR )
           CALL OS( 'X=X+CY  ' , FV , UN , UN , -FCOR )
-C
+!
           IF(LT.EQ.1) THEN
             IF(LNG.EQ.1) WRITE(LU,21)
             IF(LNG.EQ.2) WRITE(LU,22)
           ENDIF
 21        FORMAT(1X,'PROSOU : EN COORDONNEES CARTESIENNES, LE',/,
-     *           1X,'         COEFFICIENT DE CORIOLIS EST LU DANS LE',/,
-     *           1X,'         FICHIER DES PARAMETRES ET CORRESPOND',/,
-     *           1X,'         AU MOT-CLE ''COEFFICIENT DE CORIOLIS''',/,
-     *           1X,'         IL EST ALORS CONSTANT EN ESPACE')
+     &           1X,'         COEFFICIENT DE CORIOLIS EST LU DANS LE',/,
+     &           1X,'         FICHIER DES PARAMETRES ET CORRESPOND',/,
+     &           1X,'         AU MOT-CLE ''COEFFICIENT DE CORIOLIS''',/,
+     &           1X,'         IL EST ALORS CONSTANT EN ESPACE')
 22        FORMAT(1X,'PROSOU : IN CARTESIAN COORDINATES, THE CORIOLIS',/,
-     *           1X,'         PARAMETER IS READ IN THE STEERING FILE',/,
-     *           1X,'         IT IS THE KEY WORD ''CORIOLIS',/,
-     *           1X,'         COEFFICIENT'', IT IS UNIFORM IN SPACE')
-C
+     &           1X,'         PARAMETER IS READ IN THE STEERING FILE',/,
+     &           1X,'         IT IS THE KEY WORD ''CORIOLIS',/,
+     &           1X,'         COEFFICIENT'', IT IS UNIFORM IN SPACE')
+!
         ENDIF
-C
+!
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C  LES SECONDS MEMBRES SONT MIS A LA BONNE DISCRETISATION
-C
+!
+!-----------------------------------------------------------------------
+!
+!  THE SECOND MEMBERS ARE PROPERLY DISCRETISED
+!
       IELMU=UN%ELM
-C
+!
       IF(IELMU.NE.IELM1) THEN
         CALL CHGDIS(FU,IELM1,IELMU,MESH)
         CALL CHGDIS(FV,IELM1,IELMU,MESH)
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IELMH=HN%ELM
       CALL CPSTVC(HN,SMH)
       CALL OS( 'X=0     ' , X=SMH )
-C
+!
       YASMH = .FALSE.
-C
+!
       IF(NREJET.NE.0) THEN
-C
-C LE LOGIQUE YASMH PASSE A TRUE
-C
+!
+!  YASMH BECOMES TRUE
+!
       YASMH = .TRUE.
-C
-C  TERMES SOURCES DANS L'EQUATION DE CONTINUITE
-C              ET DANS LA QUANTITE DE MOUVEMENT :
-C
-C  ATTENTION, SMH EST UTILISE AUSSI POUR LE TRACEUR.
-C
-C     CALCUL DU VOLUME DES BASES
-C     HN EST MIS ICI POUR UNE STRUCTURE BIDON
+!
+!  SOURCE TERMS IN THE CONTINUITY EQUATION
+!           AND IN THE MOMENTUM EQUATION:
+!
+!  BEWARE, SMH IS ALSO USED FOR TRACER
+!
+!     COMPUTES THE VOLUME OF THE BASES
+!     HN HERE IS A DUMMY STRUCTURE
       CALL VECTOR(T1,'=','MASBAS          ',IELMH,
-     *            1.D0,HN,HN,HN,HN,HN,HN,MESH,MSK,MASKEL)
-C
+     &            1.D0,HN,HN,HN,HN,HN,HN,MESH,MSK,MASKEL)
+!
       IF(NCSIZE.GT.1) CALL PARCOM(T1,2,MESH)
-C
+!
       DO I = 1 , NREJET
-C
+!
         IR = ISCE(I)
-C       LE TEST SERT POUR LE PARALLELISME, QUAND LE POINT SOURCE
-C       N'EST PAS DANS LE SOUS-DOMAINE TRAITE
+!       THE TEST IS USEFUL IN PARALLEL MODE, WHEN THE POINT SOURCE
+!       IS NOT IN THE SUB-DOMAIN
         IF(IR.GT.0) THEN
          IF(OPTSOU.EQ.1) THEN
-C          VERSION "NORMAL"
+!          "NORMAL" VERSION
            SMH%R(IR)=SMH%R(IR)+DSCE(I)/T1%R(IR)
          ELSE
-C          VERSION "DIRAC"
+!          "DIRAC" VERSION
            SMH%R(IR) = SMH%R(IR)+DSCE(I)
          ENDIF
         ENDIF
-C
+!
       ENDDO
-C
-C-----------------------------------------------------------------------
-C TRAITEMENT EXPLICITE DES APPORTS DE QUANTITE DE MOUVEMENT
-C AUX SOURCES
-C
+!
+!-----------------------------------------------------------------------
+!
+! EXPLICIT TREATMENT OF MOMENTUM CONTRIBUTIONS TO THE SOURCES
+!
       IF(NREJEU.GT.0) THEN
-C
+!
       DO I = 1 , NREJEU
-C
+!
         IR = ISCE(I)
-C       LE TEST SERT POUR LE PARALLELISME, QUAND LE POINT SOURCE
-C       N'EST PAS DANS LE SOUS-DOMAINE TRAITE
+!       THE TEST IS USEFUL IN PARALLEL MODE, WHEN THE POINT SOURCE
+!       IS NOT IN THE SUB-DOMAIN
         IF(IR.GT.0) THEN
-C       QUANTITE DE MOUVEMENT APPORTEE PAR LA SOURCE
-C      -QUANTITE DE MOUVEMENT PRISE PAR LA SOURCE.
+!       MOMENTUM ADDED BY THE SOURCE
+!      -MOMENTUM TAKEN BY THE SOURCE
         FU%R(IR)=FU%R(IR) + (VUSCE(AT,I)-UN%R(IR))*
-     *  DSCE(I)/(T1%R(IR)*MAX(HN%R(IR),0.1D0))
+     &  DSCE(I)/(T1%R(IR)*MAX(HN%R(IR),0.1D0))
         FV%R(IR)=FV%R(IR) + (VVSCE(AT,I)-VN%R(IR))*
-     *  DSCE(I)/(T1%R(IR)*MAX(HN%R(IR),0.1D0))
+     &  DSCE(I)/(T1%R(IR)*MAX(HN%R(IR),0.1D0))
         ENDIF
-C
+!
       ENDDO
-C
+!
       ENDIF
-C
+!
       ENDIF
-C
-C***********************************************************************
-C
-C     * WITH WAVE DRIVEN CURRENTS
-C       -------------------------------------
-C
-C                FU        =  FXH
-C                  COUROU
-C
-C                FV        =  FYH
-C                  COUROU
-C
-C       FXH ET FYH ARE TAKEN IN A RESULTS FILE FROM 
-C       (ARTEMIS, COWADIS, OU TOMAWAC)
-C
-C       ATTENTION : 1. MESHES MUST BE THE SAME
-C       ---------    
-C
-C                   2. STATIONARY FORCING
-C
+!
+!***********************************************************************
+!
+!     * WITH WAVE DRIVEN CURRENTS
+!       -------------------------------------
+!
+!                FU        =  FXWAVE
+!                  COUROU
+!
+!                FV        =  FYWAVE
+!                  COUROU
+!
+!       FXWAVE AND FYWAVE ARE TAKEN IN A RESULTS FILE FROM
+!       ARTEMIS OR TOMAWAC
+!
+!       BEWARE   : 1. MESHES MUST BE THE SAME
+!       ---------
+!
+!                  2. STATIONARY FORCING
+!
       IF(COUROU) THEN
-C
-         IF(.NOT.DEJALU) THEN
-C
+!
+!        WITH NO COUPLING, TAKING THE WAVE STRESSES ONCE FOR ALL
+!        IN A BINARY DATA FILE
+!
+         IF(.NOT.DEJALU.AND..NOT.INCLUS(COUPLING,'TOMAWAC')) THEN
+!
             ALLOCATE(W(NPOIN),STAT=ERR)
             IF(ERR.NE.0) THEN
               IF(LNG.EQ.1) THEN
@@ -418,53 +419,51 @@ C
                 WRITE(LU,*) 'MEMORY ALLOCATION ERROR OF W IN PROSOU'
               ENDIF
             ENDIF
-            CALL ALLVEC(1,FXH   ,'FXH   ',IELMU, 1 , 2 )
-            CALL ALLVEC(1,FYH   ,'FYH   ',IELMU, 1 , 2 )
-C
-C           NBI1 : FICHIER DE DONNEES BINAIRE 1 ; BINARY DATA FILE 1
+!
+!           NBI1 : BINARY DATA FILE 1
             NOMX='FORCE FX        '
             NOMY='FORCE FY        '
-            CALL FIND_IN_SEL(FXH,NOMX,T2D_FILES(T2DBI1)%LU,
-     *                       W,OKX,NPTH,NP,ATH)
-            CALL FIND_IN_SEL(FYH,NOMY,T2D_FILES(T2DBI1)%LU,
-     *                       W,OKY,NPTH,NP,ATH)
+            CALL FIND_IN_SEL(FXWAVE,NOMX,T2D_FILES(T2DBI1)%LU,
+     &                       W,OKX,NPTH,NP,ATH)
+            CALL FIND_IN_SEL(FYWAVE,NOMY,T2D_FILES(T2DBI1)%LU,
+     &                       W,OKY,NPTH,NP,ATH)
             IF(.NOT.OKX.OR..NOT.OKY) THEN
-C             SECOND TRY (OLD VERSIONS OF ARTEMIS OR TOMAWAC)
+!             SECOND TRY (OLD VERSIONS OF ARTEMIS OR TOMAWAC)
               NOMX='FORCE_FX        '
               NOMY='FORCE_FY        '
-              CALL FIND_IN_SEL(FXH,NOMX,T2D_FILES(T2DBI1)%LU,
-     *                         W,OKX,NPTH,NP,ATH)
-              CALL FIND_IN_SEL(FYH,NOMY,T2D_FILES(T2DBI1)%LU,
-     *                         W,OKY,NPTH,NP,ATH)
+              CALL FIND_IN_SEL(FXWAVE,NOMX,T2D_FILES(T2DBI1)%LU,
+     &                         W,OKX,NPTH,NP,ATH)
+              CALL FIND_IN_SEL(FYWAVE,NOMY,T2D_FILES(T2DBI1)%LU,
+     &                         W,OKY,NPTH,NP,ATH)
             ENDIF
-C           VARIABLES CLANDESTINES TRANSMISES DE TOMAWAC A SISYPHE
+!           CLANDESTINE VARIABLES FROM TOMAWAC TO SISYPHE
             IF(NVARCL.GT.0) THEN
               DO I=1,NVARCL
               CALL FIND_IN_SEL(VARCL%ADR(I)%P,VARCLA(I)(1:16),
-     *                         T2D_FILES(T2DBI1)%LU,
-     *                         W,OKC,NPTH,NP,ATH)
+     &                         T2D_FILES(T2DBI1)%LU,
+     &                         W,OKC,NPTH,NP,ATH)
               IF(.NOT.OKC) THEN
                 IF(LNG.EQ.1) WRITE(LU,7) VARCLA(I)(1:16)
                 IF(LNG.EQ.2) WRITE(LU,8) VARCLA(I)(1:16)
 7             FORMAT(1X,'PROSOU : VARIABLE CLANDESTINE :',/,1X,A16,/,1X,
-     *                  '         NON TROUVEE',/,1X,
-     *                  '         DANS LE FICHIER DE HOULE')
+     &                  '         NON TROUVEE',/,1X,
+     &                  '         DANS LE FICHIER DE HOULE')
 8             FORMAT(1X,'PROSOU : CLANDESTINE VARIABLE:',/,1X,A16,/,1X,
-     *                  '         NOT FOUND',/,1X,
-     *                  '         IN THE WAVE RESULTS FILE')
+     &                  '         NOT FOUND',/,1X,
+     &                  '         IN THE WAVE RESULTS FILE')
               CALL PLANTE(1)
               STOP
               ENDIF
               ENDDO
             ENDIF
-C
+!
             IF(.NOT.OKX.OR..NOT.OKY) THEN
               IF(LNG.EQ.1) WRITE(LU,5)
               IF(LNG.EQ.2) WRITE(LU,6)
- 5            FORMAT(1X,'PROSOU : FORCE FX OU FY NON TROUVES',/,1X,
-     *                  '         DANS LE FICHIER DE HOULE')
- 6            FORMAT(1X,'PROSOU: FORCE FX OR FY NOT FOUND',/,1X,
-     *                  '         IN THE WAVE RESULTS FILE')
+5             FORMAT(1X,'PROSOU : FORCE FX OU FY NON TROUVES',/,1X,
+     &                  '         DANS LE FICHIER DE HOULE')
+6             FORMAT(1X,'PROSOU: FORCE FX OR FY NOT FOUND',/,1X,
+     &                  '         IN THE WAVE RESULTS FILE')
               CALL PLANTE(1)
               STOP
             ENDIF
@@ -472,49 +471,55 @@ C
               IF(LNG.EQ.1) WRITE(LU,95)
               IF(LNG.EQ.2) WRITE(LU,96)
  95           FORMAT(1X,'PROSOU : SIMULATION DES COURANTS DE HOULE.',/,
-     *               1X,'LES MAILLAGES HOULE ET COURANTS SONT ',/,
-     *               1X,'DIFFERENTS : PAS POSSIBLE POUR LE MOMENT.')
+     &               1X,'LES MAILLAGES HOULE ET COURANTS SONT ',/,
+     &               1X,'DIFFERENTS : PAS POSSIBLE POUR LE MOMENT.')
  96           FORMAT(1X,'PROSOU: WAVE DRIVEN CURRENTS MODELLING.',/,
-     *               1X,'WAVE AND CURRENT MODELS MESHES ARE ',/,
-     *               1X,'DIFFERENT : NOT POSSIBLE AT THE MOMENT.')
-C
+     &               1X,'WAVE AND CURRENT MODELS MESHES ARE ',/,
+     &               1X,'DIFFERENT : NOT POSSIBLE AT THE MOMENT.')
+!
               CALL PLANTE(1)
               STOP
             ENDIF
-C           IMPRESSION SUR LE LISTING
-            IF(LNG.EQ.1) WRITE(LU,115) ATH 
+!           WRITES OUT TO THE LISTING
+            IF(LNG.EQ.1) WRITE(LU,115) ATH
             IF(LNG.EQ.2) WRITE(LU,116) ATH
 115         FORMAT(1X,/,1X,'PROSOU : COURANTS DE HOULE',/,
-     *                  1X,'         LECTURE AU TEMPS ',F10.3,/)
+     &                  1X,'         LECTURE AU TEMPS ',F10.3,/)
 116         FORMAT(1X,/,1X,'PROSOU: WAVE DRIVEN CURRENTS MODELLING',/,
-     *                  1X,'         READING FILE AT TIME ',F10.3,/)
+     &                  1X,'         READING FILE AT TIME ',F10.3,/)
             IF(IELMU.NE.IELM1) THEN
-              CALL CHGDIS(FXH,IELM1,IELMU,MESH)
-              CALL CHGDIS(FYH,IELM1,IELMU,MESH)
+              CALL CHGDIS(FXWAVE,IELM1,IELMU,MESH)
+              CALL CHGDIS(FYWAVE,IELM1,IELMU,MESH)
             ENDIF
             DEJALU = .TRUE.
-C
+!
          ENDIF
-C
-C        ADDING INTO FU AND FV
-C
-         CALL OS('X=X+Y   ',X=FU,Y=FXH)
-         CALL OS('X=X+Y   ',X=FV,Y=FYH)
-C
+!
+!        ADDS INTO FU AND FV
+!
+         IF(INCLUS(COUPLING,'TOMAWAC')) THEN
+           IF(IELMU.NE.IELM1) THEN
+             CALL CHGDIS(FXWAVE,IELM1,IELMU,MESH)
+             CALL CHGDIS(FYWAVE,IELM1,IELMU,MESH)
+           ENDIF
+         ENDIF
+         CALL OS('X=X+Y   ',X=FU,Y=FXWAVE)
+         CALL OS('X=X+Y   ',X=FV,Y=FYWAVE)
+!
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C
-C  PRISE EN COMPTE DES INFILTRATIONS DANS LE SOUS-SOL
-C  COMMUNICATION AVEC ESTEL-3D
-C
-C     GET SOURCE TERM FROM ESTEL-3D TO ACCOUNT FROM INFILTRATION
-C     CALL TO THE INFILTRATION ROUTINE
-C
+!
+!-----------------------------------------------------------------------
+!
+!
+!  TAKES SEEPAGE IN THE SOIL INTO ACCOUNT
+!  COMMUNICATES WITH ESTEL-3D
+!
+!     GETS SOURCE TERM FROM ESTEL-3D TO ACCOUNT FOR SEEPAGE
+!     CALLS THE INFILTRATION ROUTINE
+!
       CALL INFILTRATION_GET(SMH%R,UNSV2D%R,YASMH)
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

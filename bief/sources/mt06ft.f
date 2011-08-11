@@ -1,218 +1,216 @@
-C                       *****************
-                        SUBROUTINE MT06FT
-C                       *****************
-C
-     *( A11 , A12 , A13 ,
-     *        A22 , A23 , 
-     *              A33 , 
-     *  XMUL,SF,F,X,Y,Z,IKLE1,IKLE2,IKLE3,NBOR,NELEM,NELMAX)
-C
-C***********************************************************************
-C BIEF VERSION 5.5         26/04/04    J-M HERVOUET (LNH) 01 30 87 80 18
-C
-C***********************************************************************
-C
-C      FONCTION:
-C      ========:
-C
-C    CE SOUS-PROGRAMME CALCULE LES COEFFICIENTS DE LA MATRICE SUIVANTE:
-C
-C                              /
-C                    A    =   /  F * (P *P )*J(X,Y) DXDY
-C                     I J    /S        I  J
-C
-C     PAR MAILLE ELEMENTAIRE .
-C
-C     J(X,Y) : JACOBIEN DE LA TRANSFORMATION ISOPARAMETRIQUE
-C
-C     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-C
-C     L'ELEMENT EST LE TRIANGLE P1, MAIS DANS UN MAILLAGE DE PRISMES
-C     DECOUPE EN TETRAEDRES
-C
-C     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |     A11,A12... |<-- |  ELEMENTS DE LA MATRICE
-C |     XMUL       | -->|  FACTEUR MULTIPLICATIF
-C |     SF,SG,SH   | -->|  STRUCTURES DE F,G ET H.
-C |     SU,SV,SW   | -->|  STRUCTURES DE U,V ET W.
-C |     F,G,H      | -->|  FONCTIONS INTERVENANT DANS LE CALCUL DE LA
-C |                |    |  MATRICE.
-C |     U,V,W      | -->|  COMPOSANTES D'UN VECTEUR INTERVENANT DANS LE
-C |                |    |  CALCUL DE LA MATRICE.
-C |     XEL,YEL,ZEL| -->|  COORDONNEES DES POINTS DANS L'ELEMENT
-C |     SURFAC     | -->|  SURFACE DES TRIANGLES.
-C |     IKLE1..3   | -->|  PASSAGE DE LA NUMEROTATION LOCALE A GLOBALE
-C |     NELEM      | -->|  NOMBRE D'ELEMENTS DU MAILLAGE
-C |     NELMAX     | -->|  NOMBRE MAXIMUM D'ELEMENTS DU MAILLAGE
-C |                |    |  (CAS D'UN MAILLAGE ADAPTATIF)
-C |________________|____|______________________________________________
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C-----------------------------------------------------------------------
-C
-C PROGRAMMES APPELES : NEANT
-C
-C**********************************************************************
-C     -------------
-C     | ATTENTION | : LE JACOBIEN DOIT ETRE POSITIF .
-C     -------------
-C**********************************************************************
-C
+!                    *****************
+                     SUBROUTINE MT06FT
+!                    *****************
+!
+     &( A11 , A12 , A13 ,
+     &        A22 , A23 ,
+     &              A33 ,
+     &  XMUL,SF,F,X,Y,Z,IKLE1,IKLE2,IKLE3,NBOR,NELEM,NELMAX)
+!
+!***********************************************************************
+! BIEF   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    COMPUTES THE COEFFICIENTS OF THE FOLLOWING MATRIX:
+!code
+!+                              /
+!+                    A    =   /  F * (P *P )*J(X,Y) DXDY
+!+                     I J    /S        I  J
+!+
+!+     BY ELEMENTARY CELL;
+!+  !! THE ELEMENT IS THE P1 TRIANGLE, BUT IN A MESH OF PRISMS !!
+!+  !! SPLIT IN TETRAHEDRONS                                   !!
+!+
+!+     J(X,Y): JACOBIAN OF THE ISOPARAMETRIC TRANSFORMATION
+!
+!warning  THE JACOBIAN MUST BE POSITIVE
+!
+!history  J-M HERVOUET (LNH)
+!+        26/04/04
+!+        V5P5
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| A11            |<--| ELEMENTS OF MATRIX
+!| A12            |<--| ELEMENTS OF MATRIX
+!| A13            |<--| ELEMENTS OF MATRIX
+!| A22            |<--| ELEMENTS OF MATRIX
+!| A23            |<--| ELEMENTS OF MATRIX
+!| A33            |<--| ELEMENTS OF MATRIX
+!| F              |-->| FUNCTION F USED IN THE FORMULA
+!| IKLE1          |-->| FIRST POINTS OF TRIANGLES
+!| IKLE2          |-->| SECOND POINTS OF TRIANGLES
+!| IKLE3          |-->| THIRD POINTS OF TRIANGLES
+!| NBOR           |-->| GLOBAL NUMBER OF BOUNDARY POINTS
+!| NELEM          |-->| NUMBER OF ELEMENTS
+!| NELMAX         |-->| MAXIMUM NUMBER OF ELEMENTS
+!| SF             |-->| BIEF_OBJ STRUCTURE OF F
+!| SURFAC         |-->| AREA OF TRIANGLES
+!| XMUL           |-->| MULTIPLICATION FACTOR
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF, EX_MT06FT => MT06FT
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN) :: NBOR(*),NELEM,NELMAX
       INTEGER, INTENT(IN) :: IKLE1(NELMAX),IKLE2(NELMAX),IKLE3(NELMAX)
-C
+!
       DOUBLE PRECISION, INTENT(INOUT) :: A11(*),A12(*),A13(*)
       DOUBLE PRECISION, INTENT(INOUT) ::        A22(*),A23(*)
       DOUBLE PRECISION, INTENT(INOUT) ::               A33(*)
-C
+!
       DOUBLE PRECISION, INTENT(IN) :: XMUL
       DOUBLE PRECISION, INTENT(IN) :: F(*)
-C
-C     STRUCTURE DE F
+!
+!     STRUCTURE OF F
       TYPE(BIEF_OBJ), INTENT(IN) :: SF
-C
+!
       DOUBLE PRECISION, INTENT(IN) :: X(*),Y(*),Z(*)
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTRINSIC SQRT
-C
-C-----------------------------------------------------------------------
-C
-C     DECLARATIONS SPECIFIQUES A CE SOUS-PROGRAMME
-C
+!
+!-----------------------------------------------------------------------
+!
+!     DECLARATIONS SPECIFIC TO THIS SUBROUTINE
+!
       INTEGER IELMF,I1,I2,I3,IELEM
-C
+!
       DOUBLE PRECISION SUR60,S,X1,X2,X3,Y1,Y2,Y3,Z1,Z2,Z3,F1,F2,F3,F123
       DOUBLE PRECISION DET1,DET2
-C
-C**********************************************************************
-C
+!
+!**********************************************************************
+!
       IELMF=SF%ELM
-C
-C-----------------------------------------------------------------------
-C
-C     F LINEAIRE PAR FACE DE BORD
-C
+!
+!-----------------------------------------------------------------------
+!
+!     F LINEAR BY BOUNDARY SIDE
+!
       IF(IELMF.EQ.61.OR.IELMF.EQ.81) THEN
-C
+!
          SUR60  = XMUL/60.D0
-C
-C   BOUCLE SUR LES FACES DE BORD
-C
+!
+!   LOOP ON THE BOUNDARY SIDES
+!
          DO 1 IELEM = 1,NELEM
-C
-C           NUMEROTATION GLOBALE DES SOMMETS DE LA FACE
-C
+!
+!           GLOBAL NUMBERING OF THE SIDE VERTICES
+!
             I1 = NBOR(IKLE1(IELEM))
             I2 = NBOR(IKLE2(IELEM))
             I3 = NBOR(IKLE3(IELEM))
-C
+!
             X1 = X(I1)
             Y1 = Y(I1)
             Z1 = Z(I1)
-C
+!
             X2 = X(I2)-X1
-            X3 = X(I3)-X1            
+            X3 = X(I3)-X1
             Y2 = Y(I2)-Y1
-            Y3 = Y(I3)-Y1            
+            Y3 = Y(I3)-Y1
             Z2 = Z(I2)-Z1
             Z3 = Z(I3)-Z1
-C
+!
             F1 = F(IKLE1(IELEM))
             F2 = F(IKLE2(IELEM))
             F3 = F(IKLE3(IELEM))
             F123  = F1 + F2 + F3
-C
-C           CALCUL DE LA SURFACE DU TRIANGLE (PAR PRODUIT VECTORIEL)
-C
-            S=0.5D0*SQRT(  (Y2*Z3-Y3*Z2)**2 
-     *                    +(X3*Z2-X2*Z3)**2  
-     *                    +(X2*Y3-X3*Y2)**2   )  
-C 
+!
+!           COMPUTES THE AREA OF THE TRIANGLE (BY VECTOR PRODUCT)
+!
+            S=0.5D0*SQRT(  (Y2*Z3-Y3*Z2)**2
+     &                    +(X3*Z2-X2*Z3)**2
+     &                    +(X2*Y3-X3*Y2)**2   )
+!
             DET1 = S * SUR60
             DET2 = DET1 + DET1
-C
-C***********************************************************************
-C
-C          ELEMENTS EXTERIEURS A LA DIAGONALE
-C
+!
+!***********************************************************************
+!
+!          ELEMENTS OFF THE DIAGONAL
+!
            A12(IELEM) = DET1 * (F123+F123-F3)
            A13(IELEM) = DET1 * (F123+F123-F2)
            A23(IELEM) = DET1 * (F123+F123-F1)
-C
-C          TERMES DIAGONAUX
-C
+!
+!          DIAGONAL TERMS
+!
            A11(IELEM) = DET2 * (F123+F1+F1)
            A22(IELEM) = DET2 * (F123+F2+F2)
            A33(IELEM) = DET2 * (F123+F3+F3)
-C
+!
 1        CONTINUE
-C
-C-----------------------------------------------------------------------
-C
-C     AUTRES TYPES DE DISCRETISATION DE F
-C
+!
+!-----------------------------------------------------------------------
+!
+!     OTHER TYPES OF DISCRETISATION OF F
+!
       ELSE
-C
+!
          IF (LNG.EQ.1) WRITE(LU,100) IELMF,SF%NAME
          IF (LNG.EQ.2) WRITE(LU,101) IELMF,SF%NAME
 100      FORMAT(1X,'MT06FT (BIEF) :',/,
-     *          1X,'DISCRETISATION DE F NON PREVUE : ',1I6,
-     *          1X,'NOM REEL : ',A6)
+     &          1X,'DISCRETISATION DE F NON PREVUE : ',1I6,
+     &          1X,'NOM REEL : ',A6)
 101      FORMAT(1X,'MT06FT (BIEF) :',/,
-     *          1X,'DISCRETIZATION OF F NOT AVAILABLE:',1I6,
-     *          1X,'REAL NAME: ',A6)
+     &          1X,'DISCRETIZATION OF F NOT AVAILABLE:',1I6,
+     &          1X,'REAL NAME: ',A6)
          CALL PLANTE(1)
          STOP
-C
+!
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C     NOTE : SUR UN MAILLAGE DE TRIANGLE EN PLAN (X,Y)
-C
-C     DO 1 IELEM = 1 , NELEM
-C
-C     F1 = F(IKLE1(IELEM))
-C     F2 = F(IKLE2(IELEM))
-C     F3 = F(IKLE3(IELEM))
-C
-C     F123 = F1 + F2 + F3
-C
-C     DET1 = SURFAC(IELEM) * SUR60
-C     DET2 = DET1 + DET1
-C
-C***********************************************************************
-C
-C  ELEMENTS EXTERIEURS A LA DIAGONALE
-C
-C     A12(IELEM) = DET1 * (F123+F123-F3)
-C     A13(IELEM) = DET1 * (F123+F123-F2)
-C     A23(IELEM) = DET1 * (F123+F123-F1)
-C
-C  TERMES DIAGONAUX
-C
-C     A11(IELEM) = DET2 * (F123+F1+F1)
-C     A22(IELEM) = DET2 * (F123+F2+F2)
-C     A33(IELEM) = DET2 * (F123+F3+F3)
-C
-C1     CONTINUE
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
+!     NOTE: ON A TRIANGULAR MESH IN PLANE (X, Y)
+!
+!     DO 1 IELEM = 1 , NELEM
+!
+!     F1 = F(IKLE1(IELEM))
+!     F2 = F(IKLE2(IELEM))
+!     F3 = F(IKLE3(IELEM))
+!
+!     F123 = F1 + F2 + F3
+!
+!     DET1 = SURFAC(IELEM) * SUR60
+!     DET2 = DET1 + DET1
+!
+!***********************************************************************
+!
+!  ELEMENTS OFF THE DIAGONAL
+!
+!     A12(IELEM) = DET1 * (F123+F123-F3)
+!     A13(IELEM) = DET1 * (F123+F123-F2)
+!     A23(IELEM) = DET1 * (F123+F123-F1)
+!
+!  DIAGONAL TERMS
+!
+!     A11(IELEM) = DET2 * (F123+F1+F1)
+!     A22(IELEM) = DET2 * (F123+F2+F2)
+!     A33(IELEM) = DET2 * (F123+F3+F3)
+!
+!1     CONTINUE
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

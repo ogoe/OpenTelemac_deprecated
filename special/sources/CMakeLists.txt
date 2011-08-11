@@ -6,7 +6,7 @@ include_directories("${PROJECT_BINARY_DIR}/bief/sources")
 #FILE->GLOB won't work with special, as there are architecture dependend versions
 #FILE(GLOB CTR_SOURCES special/sources *.f)
 #define the library
-set(CTR_SOURCES plante.f gracestop.f)
+set(CTR_SOURCES special_plante.f gracestop.f)
 add_library(special${TELEMAC_VERSION} STATIC ${CTR_SOURCES})
 
 set_target_properties(special${TELEMAC_VERSION} PROPERTIES PREFIX "")

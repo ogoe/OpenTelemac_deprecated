@@ -1,51 +1,58 @@
-C                       ********************
-                        SUBROUTINE P_IWRIT_C
-C                       ********************
-C
-     *(BUFFER,NBYTES,DEST,ITAG,IREQ)
-C
-C***********************************************************************
-C
-C      FONCTIONS: ENVOI DE VALEURS ENTRE PROCESSEURS.
-C      ==========
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |  BUFFER        | -->| ZONE TAMPON POUR LES DONNEES
-C |                |    | BUFFER / PUFFERFELD
-C |  NBYTES        | -->| NOMBRE DE BYTES A TRANSMETTRE
-C |                |    | LENGTH IN BYTES / LAENGE IN BYTES
-C |  DEST          | -->| DESTINATION DES DONNEES
-C |                |    | TID OF THE DEST.  / KNOTEN-ID DES EMPFAENGERS
-C |  ITAG          | -->| MESSAGE TAG
-C |  IREQ          | -->| NUMERO DE REQUEST POUR MPI_ISEND
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR :
-C
-C SOUS-PROGRAMMES APPELES : NEANT
-C
-C**********************************************************************
-C
+!                    ********************
+                     SUBROUTINE P_IWRIT_C
+!                    ********************
+!
+     &(BUFFER,NBYTES,DEST,ITAG,IREQ)
+!
+!***********************************************************************
+! PARAVOID   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    EXCHANGES VALUES BETWEEN PROCESSORS.
+!
+!warning  EMPTY SHELL IN SCALAR MODE FOR PARALLEL COMPATIBILITY
+!
+!history  PASCAL VEZOLLES (IBM)
+!+        23/06/2008
+!+        V5P9
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| BUFFER         |-->| ZONE TAMPON POUR LES DONNEES
+!|                |   | BUFFER / PUFFERFELD
+!| DEST           |-->| DESTINATION DES DONNEES
+!|                |   | TID OF THE DEST.  / KNOTEN-ID DES EMPFAENGERS
+!| IREQ           |-->| NUMERO DE REQUEST POUR MPI_ISEND
+!| ITAG           |-->| MESSAGE TAG
+!| NBYTES         |-->| NOMBRE DE BYTES A TRANSMETTRE
+!|                |   | LENGTH IN BYTES / LAENGE IN BYTES
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
+!
       INTEGER NBYTES,DEST,ITAG,IREQ,IER
       CHARACTER(LEN=*) BUFFER
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       IF(LNG.EQ.1) WRITE(LU,*) 'APPEL DE P_IWRIT VERSION VIDE'
       IF(LNG.EQ.2) WRITE(LU,*) 'CALL OF P_IWRIT IN ITS VOID VERSION'
-C
-C----------------------------------------------------------------------
-C
+!
+!----------------------------------------------------------------------
+!
       RETURN
       END

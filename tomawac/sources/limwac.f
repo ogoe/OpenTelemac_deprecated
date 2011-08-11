@@ -1,70 +1,105 @@
-C                       *****************
-                        SUBROUTINE LIMWAC
-C                       *****************
-C
-     *(F     , FBOR  , LIFBOR, NPTFR , NPLAN , NF    ,  TETA , FREQ  ,
-     * NPOIN2, NBOR  , AT    , LT    , DDC   , LIMSPE, FPMAXL, FETCHL,
-     * SIGMAL, SIGMBL, GAMMAL, FPICL , HM0L  , APHILL, TETA1L, SPRE1L,
-     * TETA2L, SPRE2L, XLAMDL, X ,Y  , KENT  , KSORT , NFO1  , NBI1  ,
-     * BINBI1, UV    , VV    , SPEULI, VENT  , VENSTA, GRAVIT, DEUPI , 
-     * PRIVE , NPRIV , SPEC  , FRA   , DEPTH , FRABL )
-C
-C***********************************************************************
-C TOMAWAC   V1.0            01/02/95        F. MARCOS  (LNH) 30 87 72 66
-C***********************************************************************
-C
-C      FONCTION:
-C      =========
-C
-C    CONDITIONS AUX LIMITES
-C
-C    ATTENTION
-C    PAR DEFAUT, ON DUPLIQUE SUR L'ENSEMBLE DES DIRECTIONS ET DES
-C    FREQUENCES LA CONDITION A LA LIMITE DONNEE DANS LE FICHIER DYNAM
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C !      NOM       !MODE!                   ROLE                       !
-C !________________!____!______________________________________________!
-C !    F           ! -->!  DENSITE SPECTRALE                           !
-C !    FBOR        !<-->!  DENSITE SPECTRALE AU BORD                   !
-C !    LIFBOR      ! -->!  TYPE DE CONDITION LIMITE SUR F              !
-C !    NPTFR       ! -->!  NOMBRE DE POINTS FRONTIERE 2D               !
-C !    NPLAN       ! -->!  NOMBRE DE DIRECTIONS                        !
-C !    NF          ! -->!  NOMBRE DE FREQUENCES                        !
-C !    TETA        ! -->! DIRECTIONS DE PROPAGATION                    !
-C !    FREQ        ! -->! FREQUENCES DISCRETISEES                      !
-C !    NPOIN2      ! -->!  NOMBRE DE POINTS 2D                         !
-C !    NBOR        ! -->!  NUMEROTATION DES POINTS DE BORD 2D          !
-C !    AT          ! -->!  TEMPS                                       !
-C !    LT          ! -->!  NUMERO DU PAS DE TEMPS                      !
-C !    DDC         ! -->!  DATE DU DEBUT DU CALCUL                     !
-C !    X           ! -->!  ABSCISSES DES POINTS 2D                     !
-C !    Y           ! -->!  ORDONNEES DES POINTS 2D                     !
-C !    KENT        ! -->!  C.L. INDIQUANT UNE FRONTIERE MARITIME       !
-C !    KSORT       ! -->!  C.L. INDIQUANT UNE FRONTIERE SOLIDE         !
-C !    NFO1        ! -->!  NUMERO DU FICHIER FORMATE UTILISATEUR       !
-C !    NBI1        ! -->!  NUMERO DU FICHIER BINAIRE UTILISATEUR       !
-C !    BINBI1      ! -->!  BINAIRE DU FICHIER BINAIRE UTILISATEUR      !
-C !    PRIVE       ! -->!  TABLEAU DE L'UTILISATEUR                    !
-C !    NPRIV       ! -->!  DIMENSION DU TABLEAU PRIVE                  !
-C !________________!____!______________________________________________!
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C SOUS-PROGRAMME APPELE PAR : WAC
-C
-C***********************************************************************
-C
+!                    *****************
+                     SUBROUTINE LIMWAC
+!                    *****************
+!
+     &(F     , FBOR  , LIFBOR, NPTFR , NPLAN , NF    ,  TETA , FREQ  ,
+     & NPOIN2, NBOR  , AT    , LT    , DDC   , LIMSPE, FPMAXL, FETCHL,
+     & SIGMAL, SIGMBL, GAMMAL, FPICL , HM0L  , APHILL, TETA1L, SPRE1L,
+     & TETA2L, SPRE2L, XLAMDL, X ,Y  , KENT  , KSORT , NFO1  , NBI1  ,
+     & BINBI1, UV    , VV    , SPEULI, VENT  , VENSTA, GRAVIT, DEUPI ,
+     & PRIVE , NPRIV , SPEC  , FRA   , DEPTH , FRABL ,BOUNDARY_COLOUR)
+!
+!***********************************************************************
+! TOMAWAC   V6P1                                   21/06/2011
+!***********************************************************************
+!
+!brief    BOUNDARY CONDITIONS.
+!
+!warning  BY DEFAULT, THE BOUNDARY CONDITIONS SPECIFIED IN THE FILE
+!+            DYNAM ARE DUPLICATED ON ALL THE DIRECTIONS AND FREQUENCIES
+!
+!history  F. MARCOS (LNH)
+!+        01/02/95
+!+        V1P0
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!history  G.MATTAROLO (EDF - LNHE)
+!+        20/06/2011
+!+        V6P1
+!+   Translation of French names of the variables in argument
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| APHILL         |-->| BOUNDARY PHILLIPS CONSTANT
+!| AT             |-->| COMPUTATION TIME
+!| BINBI1         |-->| BINARY FILE 1 BINARY
+!| BOUNDARY_COLOUR|-->| COLOUR OF BOUNDARY POINT (DEFAULT: ITS RANK)
+!| DDC            |-->| DATE OF COMPUTATION BEGINNING
+!| DEPTH          |-->| WATER DEPTH
+!| DEUPI          |-->| 2.PI
+!| F              |-->| VARIANCE DENSITY DIRECTIONAL SPECTRUM
+!| FBOR           |<->| SPECTRAL VARIANCE DENSITY AT THE BOUNDARIES
+!| FETCHL         |-->| BOUNDARY MEAN FETCH VALUE
+!| FPICL          |-->| BOUNDARY PEAK FREQUENCY
+!| FPMAXL         |-->| BOUNDARY MAXIMUM PEAK FREQUENCY
+!| FRA            |<--| DIRECTIONAL SPREADING FUNCTION VALUES
+!| FRABL          |-->| BOUNDARY ANGULAR DISTRIBUTION FUNCTION
+!| FREQ           |-->| DISCRETIZED FREQUENCIES
+!| GAMMAL         |-->| BOUNDARY PEAK FACTOR
+!| GRAVIT         |-->| GRAVITY ACCELERATION
+!| HM0L           |-->| BOUNDARY SIGNIFICANT WAVE HEIGHT
+!| KENT           |-->| B.C.: A SPECTRUM IS PRESCRIBED AT THE BOUNDARY
+!| KSORT          |-->| B.C.: FREE BOUNDARY: NO ENERGY ENTERING THE DOMAIN
+!| LIFBOR         |-->| TYPE OF BOUNDARY CONDITION ON F
+!| LIMSPE         |-->| TYPE OF BOUNDARY DIRECTIONAL SPECTRUM
+!| LT             |-->| NUMBER OF THE TIME STEP CURRENTLY SOLVED
+!| NBI1           |-->| LOGICAL UNIT NUMBER OF THE USER BINARY FILE
+!| NBOR           |-->| GLOBAL NUMBER OF BOUNDARY POINTS
+!| NF             |-->| NUMBER OF FREQUENCIES
+!| NFO1           |-->| LOGICAL UNIT NUMBER OF THE USER FORMATTED FILE
+!| NPLAN          |-->| NUMBER OF DIRECTIONS
+!| NPOIN2         |-->| NUMBER OF POINTS IN 2D MESH
+!| NPRIV          |-->| NUMBER OF PRIVATE ARRAYS
+!| NPTFR          |-->| NUMBER OF BOUNDARY POINTS
+!| PRIVE          |-->| USER WORK TABLE
+!| SIGMAL         |-->| BOUNDARY SPECTRUM VALUE OF SIGMA-A
+!| SIGMBL         |-->| BOUNDARY SPECTRUM VALUE OF SIGMA-B
+!| SPEC           |<--| VARIANCE DENSITY FREQUENCY SPECTRUM
+!| SPEULI         |-->| INDICATES IF B.C. SPECTRUM IS MODIFIED BY USER
+!| SPRE1L         |-->| BOUNDARY DIRECTIONAL SPREAD 1
+!| SPRE2L         |-->| BOUNDARY DIRECTIONAL SPREAD 2
+!| TETA           |-->| DISCRETIZED DIRECTIONS
+!| TETA1L         |-->| BOUNDARY MAIN DIRECTION 1
+!| TETA2L         |-->| BOUNDARY MAIN DIRECTION 2
+!| UV, VV         |-->| WIND VELOCITIES AT THE MESH POINTS
+!| VENSTA         |-->| INDICATES IF THE WIND IS STATIONARY
+!| VENT           |-->| INDICATES IF WIND IS TAKEN INTO ACCOUNT
+!| X              |-->| ABSCISSAE OF POINTS IN THE MESH
+!| XLAMDL         |-->| BOUNDARY WEIGHTING FACTOR FOR ANGULAR
+!|                |   | DISTRIBUTION FUNCTION
+!| Y              |-->| ORDINATES OF POINTS IN THE MESH
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+      USE INTERFACE_TOMAWAC, EX_LIMWAC => LIMWAC
       IMPLICIT NONE
-C
+!
       INTEGER LNG,LU
       COMMON/INFO/ LNG,LU
-C
+!
       INTEGER NPLAN,NF,NPOIN2,NPTFR,LT,NPRIV
-C
+      INTEGER, INTENT(IN) :: BOUNDARY_COLOUR(NPTFR)
+!
       DOUBLE PRECISION F(NPOIN2,NPLAN,NF),X(NPOIN2),Y(NPOIN2)
       DOUBLE PRECISION FBOR(NPTFR,NPLAN,NF),TETA(NPLAN),FREQ(NF)
       DOUBLE PRECISION UV(NPOIN2),VV(NPOIN2), SPEC(NF), FRA(NPLAN)
@@ -72,39 +107,39 @@ C
       DOUBLE PRECISION HM0L,FPICL,GAMMAL,SIGMAL,SIGMBL,APHILL,FETCHL
       DOUBLE PRECISION FPMAXL,TETA1L,SPRE1L,TETA2L,SPRE2L,XLAMDL
       DOUBLE PRECISION GRAVIT,DEUPI,E2FMIN
-C
+!
       DOUBLE PRECISION AT
-C
+!
       LOGICAL SPEULI, VENT, VENSTA
-C
+!
       INTEGER NBOR(NPTFR),LIFBOR(NPTFR),NFO1,NBI1,NPB
       INTEGER KENT,KSORT,IFF,IPLAN,IPTFR,LIMSPE,FRABL
-C
+!
       DOUBLE PRECISION, ALLOCATABLE :: TRAV(:)
       DOUBLE PRECISION, ALLOCATABLE :: UV2D(:),VV2D(:),PROF(:)
       DOUBLE PRECISION, ALLOCATABLE :: FB_CTE(:,:)
       LOGICAL FLAG
-C
+!
       CHARACTER*3 BINBI1
-C
+!
       SAVE NPB,UV2D,VV2D,PROF,FB_CTE
-C
-C***********************************************************************
-C
-C   MODIFICATION EVENTUELLE DU TYPE DE CONDITION A LA LIMITE
-C
-C   A REMPLIR PAR L'UTILISATEUR
-C
-C   LIFBOR(IPTFR)=KENT OU KSORT
-C
+!
+!***********************************************************************
+!
+!   MODIFIES THE TYPE OF BOUNDARY CONDITION (OPTIONAL)
+!
+!   TO BE CODED BU THE USER
+!
+!   LIFBOR(IPTFR)=KENT OR KSORT
+!
       IF (LIMSPE.EQ.0 .AND. .NOT.SPEULI) RETURN
-C
+!
       FLAG=.FALSE.
       IF (VENT .AND. (LIMSPE.EQ.1 .OR. LIMSPE.EQ.2 .OR. LIMSPE.EQ.3
-     * .OR. LIMSPE.EQ.5)) FLAG=.TRUE.
-C
-C     AU PREMIER PASSAGE, ON ALLOUE DE LA MEMOIRE AUX TABLEAUX UTILES
-C     ---------------------------------------------------------------
+     & .OR. LIMSPE.EQ.5)) FLAG=.TRUE.
+!
+!     THE FIRST TIME, ALLOCATES MEMORY FOR THE USEFUL ARRAYS
+!     ---------------------------------------------------------------
       IF (LT.LT.1) THEN
         NPB=1
         IF (FLAG) THEN
@@ -119,15 +154,15 @@ C     ---------------------------------------------------------------
            ALLOCATE(FB_CTE(1:NPLAN,1:NF))
         ENDIF
       ENDIF
-      IF (.NOT.allocated(UV2D)) ALLOCATE(UV2D(NPTFR))
-      IF (.NOT.allocated(VV2D)) ALLOCATE(VV2D(NPTFR)) 
-      IF (.NOT.allocated(PROF)) ALLOCATE(PROF(NPTFR))     
-      IF (.NOT.allocated(FB_CTE)) ALLOCATE(FB_CTE(1:NPLAN,1:NF))
-C
-C     AU PREMIER PASSAGE (ET EVENTUELLEMENT AUX AUTRES SI LE VENT EST 
-C     INSTATIONNAIRE ET QUE LE SPECTRE A LA LIMITE EN DEPEND),
-C     ON CALCULE LE SPECTRE AUX LIMITES
-C     ----------------------------------------------------------------
+      IF (.NOT.ALLOCATED(UV2D)) ALLOCATE(UV2D(NPTFR))
+      IF (.NOT.ALLOCATED(VV2D)) ALLOCATE(VV2D(NPTFR))
+      IF (.NOT.ALLOCATED(PROF)) ALLOCATE(PROF(NPTFR))
+      IF (.NOT.ALLOCATED(FB_CTE)) ALLOCATE(FB_CTE(1:NPLAN,1:NF))
+!
+!     THE FIRST TIME (AND POSSIBLY SUBSEQUENTLY IF THE WIND IS NOT
+!     STATIONARY AND IF THE BOUNDARY SPECTRUM DEPENDS ON IT),
+!     COMPUTES THE BOUNDARY SPECTRUM
+!     ----------------------------------------------------------------
       IF (LT.LT.1 .OR. (.NOT.VENSTA.AND.FLAG) .OR. SPEULI) THEN
         IF (FLAG) THEN
           DO IPTFR=1,NPTFR
@@ -140,85 +175,85 @@ C     ----------------------------------------------------------------
             PROF(IPTFR)=DEPTH(NBOR(IPTFR))
           ENDDO
         ENDIF
-C
-C       APPEL A SPEINI
-C     ----------------------------------------------------------------
+!
+!       CALLS SPEINI
+!     ----------------------------------------------------------------
         E2FMIN = 1.D-30
-C
+!
         IF (NPB.EQ.NPTFR) THEN
           CALL SPEINI
-     *( FBOR  , SPEC  , FRA    , UV2D  , VV2D  , FREQ ,
-     *  TETA  , GRAVIT, FPMAXL , FETCHL, SIGMAL, SIGMBL, GAMMAL, FPICL,
-     *  HM0L  , APHILL, TETA1L , SPRE1L, TETA2L, SPRE2L, XLAMDL,
-     *  NPTFR , NPLAN , NF     , LIMSPE, E2FMIN, PROF  , FRABL )
+     &( FBOR  , SPEC  , FRA    , UV2D  , VV2D  , FREQ ,
+     &  TETA  , GRAVIT, FPMAXL , FETCHL, SIGMAL, SIGMBL, GAMMAL, FPICL,
+     &  HM0L  , APHILL, TETA1L , SPRE1L, TETA2L, SPRE2L, XLAMDL,
+     &  NPTFR , NPLAN , NF     , LIMSPE, E2FMIN, PROF  , FRABL )
         ELSE
           CALL SPEINI
-     *( FB_CTE, SPEC  , FRA    , UV2D  , VV2D  , FREQ ,
-     *  TETA  , GRAVIT, FPMAXL , FETCHL, SIGMAL, SIGMBL, GAMMAL, FPICL,
-     *  HM0L  , APHILL, TETA1L , SPRE1L, TETA2L, SPRE2L, XLAMDL,
-     *  NPB   , NPLAN , NF     , LIMSPE, E2FMIN, PROF  , FRABL )
-	ENDIF
-C
-C     ===========================================================
-C     ZONE UTILISATEUR - ON PEUT Y MODIFIER RESU
-C     ===========================================================
+     &( FB_CTE, SPEC  , FRA    , UV2D  , VV2D  , FREQ ,
+     &  TETA  , GRAVIT, FPMAXL , FETCHL, SIGMAL, SIGMBL, GAMMAL, FPICL,
+     &  HM0L  , APHILL, TETA1L , SPRE1L, TETA2L, SPRE2L, XLAMDL,
+     &  NPB   , NPLAN , NF     , LIMSPE, E2FMIN, PROF  , FRABL )
+        ENDIF
+!
+!     ===========================================================
+!     TO BE MODIFIED BY USER - RESU CAN BE CHANGED
+!     ===========================================================
         IF (SPEULI) THEN
-C
-C        EXEMPLE DE MODIFICATION DE FRA - A MODIFIER SUIVANT VOTRE CAS
-C        EXAMPLE OF MODIFICATION OF FRA - TO BE MODIFIED DEPENDING 
-C        ON YOUR CASE
-C        ALLOCATE(TRAV(1:NF))
-C
-C        DO IFREQ=1,NF
-C             IF (FREQ(IFF).LT.FPIC) THEN
-C              TRAV(IFF)=0.4538D0*(FREQ(IFF)/FPIC)**(-2.03D0)
-C           ELSE
-C              TRAV(IFF)=0.4538D0*(FREQ(IFF)/FPIC)**(1.04D0)
-C           ENDIF
-C        ENDDO
-C
-C        DO IPLAN=1,NPLAN
-C             DTETA=TETA(IPLAN)-TETA1
-C           IF ((TETA(IPLAN)-TETA1).GT.DEUPI/2) THEN
-C              DTETA=DEUPI-DTETA
-C           ENDIF
-C           DO IFF=1,NF
-C              FRA(IPLAN)=1.D0/SQRT(DEUPI)*TRAV(IFF)*
-C     *                       EXP(-DTETA**2/(2.D0*TRAV(IFF)**2))
-C              DO IPTFR=1,NPTFR
-C                FBOR(IPTFR,IPLAN,IFF)= SPEC(IFF)*FRA(IPLAN)
-C              ENDDO
-C           ENDDO
-C        ENDDO
-C        DEALLOCATE(TRAV)
-C
-C        PARTIE A SUPPRIMER SI ON FAIT DES MODIFICATIONS
-C        LINES TO ERASE IF YOU DO MODIFICATIONS 
-C
+!
+!        EXEMPLE DE MODIFICATION DE FRA - A MODIFIER SUIVANT VOTRE CAS
+!        EXAMPLE OF MODIFICATION OF FRA - TO BE MODIFIED DEPENDING
+!        ON YOUR CASE
+!        ALLOCATE(TRAV(1:NF))
+!
+!        DO IFREQ=1,NF
+!             IF (FREQ(IFF).LT.FPIC) THEN
+!              TRAV(IFF)=0.4538D0*(FREQ(IFF)/FPIC)**(-2.03D0)
+!           ELSE
+!              TRAV(IFF)=0.4538D0*(FREQ(IFF)/FPIC)**(1.04D0)
+!           ENDIF
+!        ENDDO
+!
+!        DO IPLAN=1,NPLAN
+!             DTETA=TETA(IPLAN)-TETA1
+!           IF ((TETA(IPLAN)-TETA1).GT.DEUPI/2) THEN
+!              DTETA=DEUPI-DTETA
+!           ENDIF
+!           DO IFF=1,NF
+!              FRA(IPLAN)=1.D0/SQRT(DEUPI)*TRAV(IFF)*
+!     *                       EXP(-DTETA**2/(2.D0*TRAV(IFF)**2))
+!              DO IPTFR=1,NPTFR
+!                FBOR(IPTFR,IPLAN,IFF)= SPEC(IFF)*FRA(IPLAN)
+!              ENDDO
+!           ENDDO
+!        ENDDO
+!        DEALLOCATE(TRAV)
+!
+!        PARTIE A SUPPRIMER SI ON FAIT DES MODIFICATIONS
+!        DELETE THESE LINES IF MODIFICATIONS HAVE BEEN IMPLEMENTED
+!
         IF (LNG.EQ.1) THEN
           WRITE(LU,*)'*****  ERREUR LIMWAC  ******'
           WRITE(LU,*)
-     *      ' VOUS NE MODIFIEZ PAS LE SPECTRE AUX LIMITES ALORS QUE'
+     &      ' VOUS NE MODIFIEZ PAS LE SPECTRE AUX LIMITES ALORS QUE'
           WRITE(LU,*)' VOUS EN DEMANDEZ LA POSSIBILITE'
         ELSE
           WRITE(LU,*)'*****  ERROR LIMWAC  ******'
           WRITE(LU,*)
-     *      ' YOU DID NOT MODIFY THE BOUNDARY SPECTRUM WHEREAS '
+     &      ' YOU DID NOT MODIFY THE BOUNDARY SPECTRUM WHEREAS '
           WRITE(LU,*)' YOU ASK FOR THAT '
         ENDIF
         STOP
       ENDIF
-C
-C     ===========================================================
-C     FIN DE LA ZONE UTILISATEUR 
-C     ===========================================================
+!
+!     ===========================================================
+!     END OF USER MODIFICATIONS
+!     ===========================================================
       ENDIF
-C
-C
-C     -----------------------------------------------------------------
-C     DUPLICATION SUR TOUTES LES DIRECTIONS ET TOUTES LES FREQUENCES
-C     DE LA C.L. DE DYNAM SI ON EST EN CONDITION DE FRONT. LIQUIDE
-C     -----------------------------------------------------------------
+!
+!
+!     -----------------------------------------------------------------
+!     DUPLICATES THE BOUNDARY CONDITION FROM DYNAM ON ALL THE
+!     DIRECTIONS AND FREQUENCIES, IF LIQUID BOUNDARY
+!     -----------------------------------------------------------------
       IF (FLAG .OR. LIMSPE.EQ.7 .OR. SPEULI) THEN
         DO IPTFR=1,NPTFR
           IF (LIFBOR(IPTFR).EQ.KENT) THEN
@@ -236,11 +271,11 @@ C     -----------------------------------------------------------------
               DO IPLAN=1,NPLAN
                 F(NBOR(IPTFR),IPLAN,IFF)=FB_CTE(IPLAN,IFF)
               ENDDO
-            ENDDO     
+            ENDDO
           ENDIF
         ENDDO
       ENDIF
-C-----------------------------------------------------------------------
-C
+!-----------------------------------------------------------------------
+!
       RETURN
       END

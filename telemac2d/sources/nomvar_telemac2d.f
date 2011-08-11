@@ -1,77 +1,72 @@
-C                       ***************************
-                        SUBROUTINE NOMVAR_TELEMAC2D
-C                       ***************************
-C
-     *(TEXTE,TEXTPR,MNEMO,NPERIAF,NTRAC,NAMETRAC)
-C
-C***********************************************************************
-C  TELEMAC 2D VERSION 5.8   31/08/07   J-M HERVOUET (LNH) 01 30 87 80 18
-C
-C***********************************************************************
-C
-C FONCTION  :  FIXE LES NOMS DES VARIABLES DU CODE POUR LES FICHIERS
-C              DE RESULTAT ET DE GEOMETRIE (TEXTE) ET POUR LE FICHIER
-C              DE RESULTATS DU CALCUL PRECEDENT (TEXTPR)
-C
-C              EN GENERAL TEXTE ET TEXTPR SONT EGAUX SAUF SI ON FAIT
-C              UNE SUITE A PARTIR D'UN AUTRE LOGICIEL.
-C
-C-----------------------------------------------------------------------
-C
-C FUNCTION  :  GIVE THE NAMES OF VARIABLES AS UNDERSTOOD IN
-C              SELAFIN FORMAT
-C
-C              FOR RESULTS FILE AND GEOMETRY FILE: IN TEXTE
-C
-C              FOR PREVIOUS COMPUTATION FILE: IN TEXTPR
-C
-C              TEXTE AND TEXTPR ARE GENERALLY THE SAME, EXCEPT TO
-C              RECOVER FILES IN ANOTHER LANGUAGE.
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE
-C |________________|____|______________________________________________|
-C |   TEXTE        |<-- | SEE ABOVE
-C |   TEXTPR       |<-- | SEE ABOVE
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR : PREDON
-C
-C SOUS-PROGAMME APPELE : NEANT
-C
-C**********************************************************************
-C
+!                    ***************************
+                     SUBROUTINE NOMVAR_TELEMAC2D
+!                    ***************************
+!
+     &(TEXTE,TEXTPR,MNEMO,NPERIAF,NTRAC,NAMETRAC)
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    GIVES THE VARIABLE NAMES FOR THE RESULTS AND GEOMETRY
+!+                FILES (IN TEXTE) AND FOR THE PREVIOUS COMPUTATION
+!+                RESULTS FILE (IN TEXTPR).
+!+
+!+                TEXTE AND TEXTPR ARE GENERALLY EQUAL EXCEPT IF THE
+!+                PREVIOUS COMPUTATION COMES FROM ANOTHER SOFTWARE.
+!
+!history  J-M HERVOUET (LNHE)
+!+        31/08/2007
+!+        V5P8
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| MNEMO          |<--| MNEMONIC FOR 'VARIABLES FOR GRAPHIC OUTPUTS'
+!| NAMETRAC       |-->| NAME OF TRACERS (GIVEN BY KEYWORDS)
+!| NPERIAF        |-->| NUMBER OF PERIODS FOR FOURRIER ANALYSIS
+!| NTRAC          |-->| NUMBER OF TRACERS
+!| TEXTE          |<--| SEE ABOVE
+!| TEXTPR         |<--| SEE ABOVE
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       CHARACTER(LEN=32), INTENT(INOUT) :: TEXTE(*),TEXTPR(*)
       CHARACTER(LEN=8),  INTENT(INOUT) :: MNEMO(*)
       INTEGER, INTENT(IN)              :: NPERIAF,NTRAC
       CHARACTER(LEN=32), INTENT(IN)    :: NAMETRAC(32)
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       CHARACTER(LEN=2) I_IN_2_LETTERS(32)
       DATA I_IN_2_LETTERS /'1 ','2 ','3 ','4 ','5 ','6 ','7 ','8 ','9 ',
-     *                     '10','11','12','13','14','15','16','17','18',
-     *                     '19','20','21','22','23','24','25','26','27',
-     *                     '28','29','30','31','32'/
+     &                     '10','11','12','13','14','15','16','17','18',
+     &                     '19','20','21','22','23','24','25','26','27',
+     &                     '28','29','30','31','32'/
       INTEGER I
-C
-C-----------------------------------------------------------------------
-C
-C  ENGLISH
-C
+!
+!-----------------------------------------------------------------------
+!
+!  ENGLISH
+!
       IF(LNG.EQ.2) THEN
-C
+!
       TEXTE (1 ) = 'VELOCITY U      M/S             '
       TEXTE (2 ) = 'VELOCITY V      M/S             '
       TEXTE (3 ) = 'CELERITY        M/S             '
@@ -103,12 +98,12 @@ C
       TEXTE (29) = 'HIGHEST VELOCITYM/S             '
       TEXTE (30) = 'TIME OF HIGH VELS               '
       TEXTE (31) = 'FRICTION VEL.   M/S             '
-C
-C TEXTPR IS USED FOR READING PREVIOUS COMPUTATION FILES.
-C IN GENERAL TEXTPR=TEXTE BUT YOU CAN FOLLOW UP A COMPUTATION
-C FROM ANOTHER CODE WITH DIFFERENT NAMES THAT YOU HAVE TO
-C WRITE HERE.
-C
+!
+! TEXTPR IS USED TO READ PREVIOUS COMPUTATION FILES.
+! IN GENERAL TEXTPR=TEXTE BUT YOU CAN FOLLOW UP A COMPUTATION
+! FROM ANOTHER CODE WITH DIFFERENT VARIABLE NAMES, WHICH MUST
+! BE GIVEN HERE:
+!
       TEXTPR (1 ) = 'VELOCITY U      M/S             '
       TEXTPR (2 ) = 'VELOCITY V      M/S             '
       TEXTPR (3 ) = 'CELERITY        M/S             '
@@ -140,13 +135,13 @@ C
       TEXTPR (29) = 'HIGHEST VELOCITYM/S             '
       TEXTPR (30) = 'TIME OF HIGH VELS               '
       TEXTPR (31) = 'FRICTION VEL.   M/S             '
-C
-C-----------------------------------------------------------------------
-C
-C  FRANCAIS OU AUTRE
-C
+!
+!-----------------------------------------------------------------------
+!
+!  FRANCAIS OU AUTRE
+!
       ELSE
-C
+!
       TEXTE (1 ) = 'VITESSE U       M/S             '
       TEXTE (2 ) = 'VITESSE V       M/S             '
       TEXTE (3 ) = 'CELERITE        M/S             '
@@ -178,11 +173,11 @@ C
       TEXTE (29) = 'VITESSE MAXIMUM M/S             '
       TEXTE (30) = 'T VITESSE MAXI  S               '
       TEXTE (31) = 'VITESSE DE FROT.M/S             '
-C
-C TEXTPR SERT A LA LECTURE DES FICHIERS DE CALCULS PRECEDENTS
-C A PRIORI TEXTPR=TEXTE MAIS ON PEUT ESSAYER DE FAIRE UNE SUITE
-C DE CALCUL A PARTIR D'UN AUTRE CODE.
-C
+!
+! TEXTPR SERT A LA LECTURE DES FICHIERS DE CALCULS PRECEDENTS
+! A PRIORI TEXTPR=TEXTE MAIS ON PEUT ESSAYER DE FAIRE UNE SUITE
+! DE CALCUL A PARTIR D'UN AUTRE CODE.
+!
       TEXTPR (1 ) = 'VITESSE U       M/S             '
       TEXTPR (2 ) = 'VITESSE V       M/S             '
       TEXTPR (3 ) = 'CELERITE        M/S             '
@@ -214,128 +209,128 @@ C
       TEXTPR (29) = 'VITESSE MAXIMUM M/S             '
       TEXTPR (30) = 'T VITESSE MAXI  S               '
       TEXTPR (31) = 'VITESSE DE FROT.M/S             '
-C
+!
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C   ALIAS DES NOMS DE VARIABLES POUR LE FICHIER DES PARAMETRES
-C
-C     UVCHSBFQTKEDIJMXYPWAGLNORZ
-C     VITESSE U
+!
+!-----------------------------------------------------------------------
+!
+!   ALIASES FOR THE VARIABLES IN THE STEERING FILE
+!
+!     UVCHSBFQTKEDIJMXYPWAGLNORZ
+!     VELOCITY COMPONENT U
       MNEMO(1)   = 'U       '
-C     VITESSE V
+!     VELOCITY COMPONENT V
       MNEMO(2)   = 'V       '
-C     CELERITE
+!     CELERITY
       MNEMO(3)   = 'C       '
-C     HAUTEUR D'EAU
+!     WATER DEPTH
       MNEMO(4)   = 'H       '
-C     SURFACE LIBRE
+!     FREE SURFACE ELEVATION
       MNEMO(5)   = 'S       '
-C     FOND
+!     BOTTOM ELEVATION
       MNEMO(6)   = 'B       '
-C     FROUDE
+!     FROUDE
       MNEMO(7)   = 'F       '
-C     DEBIT SCALAIRE
+!     FLOW RATE
       MNEMO(8)   = 'Q       '
-C     EX TRACEUR
+!     EX TRACER
       MNEMO(9)   = '?       '
-C     ENERGIE TURBUL.
+!     TURBULENT ENERGY
       MNEMO(10)   = 'K       '
-C     DISSIPATION
+!     DISSIPATION
       MNEMO(11)   = 'E       '
-C     VISCOSITE TURB.
+!     TURBULENT VISCOSITY
       MNEMO(12)   = 'D       '
-C     DEBIT SUIVANT X
+!     FLOWRATE ALONG X
       MNEMO(13)   = 'I       '
-C     DEBIT SUIVANT Y
+!     FLOWRATE ALONG Y
       MNEMO(14)   = 'J       '
-C     VITESSE SCALAIRE
+!     SPEED
       MNEMO(15)   = 'M       '
-C     VENT X
+!     WIND COMPONENT X
       MNEMO(16)   = 'X       '
-C     VENT Y
+!     WIND COMPONENT Y
       MNEMO(17)   = 'Y       '
-C     PRESSION ATMOS.
+!     ATMOSPHERIC PRESSURE
       MNEMO(18)   = 'P       '
-C     FROTTEMENT
+!     FRICTION
       MNEMO(19)   = 'W       '
-C     DERIVE EN X
+!     DRIFT IN X
       MNEMO(20)   = 'A       '
-C     DERIVE EN Y
+!     DRIFT IN Y
       MNEMO(21)   = 'G       '
-C     NBRE DE COURANT
+!     COURANT NUMBER
       MNEMO(22)   = 'L       '
-C     VARIABLE 23
+!     VARIABLE 23
       MNEMO(23)   = 'N       '
-C     VARIABLE 24
+!     VARIABLE 24
       MNEMO(24)   = 'O       '
-C     VARIABLE 25
+!     VARIABLE 25
       MNEMO(25)   = 'R       '
-C     VARIABLE 26
+!     VARIABLE 26
       MNEMO(26)   = 'Z       '
-C     VARIABLE 27
+!     VARIABLE 27
       MNEMO(27)   = 'MAXZ    '
-C     VARIABLE 28
+!     VARIABLE 28
       MNEMO(28)   = 'TMXZ    '
-C     VARIABLE 29
+!     VARIABLE 29
       MNEMO(29)   = 'MAXV    '
-C     VARIABLE 30
+!     VARIABLE 30
       MNEMO(30)   = 'TMXV    '
-C     VARIABLE 31
+!     VARIABLE 31
       MNEMO(31)   = 'US      '
-C
-C-----------------------------------------------------------------------
-C
-C     ANALYSES DE FOURIERS
-C
+!
+!-----------------------------------------------------------------------
+!
+!     FOURIER ANALYSES
+!
       IF(NPERIAF.GT.0) THEN
         DO I=1,NPERIAF
           IF(LNG.EQ.1) THEN
             TEXTE(32+NTRAC+2*(I-1)) =  'AMPLI PERIODE '
-     *                         //I_IN_2_LETTERS(I)
-     *                         //'M               '
+     &                         //I_IN_2_LETTERS(I)
+     &                         //'M               '
             TEXTE(33+NTRAC+2*(I-1)) =  'PHASE PERIODE '
-     *                         //I_IN_2_LETTERS(I)
-     *                         //'DEGRES          '
+     &                         //I_IN_2_LETTERS(I)
+     &                         //'DEGRES          '
             TEXTPR(32+NTRAC+2*(I-1)) =  'AMPLI PERIODE '
-     *                         //I_IN_2_LETTERS(I)
-     *                         //'M               '
+     &                         //I_IN_2_LETTERS(I)
+     &                         //'M               '
             TEXTPR(33+NTRAC+2*(I-1)) =  'PHASE PERIODE '
-     *                         //I_IN_2_LETTERS(I)
-     *                         //'DEGRES          '
+     &                         //I_IN_2_LETTERS(I)
+     &                         //'DEGRES          '
           ELSE
             TEXTE(32+NTRAC+2*(I-1)) =  'AMPLI PERIOD  '
-     *                         //I_IN_2_LETTERS(I)
-     *                         //'M               '
+     &                         //I_IN_2_LETTERS(I)
+     &                         //'M               '
             TEXTE(33+NTRAC+2*(I-1)) =  'PHASE PERIOD  '
-     *                         //I_IN_2_LETTERS(I)
-     *                         //'DEGRES          '
+     &                         //I_IN_2_LETTERS(I)
+     &                         //'DEGRES          '
             TEXTPR(32+NTRAC+2*(I-1)) =  'AMPLI PERIOD  '
-     *                         //I_IN_2_LETTERS(I)
-     *                         //'M               '
+     &                         //I_IN_2_LETTERS(I)
+     &                         //'M               '
             TEXTPR(33+NTRAC+2*(I-1)) =  'PHASE PERIOD  '
-     *                         //I_IN_2_LETTERS(I)
-     *                         //'DEGRES          '
+     &                         //I_IN_2_LETTERS(I)
+     &                         //'DEGRES          '
           ENDIF
           MNEMO(32+NTRAC+2*(I-1)) = 'AMPL'//I_IN_2_LETTERS(I)//'  '
           MNEMO(33+NTRAC+2*(I-1)) = 'PHAS'//I_IN_2_LETTERS(I)//'  '
-        ENDDO 
+        ENDDO
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
-C     TRACEURS
-C
+!
+!-----------------------------------------------------------------------
+!
+!     TRACERS
+!
       IF(NTRAC.GT.0) THEN
         DO I=1,NTRAC
           TEXTE(31+I)  = NAMETRAC(I)
           TEXTPR(31+I) = NAMETRAC(I)
           MNEMO(31+I)  = 'T'//I_IN_2_LETTERS(I)//'   '
-        ENDDO 
+        ENDDO
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       RETURN
       END

@@ -1,55 +1,66 @@
-C                       **************************
-                        SUBROUTINE FRICTION_BUBBLE
-C                       **************************
-C
-     & (IKLE, NPOIN, NELEM, NELMAX, LINDNER, NKFROT, CHESTR, NDEFMA,
-     &  LINDDP, LINDSP)
-C
-C***********************************************************************
-C  TELEMAC-2D VERSION 5.5                 J-M HERVOUET (LNH) 30 87 80 18
-C***********************************************************************
-C
-C 22/12/04 : subroutine written by F. Huvelin
-C
-C
-C   ! --------------------------------------------------------------- !
-C   ! Computation of the friction vector for the quasi-bubble element !
-C   ! --------------------------------------------------------------- !
-C
-C
-C
-C----------------------------------------------------------------------C
-C                             ARGUMENTS                                C
-C .________________.____.______________________________________________C
-C |      NOM       |MODE|                   ROLE                       C
-C |________________|____|______________________________________________C
-C |                | => |                                              C
-C |________________|____|______________________________________________C
-C                    <=  input value                                   C
-C                    =>  output value                                  C 
-C ---------------------------------------------------------------------C
-
-!=======================================================================!
-!=======================================================================!
-!                    DECLARATION DES TYPES ET DIMENSIONS                !
-!=======================================================================!
-!=======================================================================!
-
+!                    **************************
+                     SUBROUTINE FRICTION_BUBBLE
+!                    **************************
+!
+     &(IKLE, NPOIN, NELEM, NELMAX, LINDNER, NKFROT, CHESTR, NDEFMA,
+     & LINDDP, LINDSP)
+!
+!***********************************************************************
+! TELEMAC2D   V6P1                                   21/08/2010
+!***********************************************************************
+!
+!brief    COMPUTES THE FRICTION VECTOR FOR THE QUASI-BUBBLE ELEMENT.
+!
+!history  F. HUVELIN
+!+        22/12/2004
+!+
+!+
+!
+!history  J-M HERVOUET (LNHE)
+!+
+!+        V5P5
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CHESTR         |<->| FRICTION COEFFICIENTS
+!| IKLE           |-->| CONNECTIVITY TABLE.
+!| LINDDP         |<--| DIAMETER OF ROUGHNESS ELEMENT IN LINDNER CASE
+!| LINDNER        |-->| IF YES, THERE IS NON-SUBMERGED VEGETATION FRICTION
+!| LINDSP         |<--| SPACING OF ROUGHNESS ELEMENT IN LINDNER CASE
+!| NDEFMA         |<--| DEFAULT MANNING COEFFICIENT
+!| NELEM          |-->| NUMBER OF ELEMENTS
+!| NELMAX         |-->| MAXIMUM NUMBER OF ELEMENTS
+!| NKFROT         |<->| LAW OF BOTTOM FRICTION FOR EVERY POINT
+!| NPOIN          |-->| NUMBER OF POINTS
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       TYPE(BIEF_OBJ), INTENT(IN)    :: IKLE
       INTEGER,        INTENT(IN)    :: NPOIN, NELEM, NELMAX
       LOGICAL,        INTENT(IN)    :: LINDNER
       TYPE(BIEF_OBJ), INTENT(INOUT) :: NKFROT, CHESTR, NDEFMA
       TYPE(BIEF_OBJ), INTENT(INOUT) :: LINDDP, LINDSP
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER :: I, I1, I2, I3
 !
 !=======================================================================!
@@ -67,8 +78,7 @@ C
          ! COMPUTING THE VALUES OF THE MIDDLE-NODE
          ! ---------------------------------------
          IF (NKFROT%I(I1).EQ.NKFROT%I(I2)) THEN
-
-            ! The 3 nodes have the same law !
+            ! THE 3 NODES HAVE THE SAME LAW !
             ! ***************************** !
             IF (NKFROT%I(I1).EQ.NKFROT%I(I3))THEN
 !
@@ -86,7 +96,7 @@ C
      &                           +LINDSP%R(I1) )/3.D0
                ENDIF
 !
-            ! The nodes "1" and "2" have the same law !
+            ! THE NODES "1" AND "2" HAVE THE SAME LAW !
             ! *************************************** !
             ELSE
                NKFROT%I(I) = NKFROT%I(I1)
@@ -99,7 +109,7 @@ C
                ENDIF
             ENDIF
 !
-         ! The nodes "2" and "3" have the same law !
+         ! THE NODES "2" AND "3" HAVE THE SAME LAW !
          ! *************************************** !
          ELSE IF (NKFROT%I(I2).EQ.NKFROT%I(I3)) THEN
 !
@@ -112,7 +122,7 @@ C
                LINDSP%R(I) = (LINDSP%R(I3) + LINDSP%R(I2))/2.D0
             ENDIF
 !
-         ! The 3 nodes have different laws : value of the node "1" kept !
+         ! THE 3 NODES HAVE DIFFERENT LAWS : VALUE OF THE NODE "1" KEPT !
          ! ************************************************************ !
          ELSE
             NKFROT%I(I) = NKFROT%I(I1)

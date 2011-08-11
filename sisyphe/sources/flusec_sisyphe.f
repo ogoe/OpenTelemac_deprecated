@@ -1,132 +1,136 @@
-C                       *************************
-                        SUBROUTINE FLUSEC_SISYPHE
-C                       *************************
-C
-     *(U,V,H,QSXC,QSYC,CHARR,QSXS,QSYS,SUSP,
-     * IKLE,NELMAX,NELEM,X,Y,DT,NCP,CTRLSC,INFO,TPS,KNOGL)
-C
-C***********************************************************************
-C  SISYPHE VERSION 5.7 27/12/06       J-M HERVOUET (LNHE) 01 30 87 80 18
-C
-C***********************************************************************
-C
-C  FONCTION : CALCUL DES FLUX A TRAVERS DES SECTIONS DE CONTROLE
-C             ET CUMUL DE CES FLUX POUR OBTENIR LES VOLUMES OSCILLANTS.
-C
-C             MAILLAGES DE DIMENSION 2 ET HAUTEUR D'EAU CONSIDEREE
-C
-C
-C-----------------------------------------------------------------------
-C                             ARGUMENTS
-C .________________.____.______________________________________________.
-C |      NOM       |MODE|                   ROLE                       |
-C |________________|____|______________________________________________|
-C |   U,V          | -->| CHAMP DE VITESSE
-C |   H            | -->| HAUTEUR D'EAU
-C |   CS           | -->| BLOC DE TRACEURS EN SUSPENSION
-C |   SUSP         | -->| LOGIQUE INDIQUANT DE PRENDRE EN COMPTE
-C |                |    | LE BLOC DE TRACEURS EN SUSPENSION
-C |   IKLE         | -->| TABLEAUX DE CONNECTIVITE LOCAL-GLOBAL
-C |   XEL,YEL      | -->| COORDONNEES DES POINTS PAR ELEMENT
-C |   NELMAX       | -->| NOMBRE MAXIMUM D'ELEMENTS.
-C |   NELEM        | -->| NOMBRE D'ELEMENTS.
-C |   X,Y          | -->| COORDONNEES DES POINTS DU MAILLAGE
-C |   DT           | -->| PAS DE TEMPS.
-C |   NCP          | -->| TWO TIMES THE NUMBER OF CONTROL SECTIONS
-C |   CTRLSC       | -->| DONNEES SUR LES SECTIONS DE CONTROLE.
-C |   INFO         | -->| SI OUI : IMPRESSIONS.
-C |   TPS          | -->| TEMPS
-C |________________|____|______________________________________________|
-C MODE : -->(DONNEE NON MODIFIEE), <--(RESULTAT), <-->(DONNEE MODIFIEE)
-C
-C-----------------------------------------------------------------------
-C
-C APPELE PAR :
-C
-C SOUS-PROGRAMMES APPELES :
-C
-C***********************************************************************
-C
+!                    *************************
+                     SUBROUTINE FLUSEC_SISYPHE
+!                    *************************
+!
+     &(U,V,H,QSXC,QSYC,CHARR,QSXS,QSYS,SUSP,
+     & IKLE,NELMAX,NELEM,X,Y,DT,NCP,CTRLSC,INFO,TPS,KNOGL)
+!
+!***********************************************************************
+! SISYPHE   V6P1                                   21/07/2011
+!***********************************************************************
+!
+!brief    COMPUTES FLUXES THROUGH CONTROL SECTIONS
+!+                AND ADDS THEM UP TO OBTAIN OSCILLATING VOLUMES.
+!+
+!+            MESHES OF DIMENSION 2 AND CONSIDERED WATER DEPTH.
+!
+!history  J-M HERVOUET (LNHE)
+!+        27/12/2006
+!+        V5P7
+!+
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        13/07/2010
+!+        V6P0
+!+   Translation of French comments within the FORTRAN sources into
+!+   English comments
+!
+!history  N.DURAND (HRW), S.E.BOURBAN (HRW)
+!+        21/08/2010
+!+        V6P0
+!+   Creation of DOXYGEN tags for automated documentation and
+!+   cross-referencing of the FORTRAN sources
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!| CHARR          |-->| LOGICAL, BEDLOAD
+!| CTRLSC         |-->| CONTROL SECTION
+!| DT             |-->| TIME STEP
+!| H              |-->| WATER DEPTH 
+!| IKLE           |-->| CONNECTIVITY TABLE
+!| INFO           |-->| IF YES, PRINT
+!| KNOGL          |-->| FROM GLOBAL TO LOCAL NUMBERING IN PARALLEL
+!| NCP            |-->| TWO TIMES THE NUMBER OF CONTROL SECTIONS
+!| NELEM          |-->| NUMBER OF ELEMENTS
+!| NELMAX         |-->| MAXIMUM NUMBER OF ELEMENTS
+!| QSXC           |<->| BEDLOAD TRANSPORT RATE X-DIRECTION 
+!| QSXS           |<->| SUSPENSION TRANSPORT RATE X-DIRECTION 
+!| QSYC           |<->| BEDLOAD TRANSPORT RATE Y-DIRECTION
+!| QSYS           |<->| SUSPENSION TRANSPORT RATE Y-DIRECTION 
+!| SUSP           |-->| LOGICAL, SUSPENSION 
+!| TPS            |-->| TEMPS
+!| U,V            |-->| VELOCITY FIELD COMPONENTS
+!| X,Y            |-->| NODES COORDINATES
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       USE BIEF
       USE DECLARATIONS_SISYPHE, ONLY: CHAIN
       USE INTERFACE_SISYPHE, EX_FLUSEC_SISYPHE => FLUSEC_SISYPHE
-C
+!
       IMPLICIT NONE
       INTEGER LNG,LU
       COMMON/INFO/LNG,LU
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER, INTENT(IN)          :: NELMAX,NELEM,NCP
-      INTEGER, INTENT(IN)          :: IKLE(NELMAX,*) 
-      INTEGER, INTENT(IN)          :: CTRLSC(NCP),KNOGL(*) 
+      INTEGER, INTENT(IN)          :: IKLE(NELMAX,*)
+      INTEGER, INTENT(IN)          :: CTRLSC(NCP),KNOGL(*)
       DOUBLE PRECISION, INTENT(IN) :: X(*),Y(*),TPS,DT
        LOGICAL, INTENT(IN)          :: INFO,SUSP,CHARR
       TYPE(BIEF_OBJ), INTENT(IN)   :: U,V,H,QSXC,QSYC,QSXS,QSYS
-C
-C+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-C
+!
+!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+!
       INTEGER NSEMAX,ERR
       PARAMETER(NSEMAX=50)
-C
+!
       INTEGER IELEM,I1,I2,I3,ELBEST,IGBEST,ILBEST
       INTEGER ILPREC,ISEG,ISEC,NSEC,PT,DEP,ARR
-C
+!
       DOUBLE PRECISION DIST,DIST1,DIST2,DIST3
       DOUBLE PRECISION H1,H2,X1,Y1,X2,Y2,UN1,UN2,NX,NY,SUR6
-C
+!
       DOUBLE PRECISION, ALLOCATABLE :: FLX(:),VOLNEG(:),VOLPOS(:)
       DOUBLE PRECISION, ALLOCATABLE :: FLXS(:),FLXC(:)
       DOUBLE PRECISION, ALLOCATABLE :: VOLNEGS(:),VOLPOSS(:)
       DOUBLE PRECISION, ALLOCATABLE :: VOLNEGC(:),VOLPOSC(:)
       INTEGER, ALLOCATABLE :: NSEG(:),LISTE(:,:,:)
-C
+!
       LOGICAL DEJA
       DATA DEJA/.FALSE./
-      LOGICAL :: CLASSIC=.FALSE. 
-C
+      LOGICAL :: OLD_METHOD=.FALSE.
+!
       SAVE LISTE,DEJA,NSEG,VOLNEG,VOLPOS,FLX,FLXS,VOLNEGS,VOLPOSS
-      SAVE FLXC,VOLNEGC,VOLPOSC,CLASSIC
-C
-C-----------------------------------------------------------------------
-C
-      WRITE(lu,*) '-> entering FLUSEC_SISYPHE'
-      WRITE(lu,*) 'NCP: ',NCP
-      WRITE(lu,*) 'CTRLSC: ',CTRLSC(:)
-
+      SAVE FLXC,VOLNEGC,VOLPOSC,OLD_METHOD
+!
+!-----------------------------------------------------------------------
+!
+      WRITE(LU,*) '-> ENTERING FLUSEC_SISYPHE'
+      WRITE(LU,*) 'NCP: ',NCP
+      WRITE(LU,*) 'CTRLSC: ',CTRLSC(:)
       SUR6 = 1.D0/6.D0
       NSEC = NCP/2
-C
-C  RECHERCHE DES CHEMINS QUI JOIGNENT LES COUPLES DE POINTS :
-C
+!
+!  LOOKS FOR WAYS THAT JOIN THE POINT COUPLES:
+!
       IF(.NOT.DEJA) THEN
-C
-C     ALLOCATION DYNAMIQUE DE FLX, VOLNEG, VOLPOS, ETC.
-C
+!
+!     DYNAMICALLY ALLOCATES FLX, VOLNEG, VOLPOS, ETC.
+!
       ALLOCATE(FLX(NSEC)           ,STAT=ERR)
       ALLOCATE(VOLNEG(NSEC)        ,STAT=ERR)
       ALLOCATE(VOLPOS(NSEC)        ,STAT=ERR)
       ALLOCATE(NSEG(NCP)           ,STAT=ERR)
       ALLOCATE(LISTE(NCP,NSEMAX,2) ,STAT=ERR)
-C     S FOR SUSPENSION, C FOR BEDLOAD (CHARRIAGE...)
+!     S FOR SUSPENSION, C FOR BEDLOAD
       ALLOCATE(FLXS(NSEC)          ,STAT=ERR)
       ALLOCATE(VOLNEGS(NSEC)       ,STAT=ERR)
       ALLOCATE(VOLPOSS(NSEC)       ,STAT=ERR)
       ALLOCATE(FLXC(NSEC)          ,STAT=ERR)
       ALLOCATE(VOLNEGC(NSEC)       ,STAT=ERR)
       ALLOCATE(VOLPOSC(NSEC)       ,STAT=ERR)
-C
+!
       IF(ERR.NE.0) THEN
         IF(LNG.EQ.1) WRITE(LU,100) ERR
         IF(LNG.EQ.2) WRITE(LU,200) ERR
 100     FORMAT(1X,'FLUSEC : ERREUR A L''ALLOCATION DE MEMOIRE : ',/,1X,
-     *            'CODE D''ERREUR : ',1I6)
+     &            'CODE D''ERREUR : ',1I6)
 200     FORMAT(1X,'FLUSEC: ERROR DURING ALLOCATION OF MEMORY: ',/,1X,
-     *            'ERROR CODE: ',1I6)
+     &            'ERROR CODE: ',1I6)
       ENDIF
-C
-      IF (.NOT.ALLOCATED(CHAIN)) CLASSIC=.TRUE.
-C
+!
+      IF (.NOT.ALLOCATED(CHAIN)) OLD_METHOD=.TRUE.
+!
       DO ISEC=1,NSEC
         FLX(ISEC)=0.0D0
         VOLNEG(ISEC) =0.D0
@@ -136,16 +140,16 @@ C
         VOLNEGC(ISEC)=0.D0
         VOLPOSC(ISEC)=0.D0
       ENDDO
-C
+!
       DO 60 ISEC =1,NSEC
-C
-C!jaj #### in the serial case, or "classical" in parallel, 
-C     follow the algorithm of finding segment chains
-C 
-C NOTE: if you change the algorithm, change it in PARTEL as well
-C
-        IF (NCSIZE.LE.1 .OR. CLASSIC) THEN
-C
+!
+!!JAJ #### IN THE SERIAL CASE, OR "CLASSICAL" IN PARALLEL,
+!     FOLLOW THE ALGORITHM OF FINDING SEGMENT CHAINS
+!
+! NOTE: IF YOU CHANGE THE ALGORITHM, CHANGE IT IN PARTEL AS WELL
+!
+        IF (NCSIZE.LE.1 .OR. OLD_METHOD) THEN
+!
         DEP = CTRLSC(1+2*(ISEC-1))
         ARR = CTRLSC(2+2*(ISEC-1))
         IF(NCSIZE.GT.1) THEN
@@ -164,13 +168,13 @@ C
         ISEG = 0
         DIST=(X(DEP)-X(ARR))**2+(Y(DEP)-Y(ARR))**2
 10      CONTINUE
-C
+!
         DO 20 IELEM =1,NELEM
-C
+!
           I1 = IKLE(IELEM,1)
           I2 = IKLE(IELEM,2)
           I3 = IKLE(IELEM,3)
-C         SI L'ELEMENT CONTIENT LE POINT COURANT :
+!         IF THE ELEMENT CONTAINS THE CURRENT POINT:
           IF(PT.EQ.I1.OR.PT.EQ.I2.OR.PT.EQ.I3) THEN
             DIST1 = (X(I1)-X(ARR))**2 + (Y(I1)-Y(ARR))**2
             DIST2 = (X(I2)-X(ARR))**2 + (Y(I2)-Y(ARR))**2
@@ -203,9 +207,9 @@ C         SI L'ELEMENT CONTIENT LE POINT COURANT :
               IF(I3.EQ.PT) ILPREC = 3
             ENDIF
           ENDIF
-C
+!
 20      CONTINUE
-C
+!
         IF(IGBEST.EQ.PT) THEN
           IF(LNG.EQ.1) WRITE(LU,32)
           IF(LNG.EQ.2) WRITE(LU,33)
@@ -231,54 +235,51 @@ C
           LISTE(ISEC,ISEG,2) = IKLE(ELBEST,ILBEST)
           IF(IGBEST.NE.ARR) GO TO 10
         ENDIF
-C
+!
         NSEG(ISEC) = ISEG
 !
-!jaj #### this part to be done in the parallel case; fill LISTE 
-! with ready segment chains provided by PARTEL: see read_sections
-! note: future optimisation - use CHAIN structure in the whole routine 
+!JAJ #### THIS PART TO BE DONE IN THE PARALLEL CASE; FILL LISTE
+! WITH READY SEGMENT CHAINS PROVIDED BY PARTEL: SEE READ_SECTIONS
+! NOTE: FUTURE OPTIMISATION - USE CHAIN STRUCTURE IN THE WHOLE ROUTINE
 !
         ELSE
-C
+!
           NSEG(ISEC) = CHAIN(ISEC)%NSEG
           LISTE(ISEC,:,:)=0
-
           DO ISEG=1,NSEG(ISEC)
             LISTE(ISEC,ISEG,1) = CHAIN(ISEC)%LISTE(ISEG,1)
             LISTE(ISEC,ISEG,2) = CHAIN(ISEC)%LISTE(ISEG,2)
-          END DO 
-
-          WRITE(lu,*) 'chain@sisyphe -> liste@sisyphe:'
-          WRITE(lu,*) 'isec,nseg(isec): ',isec,nseg(isec)
+          END DO
+          WRITE(LU,*) 'CHAIN@SISYPHE -> LISTE@SISYPHE:'
+          WRITE(LU,*) 'ISEC,NSEG(ISEC): ',ISEC,NSEG(ISEC)
           DO ISEG=1,NSEG(ISEC)
-            WRITE(lu,*) LISTE(ISEC,ISEG,:) 
-          END DO 
-
-        ENDIF 
-C
+            WRITE(LU,*) LISTE(ISEC,ISEG,:)
+          END DO
+        ENDIF
+!
 60    CONTINUE
-C
-C     IF(.NOT.DEJA) THEN
+!
+!     IF(.NOT.DEJA) THEN
       ENDIF
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       DEJA = .TRUE.
-C
-C-----------------------------------------------------------------------
-C
+!
+!-----------------------------------------------------------------------
+!
       DO ISEC = 1 , NSEC
-C
+!
       FLX(ISEC)  = 0.D0
       FLXS(ISEC) = 0.D0
       FLXC(ISEC) = 0.D0
-C
+!
       IF(NSEG(ISEC).GE.1) THEN
-C
-C     COMPUTING THE FLUX DIRECTLY, REGARDLESS OF THE WEAK FORM
-C     OF THE IMPERMEABILITY CONDITION
-C
-      DO ISEG = 1 , NSEG(ISEC)          
+!
+!     COMPUTES THE FLUX DIRECTLY, REGARDLESS OF THE WEAK FORM
+!     OF THE IMPERMEABILITY CONDITION
+!
+      DO ISEG = 1 , NSEG(ISEC)
         I1 = LISTE(ISEC,ISEG,1)
         I2 = LISTE(ISEC,ISEG,2)
         X1 = X(I1)
@@ -303,13 +304,13 @@ C
           FLXC(ISEC) = FLXC(ISEC) + 0.5D0*(UN1+UN2)
         ENDIF
       ENDDO
-C
+!
       IF(FLX(ISEC).GT.0.D0) THEN
         VOLPOS(ISEC) = VOLPOS(ISEC) + FLX(ISEC)*DT
       ELSE
         VOLNEG(ISEC) = VOLNEG(ISEC) + FLX(ISEC)*DT
       ENDIF
-C
+!
       IF(SUSP) THEN
         IF(FLXS(ISEC).GT.0.D0) THEN
           VOLPOSS(ISEC) = VOLPOSS(ISEC) + FLXS(ISEC)*DT
@@ -317,7 +318,7 @@ C
           VOLNEGS(ISEC) = VOLNEGS(ISEC) + FLXS(ISEC)*DT
         ENDIF
       ENDIF
-C
+!
       IF(CHARR) THEN
         IF(FLXC(ISEC).GT.0.D0) THEN
           VOLPOSC(ISEC) = VOLPOSC(ISEC) + FLXC(ISEC)*DT
@@ -325,23 +326,23 @@ C
           VOLNEGC(ISEC) = VOLNEGC(ISEC) + FLXC(ISEC)*DT
         ENDIF
       ENDIF
-C
-C     IF(NSEG(ISEC).GT.1)...
+!
+!     IF(NSEG(ISEC).GT.1)...
       ENDIF
-C
+!
       ENDDO
-C
-C-----------------------------------------------------------------------
-C
-C     PRINTING THE RESULTS / !jaj here allreduces for values
-C
+!
+!-----------------------------------------------------------------------
+!
+!     PRINTS THE RESULTS / !JAJ HERE ALLREDUCES FOR VALUES
+!
       CALL FLUXPR_SISYPHE(NSEC,CTRLSC,FLX,VOLNEG,VOLPOS,INFO,TPS,
-     *                    NSEG,NCSIZE,
-     *                    FLXS,VOLNEGS,VOLPOSS,SUSP,
-     *                    FLXC,VOLNEGC,VOLPOSC,CHARR)
-C
-C-----------------------------------------------------------------------
-C
-      WRITE(lu,*) '-> leaving FLUSEC_SISYPHE'
+     &                    NSEG,NCSIZE,
+     &                    FLXS,VOLNEGS,VOLPOSS,SUSP,
+     &                    FLXC,VOLNEGC,VOLPOSC,CHARR)
+!
+!-----------------------------------------------------------------------
+!
+      WRITE(LU,*) '-> LEAVING FLUSEC_SISYPHE'
       RETURN
       END
