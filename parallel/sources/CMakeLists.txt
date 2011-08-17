@@ -28,9 +28,9 @@ if(MPI_LINK_FLAGS)
 endif() 
 #
 install(TARGETS parallel${TELEMAC_VERSION}
-            RUNTIME DESTINATION parallel$/${Fortran_COMPILER_NAME}
-            LIBRARY DESTINATION parallel$/${Fortran_COMPILER_NAME}
-            ARCHIVE DESTINATION parallel$/${Fortran_COMPILER_NAME})
+            RUNTIME DESTINATION parallel/${Fortran_COMPILER_NAME}
+            LIBRARY DESTINATION parallel/${Fortran_COMPILER_NAME}
+            ARCHIVE DESTINATION parallel/${Fortran_COMPILER_NAME})
 #
 #Parallel executables
 #partel is only buiöd if libmetis is found in one of the given diretories
@@ -38,7 +38,7 @@ install(TARGETS parallel${TELEMAC_VERSION}
 add_executable(gretel.exe gretel_autop.f)
 #
 install(TARGETS gretel.exe
-            RUNTIME DESTINATION parallel$/${Fortran_COMPILER_NAME})
+            RUNTIME DESTINATION parallel/${Fortran_COMPILER_NAME})
 #
 FIND_LIBRARY(METIS_LIBRARY metis
     /usr/local/lib
@@ -53,6 +53,6 @@ IF(METIS_LIBRARY)
   target_link_libraries(partel.exe ${METIS_LIBRARY})
 #
   install(TARGETS partel.exe
-            RUNTIME DESTINATION parallel$/${Fortran_COMPILER_NAME})
+            RUNTIME DESTINATION parallel/${Fortran_COMPILER_NAME})
 #
 ENDIF(METIS_LIBRARY)
