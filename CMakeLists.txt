@@ -61,7 +61,9 @@ add_subdirectory(sisyphe/sources)
 add_subdirectory(tomawac/sources)
 add_subdirectory(telemac2d/sources)
 add_subdirectory(telemac3d/sources)
-#add_subdirectory(bin/sel2vtk_dir)
+add_subdirectory(bin/sel2vtk_dir)
+add_subdirectory(bin/conviee)
+
 
 #Dependencies
 add_dependencies(special${TELEMAC_VERSION} bief${TELEMAC_VERSION} )
