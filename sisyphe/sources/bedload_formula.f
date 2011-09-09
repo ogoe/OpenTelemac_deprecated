@@ -314,6 +314,17 @@
            QSC%R(I)=QSC%R(I)*AVA(I)*HIDING%R(I)
          ENDDO
          ALPHA = -3.D0
+      ! ======================================= !
+      ! IV(20) - FORMULE DE CHENG               ! 
+      !          BED LOAD ONLY                  ! 
+      ! ======================================= !      
+      ELSEIF(ICF == 20) THEN
+
+         CALL BEDLOAD_CHENG(TETAP,NPOIN,DENS,GRAV,DM,DSTAR,QSC)
+         DO I=1,NPOIN
+           QSC%R(I)=QSC%R(I)*AVA(I)*HIDING%R(I)
+         ENDDO
+         ALPHA = -6.D0
       ! ============================================ !
       ! IV(0) - USER-DEFINED FORMULATION             !
       ! ============================================ !
