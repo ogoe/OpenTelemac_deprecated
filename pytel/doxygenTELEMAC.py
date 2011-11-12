@@ -17,6 +17,11 @@
          linux calls. This is a temporary solution as "/usr/bin/env" is not
          strickly portable cross operating systems
 """
+"""@history 30/08/2011 -- Sebastien Bourban: completion of the scipt so it
+         reads the agreed template and write the DOXYGEN tags. There are a
+         number of extensions that can be used, in particular a scan of the
+         source code for validity of declaration and memory allocation.
+"""
 # _____          ___________________________________________________
 # ____/ Imports /__________________________________________________/
 #
@@ -36,7 +41,6 @@ def createDOXYGEN(ifile,ilines,lname,list):
    olines = []
 
    for name,subname,doxy,body in parseDoxyWrap(ilines):
-   #for name,doxy,docs,body,vars in parseDoxyWrap(ilines,icount):
       print '    +>  ',path.basename(ifile), subname, name
       who = list[lname][subname]
 
@@ -235,23 +239,19 @@ def createDOXYGEN(ifile,ilines,lname,list):
 
    return olines
 
-def updateDOXYGEN(ilines,lname,list):
+#def updateDOXYGEN(ilines,lname,list):
 
    # ~~ Parsers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   olines = []
+   #olines = []
 
-   for name,subname,doxy,body in parseDoxyWrap(ilines):
-   #for name,doxy,docs,body,vars in parseDoxyWrap(ilines,icount):
-      who = list[lname][name]
-      print name, lname #, ifile
-      print doxy
+   #for name,subname,doxy,body in parseDoxyWrap(ilines):
+      #who = list[lname][name]
 
-      for d in doxy:
+      #for d in doxy:
       # ~~ Brief(s)
-         if d[0] == 'brief' or d[0] == 'brief' or d[0] == 'brief':
-            olines.extend('!> @'+d[0]+'\n!> <br> '.join(d[1]))
-            print '!> @'+d[0]+'\n!> <br> '.join(d[1])
-      sys.exit()
+         #if d[0] == 'brief' or d[0] == 'brief' or d[0] == 'brief':
+            #olines.extend('!> @'+d[0]+'\n!> <br> '.join(d[1]))
+            #print '!> @'+d[0]+'\n!> <br> '.join(d[1])
          #~~~~~~~~~>
          #> replace line break by its HTML tag (but not in the following @code part)
          #count = 1
@@ -428,7 +428,7 @@ def updateDOXYGEN(ilines,lname,list):
    #   olines.extend(body)
    #   olines.extend(['C\nC'+71*'#'+'\nC'])
 
-   return olines
+   #return olines
 
 # _____             ________________________________________________
 # ____/ MAIN CALL  /_______________________________________________/
@@ -464,7 +464,7 @@ if __name__ == "__main__":
    parser.add_option("-r", "--rootdir",
                       type="string",
                       dest="rootDir",
-                      default=PWD,
+                      default='',
                       help="specify the root, default is taken from config file" )
    parser.add_option("-v", "--version",
                       type="string",
@@ -511,10 +511,14 @@ if __name__ == "__main__":
    if not path.isdir(cfgs[cfgname]['doxydocs']): createDirectories(cfgs[cfgname]['doxydocs'])
    # parsing for proper naming
    cfg = parseConfig_DoxygenTELEMAC(cfgs[cfgname])
+   print '\n\nScanning the source code for:\n\
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n'
+   print '    +> configuration: ' +  cfgname
+   print '    +> root:          ' +  cfgs[cfgname]['root']
+   print '    +> version        ' +  cfgs[cfgname]['version'] + '\n\n\
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n'
 
    # ~~ Scans all source files to build a relation database ~~
-   print '\n\nScanning the source code\n\
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n'
    fic,mdl,sbt,fct,prg,dep,all = scanSources(cfgname,cfg,BYPASS)
 
    # ~~ Scann all source files to update Doxygen ~~~~~~~~~~~~~~~~
@@ -535,6 +539,11 @@ if __name__ == "__main__":
 
    # ~~ Run Doxygen ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    chdir(cfg['DOXYDOCS'])
-   system('doxygen')
+   if system('doxygen'): sys.exit()
+
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+# ~~~~ Jenkins' success message ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   print '\n\nMy work is done\n\n'
+
    sys.exit()
 
