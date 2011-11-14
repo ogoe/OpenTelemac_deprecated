@@ -6,7 +6,7 @@ So far the main changes compared to the official version are:
 * CMake build system
 * changed directory structure for easier diff/merge/branch operations
 * adapted perl scripts and dicos for changed directory structure
-* additional sediment transport equation(s) (only in the 6.0 branch)
+* additional sediment transport equation(s) 
 * alternative sandslide algorithm (only in the 6.0 branch)
 * wave module for Telemac 3D (Airy, Stokes and Stream Function) (not in the repo yet)
 * ....
