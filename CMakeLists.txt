@@ -116,7 +116,7 @@ add_dependencies(stbtel${TELEMAC_VERSION}
                  bief${TELEMAC_VERSION} damo${TELEMAC_VERSION} paravoid${TELEMAC_VERSION}
                  special${TELEMAC_VERSION} )
 
-add_dependencies(stbtel${TELEMAC_VERSION}.exe stbteld${TELEMAC_VERSION} )
+add_dependencies(stbtel${TELEMAC_VERSION}.exe stbtel${TELEMAC_VERSION} )
 
 
 
